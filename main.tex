@@ -132,19 +132,18 @@
 \section{Introduction} \label{sec:Introduction}
 % https://dl-acm-org.ezproxy.its.uu.se/doi/pdf/10.1145/1455770.1455793?download=true has motivation for using pure functions in its abstract
 
-Perhaps one of the most useful features of functional programming that the object oriented world of programming could adopt is \textit{functional purity}.
-
-\section{Background} \label{sec:Background} % (several sections depending on work)
-% Perhaps move this to Introduction
 Functional programming is on the rise and becoming more mainstream~\cite{intertech}. Object oriented (OO) programming has been the industry norm for quite some time now, and for a long time functional programming was considered by developers to only be applicable in academic domains. However it is now becoming popular in the IT industry as well. Many mainstream languages like Java, C\# and C++ have adopted first-class functions from the functional paradigm~\cite{intertech}. Moreover, functional programming can be used for building web applications and mobile apps~\cite{jonas-walter}.
 
-Functional programs have many benefits over purely object oriented ones. One major benefit is \textit{functional purity}. Programs with pure functions are generally easier to reason about compared to object oriented ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value~\cite{purity-in-javascript}. Pure functions are also easier to test since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}.  Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
-For this reason it useful in software engineering to evaluate the level of functional programming in programs~\cite{purity-in-javascript}.
+Functional programs have many benefits over purely object oriented ones. Perhaps one of the most useful features of functional programming that the object oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about compared to object oriented ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value~\cite{purity-in-javascript}. Pure functions are also easier to test since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}.  Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
+For this reason it useful in software engineering to evaluate the level of functional purity in programs~\cite{purity-in-javascript}.
 
-C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language by developers?
+C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language by developers? This paper will attempt to answer this by evaluting to what degree functional purity is used in C\# programs today.
 
-Yannis Smaragdakis and Brian McNamara showed that there are ways of converting the common OO design patterns Command, Observer, Adaptor, Visitor and Virtual Proxy in C++ to functional programs using FC++ -- a library that adds many functional features to C++~\cite{yannis-smaragdakis}. Would this kind of transformation be useful for programs written in C\#? If C\# is not currently being used primarily as a functional programming language, this tool could be useful to programmers that want to refactor an existing OO program to a functional one.
+% Yannis Smaragdakis and Brian McNamara showed that there are ways of converting the common OO design patterns Command, Observer, Adaptor, Visitor and Virtual Proxy in C++ to functional programs using FC++ -- a library that adds many functional features to C++~\cite{yannis-smaragdakis}. Would this kind of transformation be useful for programs written in C\#? If C\# is not currently being used primarily as a functional programming language, this tool could be useful to programmers that want to refactor an existing OO program to a functional one.
 
+\section{Background} \label{sec:Background} % (several sections depending on work)
+
+\subsection{Definitions} \label{sub:Definitions}
 Following are definitions of functional and objected oriented programming respectively.
 % Are there multiple definitions? Motivate choice of definitions?
 
@@ -359,6 +358,9 @@ To find the declaration/definition of symbols (in the form of \texttt{Identifier
 
 TODO
 
+\section{Results} \label{sec:Results}
+TODO
+
 \section{Related work} \label{sec:Related work} % (If not part of introduction)
 
 \subsection{Purity in Erlang} \label{sub:Purity-in-Erlang}
@@ -416,7 +418,6 @@ If its class is immutable it means that a method's global scope has a constant s
 Their verifier has a whitelist of fields and methods from Java librarires that do not expose the ability to observe a global mutable state, or provide access to nondeterminism, and it will reject any reference to a field or method that is not on the list~\cite{purity-in-java}.
 
 \section{Future Work and Conclusion} \label{sec:Conclusion and future Work}
-
 \subsection{Future work} \label{sub:Future work}
 
 \begin{itemize}
@@ -424,6 +425,7 @@ Their verifier has a whitelist of fields and methods from Java librarires that d
 \end{itemize}
 
 \subsection{Conclusion} \label{sub:Conclusion}
+TODO
 
 \bibliography{references}
 
