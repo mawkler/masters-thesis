@@ -134,7 +134,7 @@
 
 Functional programming is on the rise and becoming more mainstream~\cite{intertech}. Object oriented (OO) programming has been the industry norm for quite some time now, and for a long time functional programming was considered by developers to only be applicable in academic domains. However it is now becoming popular in the IT industry as well. Many mainstream languages like Java, C\# and C++ have adopted first-class functions from the functional paradigm~\cite{intertech}. Moreover, functional programming can be used for building web applications and mobile apps~\cite{jonas-walter}.
 
-Functional programs have many benefits over purely object oriented ones. Perhaps one of the most useful features of functional programming that the object oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about compared to object oriented ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value~\cite{purity-in-javascript}. Pure functions are also easier to test since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}.  Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
+Functional programs have many benefits over purely object oriented ones. Perhaps one of the most useful features of functional programming that the object oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about compared to object oriented ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value~\cite{purity-in-javascript}. Pure functions are also easier to test since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
 For this reason it useful in software engineering to evaluate the level of functional purity in programs~\cite{purity-in-javascript}.
 
 C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language by developers? This paper will attempt to answer this by evaluting to what degree functional purity is used in C\# programs today.
@@ -151,6 +151,7 @@ Following are definitions of functional and objected oriented programming respec
 
 \begin{enumerate}
   \item All functions are \emph{pure}, meaning that they do not have any side-effects, and their output depends only on the input~\cite{john-m-chambers}. The latter is what Finifter et al. call \textit{determinism}, as mentioned in \autoref{sub:Verifiable-Functional-Purity-in-Java}~\cite{purity-in-java}.
+    % We will go in more to this in \autoref{sub:Definition of functional purity}
 \item Functions are first-class and can be higher-order, meaning that functions can be passed to functions as parameters, and can be returned by functions~\cite{jonas-walter}. % page 3
 \item Variables are immutable, meaning that their value does not change after being initiated~\cite{jonas-walter}. % page 3
 \end{enumerate}
@@ -197,14 +198,16 @@ Microsoft has an article on refactoring none-pure C\# code to pure functions \ci
 % \subsection{The C\# Language} \label{sub:The C\# Language}
 % TODO: short description of C\#
 
-\subsection{What makes a C\# method pure?} \label{sub:What makes a Cs program functional?}
-
+\subsection{Definition of functional purity} \label{sub:Definition of functional purity}
 % Maybe move this before subsection to lead up to this?
 As mentioned in \autoref{sec:Background}, the definition of functional programming consists of three parts. \textit{Purity}, functions being \textit{first-class} and \textit{higher-order}, and variables being \textit{immutable}. To delimit the scope of this thesis it will only focus on purity, mainly because it is the one which seems the most useful for object oriented programming, and as it is the one that is the most emphasized as a benefit of using a more functional style in object oriented programming~\cite{alvin-alexander}. % page 19
 
 As seen in \autoref{sec:Related work} a lot of related work defines purity only as being synonymous with side-effect free. This definition therefore doesn't require functions' output to depend purely on their input -- what Finifter et al. call \textit{determinism}, as mentioned in \autoref{sub:Verifiable-Functional-Purity-in-Java} -- but allows them to read from variables defined outside of their scope. This definition is less functional. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}, % page 19
 the first two who's work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively. Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic does in a way also simplify the analysis because it means that any symbol used in a function \textit{F} but defined outside \textit{F} would make \textit{F} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{F} to see if it is being written to or if it is only being read before concluding if \textit{F} is pure.
 
+Thus, a function is pure if it is side-effect free and deterministic.
+
+\subsection{What makes a C\# method pure?} \label{sub:What makes a Cs program functional?}
 \autoref{fig:impure-example} and \autoref{fig:pure-example} illustrate two very simple examples of pure and impure code, respectively. In \autoref{fig:impure-example} the function \texttt{addOne()} is impure because it is writing to the variable \texttt{number} which was defined outside \texttt{addOne()}'s scope, which is a side-effect. \autoref{fig:pure-example} illustrates how \texttt{addOne()} can be rewritten to a pure function while preserving the program's semantics.
 
 \begin{figure}[H]
@@ -350,6 +353,8 @@ The abstract syntax tree (AST) generated by the texttt{Microsoft.CodeAnalysis} l
 
 % Because of the poor documentation of the \texttt{CodeAnalysis} library, a lot of time was spent on playing around with it and figuring out how it is intended to be used.
 
+Because there was a clear goal for the software and it's requirements, test driven development was used.
+
 Because .NET has many libraries with functions of unknown purity, the purity level "unknown" has to be added.
 
 The code analysis tool is built in .NET core and C\#. It can be compiled, run and tested from the command line using the command \href{https://docs.microsoft.com/en-us/dotnet/core/tools/}{\texttt{dotnet}}, followed by \texttt{run}, \texttt{build} or \texttt{test}, respectively.
@@ -380,12 +385,19 @@ TODO
 % By parsing the Abstract Syntax Tree of the code they construct a \textit{dependency set} for each function \textit{f}, i.e. the set of functions being called by \textit{f} ... TODO (page 5 in \cite{pitidis2010purity}).
 
 \subsection{Detecting function purity in JavaScript}
-Nicolay et al. developed a method of detecting function purity in JavaScript~\cite{purity-in-javascript}. Their definition of functional purity, however, includes only side-effects and does not require functions' output to depend purely on their input~\cite{purity-in-javascript}.
+% This was a little too difficult to understand, maybe remove from related work?
+Nicolay et al. developed a method of detecting function purity in JavaScript using something called \textit{pushdown analysis}~\cite{purity-in-javascript}. Their definition of functional purity, however, includes only side-effects and does not require functions' output to depend purely on their input~\cite{purity-in-javascript}.
 
 % Because everything except for
 
 \subsection{Purity and Side Effect Analysis for Java Programs} \label{sub:Purity and Side Effect Analysis for Java Programs}
-Similarly, S\u{a}lcianu and Rinard presented a method for analysing purity in Java programs, but their definition of purity also only includes side-effects and does not look at the input or output~\cite{salcianu}. Their pointer analysis is based on tracking object creation and updates, as well as updates to local variables, and defines methods that mutate memory locations that existed before a method call as impure~\cite{salcianu}. Moreover, their analysis can recognize purity-related properties for impure methods, including \textit{read-only} and \textit{safe} parameters~\cite{salcianu}. The analysis method presented looks at each program point in each method \textit{m}, and computes a points-to graph modelling the parts of the heap that method \textit{m} points to~\cite{salcianu}.
+Similarly, S\u{a}lcianu and Rinard presented a method for analysing purity in Java programs, but their definition of purity also only includes side-effects and does not look at the input or output~\cite{salcianu}. Their pointer analysis is based on tracking object creation and updates, as well as updates to local variables, and defines methods that mutate memory locations that existed before a method call as impure~\cite{salcianu}. Moreover, their analysis can recognize purity-related properties for impure methods, including \textit{read-only} and \textit{safe} parameters~\cite{salcianu}.
+
+The analysis method presented looks at each program point in each method \textit{m}, and computes a points-to graph modelling the parts of the heap that method \textit{m} points to, represented by nodes in the graph~\cite{salcianu}. There are three kinds of nodes. \textit{Inside nodes} which model objects created by \textit{m}, \textit{parameter nodes} which model objects passed to \textit{m} as arguments, and \textit{load nodes} modelling objects read from outside \textit{m}. Edges in the points-to graph model heap references. There are two types of edges: \textit{inside edges} which model heap references created by \textit{m}, and \textit{outside edges} modelling heap references read by \textit{m} from outside of it (this includes \textit{m}'s parameters).
+
+For each method \textit{m} the analysis computes a set $W_m$ containing the mutated fields that are externally visible.
+
+TODO
 
 \subsection{Writing Pure Code in C\#} \label{sub:Writing Pure Code in Cs}
 In his article \textit{Writing Pure Code in C\#} Massad defines three levels of pure methods~\cite{yacoub-massad-pure-code}:
@@ -395,14 +407,14 @@ In his article \textit{Writing Pure Code in C\#} Massad defines three levels of 
   \item Methods that are pure, and that \textit{read} or \textit{write} to the state of their containing objects, or to the state of objects created in the current method.
 \end{enumerate}
 
-\subsection{.NET Code Contracts} \label{sub:Code contracts} % kanske ta bort?
+\subsection{.NET Code Contracts} \label{sub:Code contracts} % kanske ta bort eller flytta till Backgrounds?
 .NET code contracts are used to define pre- and postconditions, as well invariants for pieces of code -- some which can be checked statically and some at runtime~\cite{microsoft-code-contracts}. One available code contract is the \texttt{[pure]} attribute, which requires the method to be pure~\cite{microsoft-code-contracts}. Microsoft defines pure methods as methods that don't modify an pre-existing state, i.e. methods can only modify objects that were created \textit{after} the method was called. The following code elements are assumed by the code contract tools to be pure~\cite{microsoft-code-contracts}:
 
 \begin{itemize}
   \item Methods or types marked with \texttt{[pure]} (for types marked with \texttt{[pure]} this should apply to to all the type's methods).
   \item Property get accessors.
   \item Operators.
-  \item Any method with the a fully qualified name starting with \texttt{System.Diagnost\-ics.Contracts.Contract}, \texttt{System.String}, \texttt{System\-.IO.Path}, or \texttt{System.Type}.
+  \item Any method with a fully qualified name starting with \texttt{System.Diagnost\-ics.Contracts.Contract}, \texttt{System.String}, \texttt{System\-.IO.Path}, or \texttt{System.Type}.
   \item Any called delegate with the \texttt{[pure]} attribute. Delegates are basically function pointers.
 \end{itemize}
 
@@ -415,7 +427,7 @@ In their definition of functional purity Finifter et al. require pure functions 
 They make the point that if all of method's parameters are immutable, including the implicit \texttt{this}, then the method is pure~\cite{purity-in-java}. % page 166
 If its class is immutable it means that a method's global scope has a constant state, and so the only varying state is the one observable through its arguments~\cite{purity-in-java}.
 
-Their verifier has a whitelist of fields and methods from Java librarires that do not expose the ability to observe a global mutable state, or provide access to nondeterminism, and it will reject any reference to a field or method that is not on the list~\cite{purity-in-java}.
+Their verifier has a white list of fields and methods from Java libraries that do not expose the ability to observe a global mutable state, or provide access to nondeterminism, and it will reject any reference to a field or method that is not on the list~\cite{purity-in-java}.
 
 \section{Future Work and Conclusion} \label{sec:Conclusion and future Work}
 \subsection{Future work} \label{sub:Future work}
@@ -425,7 +437,7 @@ Their verifier has a whitelist of fields and methods from Java librarires that d
 \end{itemize}
 
 \subsection{Conclusion} \label{sub:Conclusion}
-TODO
+\textit{Functional purity} is perhaps the most useful concept from functional programming that object oriented programmers can learn from. The definition of a pure program used in this paper is one that is side-effect free and determinstic.
 
 \bibliography{references}
 
