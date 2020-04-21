@@ -173,6 +173,7 @@ Following are definitions of functional and objected oriented programming respec
   \item Compilers
   \item Abstract syntax trees (ASTs)
   \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/work-with-syntax}{.NET ASTs}~\cite{albahari2003nutshell}
+  \item Objects: fields and properties % https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/members
 \end{itemize}
 
 Microsoft has an article on refactoring none-pure C\# code to pure functions \cite{microsoft-refactoring}.
@@ -187,12 +188,13 @@ Microsoft has an article on refactoring none-pure C\# code to pure functions \ci
   \item Call-by-value vs. call-by-reference: % \textit{"For reference types, if you pass a parameter by value, it results in a copy of the reference to an object being passed. This copy is still associated with the same instance data as the original reference (until the reference variable is assigned to a new object). Call-by-reference is not necessarily required for a function to modify a parameter."} - \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/linq/refactoring-into-pure-functions}{link}.
   % \item Functions can be locally pure and/or globally pure https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/linq/refactoring-into-pure-functions
   \item Control flow analysis
-  \item Could talk about Haskell in which all functions are pure and all values are immutable
+  % \item Could talk about Haskell in which all functions are pure and all values are immutable
   \item Sometimes we call compiled methods, i.e. methods that we don’t have the code for, e.g. the .NET framework base class library (BCL)
   \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/delegates/}{Delegates} and \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/statements-expressions-operators/anonymous-functions}{anomynous functions}.
   \item Implicit and explicit variable declarations (C\# handles both)
   \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/inside-a-program/identifier-names}{Identifiers} are the names of types, members variables or namespaces used in source code. They reference \href{https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/work-with-semantics#symbols}{symbols}, representing a declared namespace, type, method, field, variable, etc. The compiler's process of associating identifiers with symbols is called \textit{binding}~\cite{microsoft-semantic-analysis}. % TODO explain symbols and identifiers
   \item Closures and how objects can be considered closures (if fields are \texttt{readonly}?), and whether or not they should be considered pure.
+  \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/exceptions/}{Exceptions}.
 \end{itemize}
 
 % \subsection{The C\# Language} \label{sub:The C\# Language}
@@ -204,6 +206,8 @@ As mentioned in \autoref{sec:Background}, the definition of functional programmi
 
 As seen in \autoref{sec:Related work} a lot of related work defines purity only as being synonymous with side-effect free. This definition therefore doesn't require functions' output to depend purely on their input -- what Finifter et al. call \textit{determinism}, as mentioned in \autoref{sub:Verifiable-Functional-Purity-in-Java} -- but allows them to read from variables defined outside of their scope. This definition is less functional. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}, % page 19
 the first two who's work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively. Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic does in a way also simplify the analysis because it means that any symbol used in a function \textit{F} but defined outside \textit{F} would make \textit{F} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{F} to see if it is being written to or if it is only being read before concluding if \textit{F} is pure.
+
+% The notion of purity only being synomynous with side-effect free seems to be more common in computer science, while also requireming determinism seems to be the more mathematical definition.
 
 Thus, a function is pure if it is side-effect free and deterministic.
 
@@ -306,7 +310,7 @@ TODO
 In this thesis the term \textit{method} and \textit{function} will be used interchangeably.
 
 % Abstract syntax trees in general
-Abstract syntax trees (AST) are the primary data structure used when analysing code~\cite{microsoft-work-with-syntax}. It encapsulates every piece of information held in the source code~\cite{microsoft-work-with-syntax}. A syntax tree generated by a parser can be be re-built into the exact same text that was originally parsed~\cite{microsoft-work-with-syntax}. TODO
+Abstract syntax trees (ASTs) are the primary data structure used when analysing source code~\cite{microsoft-work-with-syntax}. It encapsulates every piece of information held in the source code~\cite{microsoft-work-with-syntax}. A syntax tree generated by a parser can be be re-built into the exact same text that was originally parsed~\cite{microsoft-work-with-syntax}. TODO
 
 The abstract syntax tree (AST) generated by the texttt{Microsoft.CodeAnalysis} library represents the lexical and syntactic structure of a .NET program~\cite{microsoft-work-with-syntax}. The tree consists primarily of \textit{syntax nodes} which represent syntactic constructs including declarations, statements, clauses and expressions~\cite{microsoft-work-with-syntax}. Each node is derived from the \texttt{Syntax}-\texttt{Node} class~\cite{microsoft-work-with-syntax}. Every node is non-terminal, meaning that they always have children - either other nodes or \textit{tokens}~\cite{microsoft-work-with-syntax}. Tokens are the smallest syntactic pieces of the program, consisting of keywords identifiers, literals and punctuation~\cite{microsoft-work-with-syntax}.
 
@@ -329,10 +333,19 @@ The abstract syntax tree (AST) generated by the texttt{Microsoft.CodeAnalysis} l
   \item The \texttt{IdentifierNameSyntax} node represents symbols used in the code, including variable names and method names.
 \end{itemize}
 
-\subsection{Analysis}
+\subsection{C\# Events} \label{sub:Events}
+Events are a way for classes or object to notify other classes or objects when something happens~\cite{microsoft-events}. The class raising the event is called the \textit{publisher} and the class handling the event is called the \textit{subscriber} (there can be more than one subscriber)~\cite{microsoft-events}. When an event is raised the subscriber's handler method is executed. Since events clearly are side-effects, a method that raises events is not considered pure
+
+\subsection{The Analysis} \label{sub:Analysis}
 \begin{itemize}
-  \item Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} - set of calls to other functions~\cite{pitidis2010purity}.
-  \item Build a lookup table with all evaluated functions, their purity and their dependency set~\cite{pitidis2010purity}.
+  \item There are three kinds of purity levels: \textit{pure}, \textit{impure}, and \textit{uknown}.
+  \item Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} of each function, i.e. the set of calls inside the function.
+    Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. For each function analyzed, add the identifier of any modified object field, property ... TODO
+  \item If any field, property... is modified, ... TODO
+  \item Any method that raises an event or an exception is marked as \textit{impure}.
+  % \item Build a lookup table with all evaluated functions, their purity and their dependency set~\cite{pitidis2010purity}.
+    it
+  \item If the analysis finds a call or reference to a compiled method or a field, mark its purity as \textit{unknown}.
 \end{itemize}
 
 \subsection{Code base} \label{sub:Code base}
@@ -360,6 +373,8 @@ Because .NET has many libraries with functions of unknown purity, the purity lev
 The code analysis tool is built in .NET core and C\#. It can be compiled, run and tested from the command line using the command \href{https://docs.microsoft.com/en-us/dotnet/core/tools/}{\texttt{dotnet}}, followed by \texttt{run}, \texttt{build} or \texttt{test}, respectively.
 
 To find the declaration/definition of symbols (in the form of \texttt{IdentifierNameSyn\allowbreak tax}) the method \texttt{SemanticModel.GetSym\allowbreak bolInfo()} is used, which uses the semantic model of the program.
+
+% A very simple implementation could be one that only looks at input parameters and checks if they are all
 
 TODO
 
@@ -412,7 +427,7 @@ In his article \textit{Writing Pure Code in C\#} Massad defines three levels of 
 \end{enumerate}
 
 \subsection{.NET Code Contracts} \label{sub:Code contracts} % kanske ta bort eller flytta till Backgrounds?
-.NET code contracts are used to define pre- and postconditions, as well invariants for pieces of code -- some which can be checked statically and some at runtime~\cite{microsoft-code-contracts}. One available code contract is the \texttt{[pure]} attribute, which requires the method to be pure~\cite{microsoft-code-contracts}. Microsoft defines pure methods as methods that don't modify an pre-existing state, i.e. methods can only modify objects that were created \textit{after} the method was called. The following code elements are assumed by the code contract tools to be pure~\cite{microsoft-code-contracts}:
+.NET code contracts are used to define pre- and postconditions, as well invariants for pieces of code -- some which can be checked statically and some at runtime~\cite{microsoft-code-contracts}. One available code contract is the \texttt{[pure]} attribute, which indicates that the method is pure~\cite{microsoft-code-contracts}. However, current analysis tools do not enforce that methods marked with \texttt{[pure]} actually are pure, and so the attribute does not guarantee functional purity. Microsoft defines pure methods as methods that don't modify an pre-existing state, i.e. methods can only modify objects that were created \textit{after} the method was called. The following code elements are assumed by the code contract tools to be pure~\cite{microsoft-code-contracts}:
 
 \begin{itemize}
   \item Methods or types marked with \texttt{[pure]} (for types marked with \texttt{[pure]} this should apply to to all the type's methods).
@@ -428,7 +443,7 @@ Rajasekhara Babu et al.~\cite{rajasekharababu2012evolution}.
 \subsection{Verifiable Functional Purity in Java} \label{sub:Verifiable-Functional-Purity-in-Java}
 In their definition of functional purity Finifter et al. require pure functions to be both side-effect free and \textit{deterministic}~\cite{purity-in-java}. A function is deterministic if any two evaluations of it have the same result~\cite{purity-in-java}. This means that a deterministic function is one that relies purely on its arguments~\cite{purity-in-java}. A function is side-effect free if it only modifies objects that were created during its execution~\cite{purity-in-java}.
 
-They make the point that if all of method's parameters are immutable, including the implicit \texttt{this}, then the method is pure~\cite{purity-in-java}. % page 166
+The language that their analyzer handles is a subset of Java, in which they can prove functional purity~\cite{purity-in-java}. They make the point that if all of method's parameters are immutable, including the implicit \texttt{this}, then the method is pure~\cite{purity-in-java}. % page 166
 If its class is immutable it means that a method's global scope has a constant state, and so the only varying state is the one observable through its arguments~\cite{purity-in-java}.
 
 Their verifier has a white list of fields and methods from Java libraries that do not expose the ability to observe a global mutable state, or provide access to nondeterminism, and it will reject any reference to a field or method that is not on the list~\cite{purity-in-java}.
