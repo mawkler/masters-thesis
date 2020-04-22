@@ -348,6 +348,21 @@ Events are a way for classes or object to notify other classes or objects when s
   \item If the analysis finds a call or reference to a compiled method or a field, mark its purity as \textit{unknown}.
 \end{itemize}
 
+If we modify a list that was created inside a method \textit{m}, say by calling the function \texttt{append()}, \textit{m} will look like it has a side-effect, even though it hasn't.
+
+Solution: if a called method \textit{m} is impure, only mark \textit{m}'s callee \textit{M} as impure if the object which \textit{m} belongs to was not created inside the callee \textit{M}. This means that if \textit{m}
+
+However, a method \textit{m} (static or non-static) that modifies an object it receives as input argument shouldn't make the callee of \textit{m} impure if the callee created the object. % I.e. a method that modifies its argument is not impure.
+
+Solution: Add additional impurity level: \textit{Locally impure} -- methods that have no side-effects besides modifying their input parameters.
+
+A method \textit{m} that calls a locally impure method of an object is pure if the object was created by \textit{m}.
+
+% A method that calls a locally impure method belonging to its input parameter? -- doesn't matter?
+
+% This solution doesn't always work however, becausee called method could modify a field of a static class. Therefore, any method that calls a static and impure method is definitely impure, and its impurity should be propagated to all its callees upwards through the syntax tree. (perhaps use an extra impurity level called \textit{globally impure}?) Since static classes cannot be instantiated, they can never have been instantiated inside the callee.
+
+
 \subsection{Code base} \label{sub:Code base}
 \textbf{Mostly pure code}
 \begin{itemize}
