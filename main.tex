@@ -338,9 +338,9 @@ Events are a way for classes or object to notify other classes or objects when s
 
 \subsection{Problems with determining purity in object oriented languages} \label{sub:Problems with determining purity in object oriented languages}
 
-\textbf{Inheritance}
+\subsubsection{Inheritance} \label{sub:inheritance}
 
-When calling an argument's method, because of inheritance and method overriding we can never be sure of which method implementation will be called. Consdier the following example~\cite{pearce2011jpure}:
+When calling an argument's method, because of inheritance and method overriding we can never be sure of which method implementation will be called. Consider the following example~\cite{pearce2011jpure}:
 
 \begin{figure}[H]
   \centering
@@ -349,16 +349,27 @@ When calling an argument's method, because of inheritance and method overriding 
       x.add("Hello");
     }
   \end{lstlisting}
-  \caption{Because \texttt{x} can be any subclass of \texttt{List} we can never be sure of \texttt{add()}'s implementation}
+  \caption{Since \texttt{x} can be of any subclass of \texttt{List} we can never be sure of \texttt{x.add()}'s implementation.}
   \label{fig:inheritance-example}
 \end{figure}
 
-Because \texttt{x} can be any subclass of \texttt{List} we can not for sure know the implementation of \texttt{x.add()}, and therefore nor can we be certain of \texttt{x.add()}'s purity. Thus, we can not determine \texttt{f()}'s purity.
+Because the parameter \texttt{x} can be of any subclass of \texttt{List} we can not for sure know the implementation of \texttt{x.add()}, and therefore nor can we be certain of \texttt{x.add()}'s purity. Thus, we can not determine \texttt{f()}'s purity.
 
-One solution to this that David J. Pearce suggests is to demand that pure methods can only be overridden by methods that are also pure~\cite{pearce2011jpure}.
+One solution to this that David J. Pearce suggests is to demand that pure methods only are overridden by methods that are also pure~\cite{pearce2011jpure}. Therefore, if a method \textit{m} is overridden by at least one impure method, \textit{m} is assumed to be impure.
 
-\textbf{Iterators} % Not relevant because my definition of purity includes determinism
-As Pearce suggests, an iterator may at first glance look pure~\cite{pearce2011jpure}. Consider the following:
+This means that in the example in \autoref{fig:inheritance-example}, the function \texttt{f()} is pure iff all methods that override \texttt{List.add()} are pure.
+
+\subsubsection{Modifying a fresh object is not an impure action} \label{sub:modifying-fresh-objects}
+
+If an object \textit{o} is allocated inside the analysed method \textit{m}, the object \textit{o} is said to be \textit{fresh}~\cite{pearce2011jpure}. To modify \textit{o}'s state we might call a method that looks impure (since that method would have the side-effect of modifying \textit{o}). However, this method should not make \textit{m} impure since \textit{o} is fresh, which means that the modification of \textit{o} is not a side-effect of \textit{m}.
+
+*Can this be solved by marking them as \textit{locally impure} and not propagating their impurity to callees?*
+
+\subsubsection{Iterators}
+
+*This part is probably not relevant because my definition of purity includes determinism. Do I mention this or just delete this part?*
+
+As Pearce suggests, an iterator may at first glance look pure~\cite{pearce2011jpure}. Consider the following (\href{https://docs.microsoft.com/en-us/archive/msdn-magazine/2017/april/essential-net-understanding-csharp-foreach-internals-and-custom-iterators-with-yield}{link}):
 
 \begin{figure}[H]
   \centering
@@ -372,29 +383,29 @@ As Pearce suggests, an iterator may at first glance look pure~\cite{pearce2011jp
   \label{fig:iterator-example}
 \end{figure}
 
-TODO
-
 \subsection{The Analysis} \label{sub:Analysis}
 \begin{itemize}
   \item There are three kinds of purity levels: \textit{pure}, \textit{impure}, and \textit{unknown}.
   \item Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} of each function, i.e. the set of calls inside the function.
-    Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. For each function analyzed, add the identifier of any modified object field, property ... TODO
-  \item If any field, property... is modified, ... TODO
+    Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. % For each function analyzed, add the identifier of any modified object field or property ... TODO
+  \item If any field or property of the currently analyzed method's object is read from or modified, mark it as impure. TODO
+  \item As discussed in \autoref{sub:inheritance}, the currently analyzed method \textit{m} is overridden by any impure method, mark \textit{m} as impure.
+  \item If a method returns \texttt{this} it should be considered impure since it is dependent on the state of its object, making it non-deterministic.
   \item Any method that raises an event or an exception is marked as \textit{impure}.
   % \item Build a lookup table with all evaluated functions, their purity and their dependency set~\cite{pitidis2010purity}.
-    it
   \item If the analysis finds a call or reference to a compiled method or a field, mark its purity as \textit{unknown}.
 \end{itemize}
 
-If we modify a list that was created inside a method \textit{m}, say by calling the function \texttt{list.append()}, \textit{m} may look like it has a side-effect, even though it hasn't.
+If we modify a list that was created inside a method \textit{m}, say by calling the function \texttt{list.append()}, \textit{m} may look like it has a side-effect, even though it hasn't. Discussed in \autoref{sub:modifying-fresh-objects}.
 
-Solution: if a called method \textit{m} is (locally) impure, only mark \textit{m}'s callee \textit{M} as impure if the object which \textit{m} belongs to was not created inside the callee \textit{M}. This means that if \textit{m}
+Solution: if a called method \textit{m} is (locally) impure, only mark \textit{m}'s callee \textit{M} as impure if the object which \textit{m} belongs to was not created inside the callee \textit{M}. %  This means that if \textit{m}
+*Does this really work for all cases?*
 
-However, a method \textit{m} (static or non-static) that modifies an object it receives as input argument shouldn't make the callee of \textit{m} impure if the callee created the object. % I.e. a method that modifies its argument is not impure.
+% However, a method \textit{m} (static or non-static) that modifies an object it receives as input argument shouldn't make the callee of \textit{m} impure if the callee created the object. % I.e. a method that modifies its argument is not impure.
 
-Solution: Add additional impurity level: \textit{Parametrically impure} -- methods that have no side-effects besides modifying their input parameters. % This term is used by Microsoft in an article on refactoring C\# code into pure functions~\cite{microsoft-refactoring}.
+% Solution: Add additional impurity level: \textit{Parametrically impure} -- methods that have no side-effects besides modifying their input parameters. % This term is used by Microsoft in an article on refactoring C\# code into pure functions~\cite{microsoft-refactoring}.
 
-A method \textit{m} that calls a parametrically impure method of an object is pure if the object was created by \textit{m}.
+% A method \textit{m} that calls a parametrically impure method of an object is pure if the object was created by \textit{m}.
 
 % A method that calls a locally impure method belonging to its input parameter? -- doesn't matter?
 
