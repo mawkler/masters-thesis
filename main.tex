@@ -384,25 +384,57 @@ Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the s
 
 Because the function \texttt{Foo()} only modifies an object exclusively visible inside the function, \texttt{Foo()} does not have any side-effect. Nor is the function non-deterministic since it does not read any value outside of the function besides its parameters, which it in this case doesn't have. This means that \texttt{Foo()} is pure.
 
-To solve this we introduce the purity level \textit{locally impure}. Any method that is pure except for reading or modifying its object's fields is locally impure.
+To solve this we introduce the purity level \textit{locally impure}. Any method that is pure except for reading or modifying its object's fields is locally impure. Consider the following:
 
 \begin{figure}[H]
   \centering
   \begin{lstlisting}
-    public class List {
-      public string[] values;
-      public int size;
+    public A Foo() { // pure
+      A a = new A();
+      a.Increment();
+      return a;
+    }
 
-      public void Add(string s) {
-        ... // Increase size of values array
+    public class A {
+      public int value = 0;
 
-        values[++size] = s; // locally impure action
+      public void Increment() { // locally impure
+        value++;
       }
     }
   \end{lstlisting}
-  \caption{TODO}
-  \label{fig:list-example}
+  \caption{Since \texttt{Foo()} modifies a fresh object with a locally impure method \texttt{Foo()} is still pure}
+  \label{fig:locally-impure-example}
 \end{figure}
+
+The method \texttt{Increment()} in \autoref{fig:locally-impure-example} is locally impure because it modifies its object's field \texttt{value} but doesn't have any other side-effects. A function that calls a locally impure method on a fresh object is not contaminated by its local impurity.
+
+There is however one more way to modify a fresh object: to pass it as an argument to a method that alters its state. Consider the following example:
+
+\begin{figure}[H]
+  \centering
+  \begin{lstlisting}
+    public A Foo() { // pure
+      A a = new A();
+      A.Increment(a);
+      return a;
+    }
+
+    public class A {
+      public int value = 0;
+
+      public static void Increment(A a) { // parametrically impure
+        a.value++;
+      }
+    }
+  \end{lstlisting}
+  \caption{Since \texttt{Foo()} modifies a fresh object with a parametrically impure method \texttt{Foo()} is still pure}
+  \label{fig:parametrically-impure-example}
+\end{figure}
+
+A method that is pure, except for modifying the state of its input is considered \textit{parametrically impure}. % TODO: describe example
+
+The key thing in both the example where a method \textit{m} calls locally or parametrically impure methods is that they modify a fresh object, which doesn't affect \textit{m}'s purity level. So as long as the analyzed method \textit{m} or any of its called methods don't perform I/O operations or throw exceptions, \textit{m} is pure.
 
 \subsubsection{Iterators}
 
