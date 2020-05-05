@@ -134,7 +134,7 @@
 
 Functional programming is on the rise and becoming more mainstream~\cite{intertech}. Object oriented (OO) programming has been the industry norm for quite some time now, and for a long time functional programming was considered by developers to only be applicable in academic domains. However it is now becoming popular in the IT industry as well. Many mainstream languages like Java, C\# and C++ have adopted first-class functions from the functional paradigm~\cite{intertech}. Moreover, functional programming can be used for building web applications and mobile apps~\cite{jonas-walter}.
 
-Functional programs have many benefits over purely object oriented ones. Perhaps one of the most useful features of functional programming that the object oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about compared to object oriented ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value~\cite{purity-in-javascript}. Pure functions are also easier to test since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
+Functional programs have many benefits over purely object oriented ones. Perhaps one of the most useful features of functional programming that the object oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about compared to object oriented ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are also easier to test since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
 For this reason it useful in software engineering to evaluate the level of functional purity in programs~\cite{purity-in-javascript}.
 
 C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language by developers? This paper will attempt to answer this by evaluting to what degree functional purity is used in C\# programs today.
@@ -346,24 +346,63 @@ When calling an argument's method, because of inheritance and method overriding 
   \centering
   \begin{lstlisting}
     void f(List<string> x) {
-      x.add("Hello");
+      x.Add("Hello");
     }
   \end{lstlisting}
-  \caption{Since \texttt{x} can be of any subclass of \texttt{List} we can never be sure of \texttt{x.add()}'s implementation.}
+  \caption{Since \texttt{x} can be of any subclass of \texttt{List} we can never be sure of \texttt{x.Add()}'s implementation.}
   \label{fig:inheritance-example}
 \end{figure}
 
-Because the parameter \texttt{x} can be of any subclass of \texttt{List} we can not for sure know the implementation of \texttt{x.add()}, and therefore nor can we be certain of \texttt{x.add()}'s purity. Thus, we can not determine \texttt{f()}'s purity.
+Because the parameter \texttt{x} can be of any subclass of \texttt{List} we can not for sure know the implementation of \texttt{x.Add()}, nor therefore can we be certain of \texttt{x.Add()}'s purity. Thus, we can not determine \texttt{f()}'s purity.
 
 One solution to this that David J. Pearce suggests is to demand that pure methods only are overridden by methods that are also pure~\cite{pearce2011jpure}. Therefore, if a method \textit{m} is overridden by at least one impure method, \textit{m} is assumed to be impure.
 
-This means that in the example in \autoref{fig:inheritance-example}, the function \texttt{f()} is pure iff all methods that override \texttt{List.add()} are pure.
+This means that in the example in \autoref{fig:inheritance-example}, the function \texttt{f()} is pure iff all methods that override \texttt{List.Add()} are pure.
 
-\subsubsection{Modifying a fresh object is not an impure action} \label{sub:modifying-fresh-objects}
+\subsubsection{Modifying a fresh object} \label{sub:modifying-fresh-objects}
 
 If an object \textit{o} is allocated inside the analysed method \textit{m}, the object \textit{o} is said to be \textit{fresh}~\cite{pearce2011jpure}. To modify \textit{o}'s state we might call a method that looks impure (since that method would have the side-effect of modifying \textit{o}). However, this method should not make \textit{m} impure since \textit{o} is fresh, which means that the modification of \textit{o} is not a side-effect of \textit{m}.
 
-*Can this be solved by marking them as \textit{locally impure} and not propagating their impurity to callees?*
+Consider the following example:
+
+\begin{figure}[H]
+  \centering
+  \begin{lstlisting}
+    public List<String> Foo() {
+      List<String> list = new List<String>();
+      list.Add("hello"); // this changes list's state
+      return list;
+    }
+  \end{lstlisting}
+  \caption{TODO}
+  \label{fig:fresh-object-example}
+\end{figure}
+
+Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side-effect, \texttt{Add()} cannot be a pure method. Does that mean that since the function \texttt{Foo()} calling \texttt{list.Add()} is impure, because it calls a non-pure method? In general functions that invoce impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{sub:Definition of functional purity}:
+
+\textit{A function is pure if it is side-effect free and deterministic}.
+
+Because the function \texttt{Foo()} only modifies an object exclusively visible inside the function, \texttt{Foo()} does not have any side-effect. Nor is the function non-deterministic since it does not read any value outside of the function besides its parameters, which it in this case doesn't have. This means that \texttt{Foo()} is pure.
+
+To solve this we introduce the purity level \textit{locally impure}. Any method that is pure except for reading or modifying its object's fields is locally impure.
+
+\begin{figure}[H]
+  \centering
+  \begin{lstlisting}
+    public class List {
+      public string[] values;
+      public int size;
+
+      public void Add(string s) {
+        ... // Increase size of values array
+
+        values[++size] = s; // locally impure action
+      }
+    }
+  \end{lstlisting}
+  \caption{TODO}
+  \label{fig:list-example}
+\end{figure}
 
 \subsubsection{Iterators}
 
