@@ -403,7 +403,7 @@ To solve this we introduce the purity level \textit{locally impure}. Any method 
       }
     }
   \end{lstlisting}
-  \caption{Since \texttt{Foo()} modifies a fresh object with a locally impure method \texttt{Foo()} is still pure}
+  \caption{Since \texttt{Foo()} modifies a fresh object with a locally impure method \texttt{Foo()} is still pure.}
   \label{fig:locally-impure-example}
 \end{figure}
 
@@ -428,17 +428,17 @@ There is however one more way to modify a fresh object: to pass it as an argumen
       }
     }
   \end{lstlisting}
-  \caption{Since \texttt{Foo()} modifies a fresh object with a parametrically impure method \texttt{Foo()} is still pure}
+  \caption{Since \texttt{Foo()} modifies a fresh object with a parametrically impure method \texttt{Foo()} is still pure.}
   \label{fig:parametrically-impure-example}
 \end{figure}
 
-A method that is pure, except for modifying the state of its input is considered \textit{parametrically impure}. % TODO: describe example
+Because the method \texttt{Increment()} in \autoref{fig:parametrically-impure-example} modifies its input parameter object it cannot be considered truly pure. However, since \texttt{Foo()} uses \texttt{Increment()} to modify a fresh object \texttt{Foo()} is still pure. I have chosen to categorize methods that are pure except for modifying the state of its input as \textit{parametrically impure}. % TODO: describe example
 
-The key thing in both the example where a method \textit{m} calls locally or parametrically impure methods is that they modify a fresh object, which doesn't affect \textit{m}'s purity level. So as long as the analyzed method \textit{m} or any of its called methods don't perform I/O operations or throw exceptions, \textit{m} is pure.
+The key thing in both the example where a method \textit{m} calls locally and parametrically impure methods is that they modify a fresh object, which therefore doesn't affect \textit{m}'s purity level. So as long as the analyzed method \textit{m} or any of its called methods don't perform any truly impure action like I/O operations or throw exceptions, \textit{m} is pure.
 
 \subsubsection{Iterators}
 
-*This part is probably not relevant because my definition of purity includes determinism. Do I mention this or just delete this part?*
+% This part is probably not relevant because my definition of purity includes determinism. Do I mention this or just delete this part?
 
 As Pearce suggests, an iterator may at first glance look pure~\cite{pearce2011jpure}. Consider the following (\href{https://docs.microsoft.com/en-us/archive/msdn-magazine/2017/april/essential-net-understanding-csharp-foreach-internals-and-custom-iterators-with-yield}{link}):
 
@@ -454,9 +454,11 @@ As Pearce suggests, an iterator may at first glance look pure~\cite{pearce2011jp
   \label{fig:iterator-example}
 \end{figure}
 
+TODO: explain that this doesn't affect us because our definition of purity includes determinism
+
 \subsection{The Analysis} \label{sub:Analysis}
 \begin{itemize}
-  \item There are three kinds of purity levels: \textit{pure}, \textit{impure}, and \textit{unknown}.
+  \item There are five kinds of purity levels: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}.
   \item Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} of each function, i.e. the set of calls inside the function.
     Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. % For each function analyzed, add the identifier of any modified object field or property ... TODO
   \item If any field or property of the currently analyzed method's object is read from or modified, mark it as impure. TODO
@@ -481,7 +483,6 @@ Solution: if a called method \textit{m} is (locally) impure, only mark \textit{m
 % A method that calls a locally impure method belonging to its input parameter? -- doesn't matter?
 
 % This solution doesn't always work however, becausee called method could modify a field of a static class. Therefore, any method that calls a static and impure method is definitely impure, and its impurity should be propagated to all its callees upwards through the syntax tree. (perhaps use an extra impurity level called \textit{globally impure}?) Since static classes cannot be instantiated, they can never have been instantiated inside the callee.
-
 
 \subsection{Code base} \label{sub:Code base}
 \textbf{Mostly pure code}
