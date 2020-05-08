@@ -432,9 +432,41 @@ There is however one more way to modify a fresh object: to pass it as an argumen
   \label{fig:parametrically-impure-example}
 \end{figure}
 
-Because the method \texttt{Increment()} in \autoref{fig:parametrically-impure-example} modifies its input parameter object it cannot be considered truly pure. However, since \texttt{Foo()} uses \texttt{Increment()} to modify a fresh object \texttt{Foo()} is still pure. I have chosen to categorize methods that are pure except for modifying the state of its input as \textit{parametrically impure}. % TODO: describe example
+Because the method \texttt{Increment()} in \autoref{fig:parametrically-impure-example} modifies its input parameter object it cannot be considered truly pure. However, since \texttt{Foo()} uses \texttt{Increment()} to modify a fresh object \texttt{Foo()} is still pure. I have chosen to categorize methods that are pure except for modifying the state of its input as \textit{parametrically impure}.
 
 The key thing in both the example where a method \textit{m} calls locally and parametrically impure methods is that they modify a fresh object, which therefore doesn't affect \textit{m}'s purity level. So as long as the analyzed method \textit{m} or any of its called methods don't perform any truly impure action like I/O operations or throw exceptions, \textit{m} is pure.
+
+What if a an object's method is both locally and parametrically impure? Just like in the previous cases, as long as the object is fresh the purity of the callee is not affected.
+
+\subsubsection{Modifying a value received from constructor} \label{sub:Modifying a value received from constructor}
+\begin{figure}[H]
+  \centering
+  \begin{lstlisting}
+    public class Program {
+      public List<String> myList = new List<String>();
+
+      public void Foo() {
+        A b = new A(myList);
+        b.Bar(); // calling b.Bar() will cause myList to change
+      }
+
+      public class A {
+        public List<String> list;
+
+        public A(List<String> list) {
+          this.list = list;
+        }
+
+        public void Bar() {
+          list.Add("foo"); // looks locally impure, but it modifies constructor object
+        }
+      }
+    }
+  \end{lstlisting}
+  \caption{\texttt{ListHas()} may at first glance look pure}
+  \label{fig:constructor-value-example}
+\end{figure}
+
 
 \subsubsection{Iterators}
 
@@ -456,7 +488,7 @@ As Pearce suggests, an iterator may at first glance look pure~\cite{pearce2011jp
 
 TODO: explain that this doesn't affect us because our definition of purity includes determinism
 
-\subsection{The Analysis} \label{sub:Analysis}
+\subsection{The analysis} \label{sub:Analysis}
 \begin{itemize}
   \item There are five kinds of purity levels: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}.
   \item Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} of each function, i.e. the set of calls inside the function.
@@ -469,20 +501,16 @@ TODO: explain that this doesn't affect us because our definition of purity inclu
   \item If the analysis finds a call or reference to a compiled method or a field, mark its purity as \textit{unknown}.
 \end{itemize}
 
-If we modify a list that was created inside a method \textit{m}, say by calling the function \texttt{list.append()}, \textit{m} may look like it has a side-effect, even though it hasn't. Discussed in \autoref{sub:modifying-fresh-objects}.
+% If we modify a list that was created inside a method \textit{m}, say by calling the function \texttt{list.append()}, \textit{m} may look like it has a side-effect, even though it hasn't. Discussed in \autoref{sub:modifying-fresh-objects}.
 
-Solution: if a called method \textit{m} is (locally) impure, only mark \textit{m}'s callee \textit{M} as impure if the object which \textit{m} belongs to was not created inside the callee \textit{M}. %  This means that if \textit{m}
+If a called method \textit{m} is locally impure, only mark \textit{m}'s callee \textit{M} as impure if the object which \textit{m} belongs to was not created inside the callee \textit{M}. %  This means that if \textit{m}
 *Does this really work for all cases?*
 
-% However, a method \textit{m} (static or non-static) that modifies an object it receives as input argument shouldn't make the callee of \textit{m} impure if the callee created the object. % I.e. a method that modifies its argument is not impure.
+Methods are marked parametrically impure if they:
+- Modify a field of some a parameter
+- Modify an input parameter by calling a locally impure method on it
 
-% Solution: Add additional impurity level: \textit{Parametrically impure} -- methods that have no side-effects besides modifying their input parameters. % This term is used by Microsoft in an article on refactoring C\# code into pure functions~\cite{microsoft-refactoring}.
-
-% A method \textit{m} that calls a parametrically impure method of an object is pure if the object was created by \textit{m}.
-
-% A method that calls a locally impure method belonging to its input parameter? -- doesn't matter?
-
-% This solution doesn't always work however, becausee called method could modify a field of a static class. Therefore, any method that calls a static and impure method is definitely impure, and its impurity should be propagated to all its callees upwards through the syntax tree. (perhaps use an extra impurity level called \textit{globally impure}?) Since static classes cannot be instantiated, they can never have been instantiated inside the callee.
+A method \textit{m} that calls a locally impure method of an object is not marked impure if the object was fresh, i.e. created by \textit{m}.
 
 \subsection{Code base} \label{sub:Code base}
 \textbf{Mostly pure code}
