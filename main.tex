@@ -384,7 +384,7 @@ Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the s
 
 Because the function \texttt{Foo()} only modifies an object exclusively visible inside the function, \texttt{Foo()} does not have any side-effect. Nor is the function non-deterministic since it does not read any value outside of the function besides its parameters, which it in this case doesn't have. This means that \texttt{Foo()} is pure.
 
-To solve this we introduce the purity level \textit{locally impure}. Any method that is pure except for reading or modifying its object's fields is locally impure. Consider the following:
+To solve this we introduce the purity level \textit{locally impure}. Any method that is pure except for reading or modifying its object's fields is locally impure. This includes methods that return \texttt{this} or pass \texttt{this} as an argument to a function. Consider the following:
 
 \begin{figure}[H]
   \centering
@@ -432,45 +432,15 @@ There is however one more way to modify a fresh object: to pass it as an argumen
   \label{fig:parametrically-impure-example}
 \end{figure}
 
-Because the method \texttt{Increment()} in \autoref{fig:parametrically-impure-example} modifies its input parameter object it cannot be considered truly pure. However, since \texttt{Foo()} uses \texttt{Increment()} to modify a fresh object \texttt{Foo()} is still pure. I have chosen to categorize methods that are pure except for modifying the state of its input as \textit{parametrically impure}.
+Because the method \texttt{Increment()} in \autoref{fig:parametrically-impure-example} modifies its input parameter object it cannot be considered truly pure. However, since \texttt{Foo()} uses \texttt{Increment()} to modify a fresh object \texttt{Foo()} is still pure. I have chosen to categorize methods that are pure except for modifying the state of its input as \textit{parametrically impure}. There are two ways for a method to modify its input parameters: either by mutating a value belonging to a reference type input parameter, i.e. an object's field or property, or the cell of an array; or by calling a locally impure method belonging to a parameter object.
 
 The key thing in both the example where a method \textit{m} calls locally and parametrically impure methods is that they modify a fresh object, which therefore doesn't affect \textit{m}'s purity level. So as long as the analyzed method \textit{m} or any of its called methods don't perform any truly impure action like I/O operations or throw exceptions, \textit{m} is pure.
 
 What if a an object's method is both locally and parametrically impure? Just like in the previous cases, as long as the object is fresh the purity of the callee is not affected.
 
-\subsubsection{Modifying a value received from constructor} \label{sub:Modifying a value received from constructor}
-\begin{figure}[H]
-  \centering
-  \begin{lstlisting}
-    public class Program {
-      public List<String> myList = new List<String>();
-
-      public void Foo() {
-        A b = new A(myList);
-        b.Bar(); // calling b.Bar() will cause myList to change
-      }
-
-      public class A {
-        public List<String> list;
-
-        public A(List<String> list) {
-          this.list = list;
-        }
-
-        public void Bar() {
-          list.Add("foo"); // looks locally impure, but it modifies constructor object
-        }
-      }
-    }
-  \end{lstlisting}
-  \caption{\texttt{ListHas()} may at first glance look pure}
-  \label{fig:constructor-value-example}
-\end{figure}
-
-
 \subsubsection{Iterators}
 
-% This part is probably not relevant because my definition of purity includes determinism. Do I mention this or just delete this part?
+% This part is probably not relevant because my definition of purity includes determinism. Do I mention this or just delete this part? -- mention it
 
 As Pearce suggests, an iterator may at first glance look pure~\cite{pearce2011jpure}. Consider the following (\href{https://docs.microsoft.com/en-us/archive/msdn-magazine/2017/april/essential-net-understanding-csharp-foreach-internals-and-custom-iterators-with-yield}{link}):
 
@@ -493,22 +463,28 @@ TODO: explain that this doesn't affect us because our definition of purity inclu
   \item There are five kinds of purity levels: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}.
   \item Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} of each function, i.e. the set of calls inside the function.
     Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. % For each function analyzed, add the identifier of any modified object field or property ... TODO
-  \item If any field or property of the currently analyzed method's object is read from or modified, mark it as impure. TODO
-  \item As discussed in \autoref{sub:inheritance}, the currently analyzed method \textit{m} is overridden by any impure method, mark \textit{m} as impure.
-  \item If a method returns \texttt{this} it should be considered impure since it is dependent on the state of its object, making it non-deterministic.
+  \item If any object field or property of the currently analyzed method \textit{m}'s object is read from or modified, mark \textit{m} as locally impure.
+  \item If the analyzed method \textit{m} modifies an input parameter of reference type, mark \textit{m} as parametrically impure. This could be done either by mutating a parameter object's field, a parameter object's property or the cell of a parameter array, or by calling a locally impure method belonging to an object type parameter.
+  \item If the currently analyzed method \textit{m} is overridden by any impure, locally impure and/or parametrically impure method, mark \textit{m} with the impurity or impurities of the overriding method or methods.
+    % TODO: shouldn't we rather check if the method called on a parameter is overridden? I.e. if a parameter's method is called, require all implementations of it to be pure
+  \item If a method returns \texttt{this} or passes it as an argument to a function it should be considered locally impure since it is dependent on the state of its object, making it non-deterministic.
   \item Any method that raises an event or an exception is marked as \textit{impure}.
   % \item Build a lookup table with all evaluated functions, their purity and their dependency set~\cite{pitidis2010purity}.
-  \item If the analysis finds a call or reference to a compiled method or a field, mark its purity as \textit{unknown}.
+  \item If the analysis finds a call or reference to a compiled method or a field, or any other method that we cannot determine the purity of, mark its purity as \textit{unknown}.
+  \item If a the method \textit{m} calls a locally impure method belonging to the same object as \textit{m} (i.e. \texttt{this}) \textit{m} is also impure
 \end{itemize}
 
-% If we modify a list that was created inside a method \textit{m}, say by calling the function \texttt{list.append()}, \textit{m} may look like it has a side-effect, even though it hasn't. Discussed in \autoref{sub:modifying-fresh-objects}.
-
 If a called method \textit{m} is locally impure, only mark \textit{m}'s callee \textit{M} as impure if the object which \textit{m} belongs to was not created inside the callee \textit{M}. %  This means that if \textit{m}
-*Does this really work for all cases?*
 
-Methods are marked parametrically impure if they:
-- Modify a field of some a parameter
-- Modify an input parameter by calling a locally impure method on it
+*Do we even have check if objects are fresh? If they aren't, then we've read from a field outside the method, i.e. \textit{m} is non-deterministic i.e. locally impure.*
+
+
+% Method m is marked parametrically impure if it:
+% - Modifies a value of a reference type input parameter
+%   - The field of an object
+%   - Or the cell of an array
+% - Modifies an input parameter object by calling a method belonging to it that is locally impure
+%   - If at least one of the overridden methods is locally impure, then m is parametrically impure
 
 A method \textit{m} that calls a locally impure method of an object is not marked impure if the object was fresh, i.e. created by \textit{m}.
 
