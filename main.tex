@@ -463,18 +463,27 @@ TODO: explain that this doesn't affect us because our definition of purity inclu
   \item There are five kinds of purity levels: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}.
   \item Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} of each function, i.e. the set of calls inside the function.
     Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. % For each function analyzed, add the identifier of any modified object field or property ... TODO
+
+    Function identifier (\textit{f}):
+    \begin{itemize}
+      \item \textit{f}'s dependency set $D_f$ % Because of inheritance this is difficult to construct (maybe mention?), maybe not use this whole table thing
+      \item Variables read
+      \item Variables assigned to
+      \item \textit{f}'s purity level \textit{p}
+    \end{itemize}
   \item If any object field or property of the currently analyzed method \textit{m}'s object is read from or modified, mark \textit{m} as locally impure.
   \item If the currently analyzed method \textit{m} calls an input parameter's method $m_p$ and $m_p$ is overridden by any impure, locally impure and/or parametrically impure method, mark $m_p$ with the impurity or impurities of the overriding method or methods. % Moreover:
     % \begin{itemize} % Maybe these are covered by other cases?
     %   \item If $m_p$ is overridden by any impure method, \textit{m} is marked impure.
     %   \item If $m_p$ is overridden by any locally impure method, \textit{m} is marked parametrically impure.
     % \end{itemize}
-  \item If the analyzed method \textit{m} modifies an input parameter of reference type, mark \textit{m} as parametrically impure. This could be done either by directly mutating a parameter object's field, a parameter object's property or the cell of a parameter array, by calling a % (overriding comes in here)
-    method that has been marked locally impure and that belongs to an object type parameter (i.e. the called method may have been overridden by a locally impure method as mentioned previously), or by passing a parameter as an argument to a parametrically impure method. I.e.:
+  \item If the analyzed method \textit{m} modifies an input parameter of reference type, mark \textit{m} as parametrically impure. This could be done in a couple of ways:
     \begin{itemize}
-      \item If any of \textit{m}'s input parameters are passed as an argument to a parametrically impure method, then \textit{m} is parametrically impure
-      \item
+      \item By directly mutating a parameter object's field or property, or the cell of a parameter array.
+      \item By calling an object type parameter's method that has been marked locally impure, i.e. the called method may have been overridden by a locally impure method as mentioned previously.
+      \item By passing a parameter as an argument to a parametrically impure method.
     \end{itemize}
+    If \textit{m} does at least one of the above, mark it as parametrically impure.
   \item If a method returns \texttt{this} or passes it as an argument to a function it should be considered locally impure since it is dependent on the state of its object, making it non-deterministic.
   \item Any method that raises an event or an exception is marked as \textit{impure}.
   % \item Build a lookup table with all evaluated functions, their purity and their dependency set~\cite{pitidis2010purity}.
@@ -485,15 +494,6 @@ TODO: explain that this doesn't affect us because our definition of purity inclu
 If a called method \textit{m} is locally impure, only mark \textit{m}'s callee \textit{M} as impure if the object which \textit{m} belongs to was not created inside the callee \textit{M}. %  This means that if \textit{m}
 
 *Do we even have check if objects are fresh? If they aren't, then we've read from a field outside the method, i.e. \textit{m} is non-deterministic i.e. locally impure.*
-% We do however have to check if methods belonging to input parameters are impure or locally impure
-
-
-% Method m is marked parametrically impure if it:
-% - Modifies a value of a reference type input parameter
-%   - The field of an object
-%   - Or the cell of an array
-% - Modifies an input parameter object by calling a method belonging to it that is locally impure
-%   - If at least one of the overridden methods is locally impure, then m is parametrically impure
 
 A method \textit{m} that calls a locally impure method of an object is not marked impure if the object was fresh, i.e. created by \textit{m}.
 
@@ -606,6 +606,9 @@ The language that their analyzer handles is a subset of Java, in which they can 
 If its class is immutable it means that a method's global scope has a constant state, and so the only varying state is the one observable through its arguments~\cite{purity-in-java}.
 
 Their verifier has a white list of fields and methods from Java libraries that do not expose the ability to observe a global mutable state, or provide access to nondeterminism, and it will reject any reference to a field or method that is not on the list~\cite{purity-in-java}.
+
+\subsection{Dynamic Purity Analysis For Java Programs} \label{sub:Dynamic Purity Analysis For Java Programs}
+TODO
 
 \section{Future Work and Conclusion} \label{sec:Conclusion and future Work}
 \subsection{Future work} \label{sub:Future work}
