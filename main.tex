@@ -338,9 +338,9 @@ Events are a way for classes or object to notify other classes or objects when s
 
 \subsection{Problems with determining purity in object oriented languages} \label{sub:Problems with determining purity in object oriented languages}
 
-\subsubsection{Inheritance} \label{sub:inheritance}
+\subsubsection{Inheritance and method overriding} \label{sub:inheritance}
 
-When calling an argument's method, because of inheritance and method overriding we can never be sure of which method implementation will be called. Consider the following example~\cite{pearce2011jpure}:
+When calling an object parameter's method, because of inheritance and method overriding we can never be sure of which method implementation will be called. Consider the following example~\cite{pearce2011jpure}:
 
 \begin{figure}[H]
   \centering
@@ -458,19 +458,59 @@ As Pearce suggests, an iterator may at first glance look pure~\cite{pearce2011jp
 
 TODO: explain that this doesn't affect us because our definition of purity includes determinism
 
+\subsubsection{Non-static property pointing to a static field} \label{ssub:non-static-property}
+\textit{Properties} in C\# are special \texttt{get} and \texttt{set} methods for reading, computing or writing to values of object fields~\cite{microsoft-properties}. Properties can, just like other fields or methods be set to \texttt{static}, which means that they are assigned to the class rather than any instantiated object. If a method reads from or modifies a static property, that method would be considered to be non-determinsitc or to have a side-effect, i.e. it would be impure, because static fields are accessible anywhere in a program.
+
+However, properties can also be non-static but still read or modify static fields. Consider the following:
+
+\begin{figure}[H]
+  \centering
+  \begin{lstlisting}
+    public class Foo {
+      public Swede gert = new Swede();
+
+      public void Bar() {
+        Swede stina = new Swede();
+        stina.Nationality = "Norway"; // assignment to non-static field
+
+        Console.WriteLine(gert.Nationality); // prints "Norway"
+      }
+
+      public class Swede {
+        static string nationality = "Sweden"; // This field is static
+
+        public string Nationality { // This property is non-static
+          get { return nationality; }
+          set { nationality = value; }
+        }
+      }
+    }
+  \end{lstlisting}
+  \caption{What looks like a non-static assignment to an object property does in fact mutate a static field, which is a clear side-effect of \texttt{Bar()}}
+  \label{fig:non-static-property-example}
+\end{figure}
+
+In the example in \autoref{fig:non-static-property-example}, the method \texttt{Bar()} assigns to the field \texttt{Nationality} of the fresh object \texttt{stina}. Because the property \texttt{Nationality} is non-static it, it might look like a pure action at a first glance. But since the property writes method \texttt{get} itself modifies a static field, the \texttt{Bar()}'s assignment to \texttt{Nationality} is in fact a side-effect, which alterse all \texttt{Swede} objects' \texttt{Nationality}. Therefore, it is not enough to check if a property is static in order to determine whether a read or write is pure, but the property's \texttt{get} and \texttt{set} have to be checked as well.
+
+*Perhaps ignore cases like this for simplicity?*
+
 \subsection{The analysis} \label{sub:Analysis}
 \begin{itemize}
   \item There are five kinds of purity levels: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}.
   \item Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} of each function, i.e. the set of calls inside the function.
+    Because of the problem with inheritance and method overriding discussed in \autoref{sub:inheritance}, when calling a an object parameter's method $m_p$ we cannot know which method implementation will be called if the parameter type has subclasses that override $m_p$. Therefore when going through the AST and building the dependency set, if such an overriden parameter method is encountered, add all the overridden methods to the calling function's dependency set.
     Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. % For each function analyzed, add the identifier of any modified object field or property ... TODO
 
     Function identifier (\textit{f}):
     \begin{itemize}
-      \item \textit{f}'s dependency set $D_f$ % Because of inheritance this is difficult to construct (maybe mention?), maybe not use this whole table thing
-      \item Variables read
-      \item Variables assigned to
+      \item \textit{f}'s dependency set $D_f$
+      \item Fields or properties read by \textit{f}
+      \item Fields or properties assigned to by \textit{f}
       \item \textit{f}'s purity level \textit{p}
     \end{itemize}
+
+    After constructing the lookup table, start by analyzing the functions with empty dependency sets $D_f$... TODO
+
   \item If any object field or property of the currently analyzed method \textit{m}'s object is read from or modified, mark \textit{m} as locally impure.
   \item If the currently analyzed method \textit{m} calls an input parameter's method $m_p$ and $m_p$ is overridden by any impure, locally impure and/or parametrically impure method, mark $m_p$ with the impurity or impurities of the overriding method or methods. % Moreover:
     % \begin{itemize} % Maybe these are covered by other cases?
@@ -488,7 +528,8 @@ TODO: explain that this doesn't affect us because our definition of purity inclu
   \item Any method that raises an event or an exception is marked as \textit{impure}.
   % \item Build a lookup table with all evaluated functions, their purity and their dependency set~\cite{pitidis2010purity}.
   \item If the analysis finds a call or reference to a compiled method or a field, or any other method that we cannot determine the purity of, mark its purity as \textit{unknown}.
-  \item If a the method \textit{m} calls a locally impure method belonging to the same object as \textit{m} (i.e. \texttt{this}) \textit{m} is also impure
+  \item If the method \textit{m} calls a locally impure method belonging to the same object as \textit{m} (i.e. \texttt{this}) \textit{m} is also impure
+  \item If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked impure. This is because reading a static field of an object is a non-deterministic action, and modifying a static field of an object is a side-effect since it mutates the field for all instantiations of that object's class. % TODO: reading a or modifying a non-static property which points to a static field.
 \end{itemize}
 
 If a called method \textit{m} is locally impure, only mark \textit{m}'s callee \textit{M} as impure if the object which \textit{m} belongs to was not created inside the callee \textit{M}. %  This means that if \textit{m}
