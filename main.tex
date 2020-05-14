@@ -378,7 +378,7 @@ Consider the following example:
   \label{fig:fresh-object-example}
 \end{figure}
 
-Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side-effect, \texttt{Add()} cannot be a pure method. Does that mean that since the function \texttt{Foo()} calling \texttt{list.Add()} is impure, because it calls a non-pure method? In general functions that invoce impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{sub:Definition of functional purity}:
+Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side-effect of \texttt{Add()}, \texttt{Add()} cannot be a pure method. Does that mean that the function \texttt{Foo()} calling \texttt{list.Add()} is also impure, because it calls a non-pure method? In general functions that invoce impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{sub:Definition of functional purity}:
 
 \textit{A function is pure if it is side-effect free and deterministic}.
 
@@ -495,23 +495,30 @@ In the example in \autoref{fig:non-static-property-example}, the method \texttt{
 *Perhaps ignore cases like this for simplicity?*
 
 \subsection{The analysis} \label{sub:Analysis}
+There are five kinds of funcitonal purity levels for: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}.
+
+Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function.
+Because of the problem with inheritance and method overriding discussed in \autoref{sub:inheritance},
+% when calling a an object parameter's method $m_p$ we cannot know which method implementation will be called if the parameter type has subclasses that override $m_p$. Therefore
+when going through the AST and building the dependency set, if any object parameter's method is overridden by any of its subclasses, add all the overridden methods to the calling function's dependency set.
+Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. % For each function analyzed, add the identifier of any modified object field or property ... TODO
+
+Function identifier (\textit{f}):
 \begin{itemize}
-  \item There are five kinds of purity levels: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}.
-  \item Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} of each function, i.e. the set of calls inside the function.
-    Because of the problem with inheritance and method overriding discussed in \autoref{sub:inheritance}, when calling a an object parameter's method $m_p$ we cannot know which method implementation will be called if the parameter type has subclasses that override $m_p$. Therefore when going through the AST and building the dependency set, if such an overriden parameter method is encountered, add all the overridden methods to the calling function's dependency set.
-    Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. % For each function analyzed, add the identifier of any modified object field or property ... TODO
+  \item \textit{f}'s dependency set $D_f$ (including overridden parameter methods).
+  \item Fields or properties read by \textit{f} that belong to \textit{f}'s object \texttt{this}. % if any field is static, \textit{f} is impure
+  \item Fields or properties assigned to by \textit{f} that belong to \textit{f}'s object \texttt{this}.
+  \item \textit{f}'s purity level \textit{p} (initialized to \textit{pure}).
+\end{itemize}
 
-    Function identifier (\textit{f}):
-    \begin{itemize}
-      \item \textit{f}'s dependency set $D_f$
-      \item Fields or properties read by \textit{f}
-      \item Fields or properties assigned to by \textit{f}
-      \item \textit{f}'s purity level \textit{p}
-    \end{itemize}
+After constructing the lookup table, start by analyzing the functions with empty dependency sets $D_f$s. These functions are the \textit{working set} \textit{W}.
+Calculate the purity level \textit{p} for each function in \textit{W} as described below. Then, for each function \textit{f} in the working set with the purity level \textit{impure}, propagate that impurity to the functions dependant on \textit{f}, and remove \textit{f} from those functions' dependency sets. % TODO is it enough to only propagate p = impure?
 
-    After constructing the lookup table, start by analyzing the functions with empty dependency sets $D_f$... TODO
+TODO
 
+\begin{itemize}
   \item If any object field or property of the currently analyzed method \textit{m}'s object is read from or modified, mark \textit{m} as locally impure.
+  \item If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked impure. This is because reading a static field of an object is a non-deterministic action, and modifying a static field of an object is a side-effect since it mutates the field for all instantiations of that object's class. % TODO: reading a or modifying a non-static property which points to a static field.
   \item If the currently analyzed method \textit{m} calls an input parameter's method $m_p$ and $m_p$ is overridden by any impure, locally impure and/or parametrically impure method, mark $m_p$ with the impurity or impurities of the overriding method or methods. % Moreover:
     % \begin{itemize} % Maybe these are covered by other cases?
     %   \item If $m_p$ is overridden by any impure method, \textit{m} is marked impure.
@@ -529,14 +536,13 @@ In the example in \autoref{fig:non-static-property-example}, the method \texttt{
   % \item Build a lookup table with all evaluated functions, their purity and their dependency set~\cite{pitidis2010purity}.
   \item If the analysis finds a call or reference to a compiled method or a field, or any other method that we cannot determine the purity of, mark its purity as \textit{unknown}.
   \item If the method \textit{m} calls a locally impure method belonging to the same object as \textit{m} (i.e. \texttt{this}) \textit{m} is also impure
-  \item If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked impure. This is because reading a static field of an object is a non-deterministic action, and modifying a static field of an object is a side-effect since it mutates the field for all instantiations of that object's class. % TODO: reading a or modifying a non-static property which points to a static field.
 \end{itemize}
 
-If a called method \textit{m} is locally impure, only mark \textit{m}'s callee \textit{M} as impure if the object which \textit{m} belongs to was not created inside the callee \textit{M}. %  This means that if \textit{m}
-
-*Do we even have check if objects are fresh? If they aren't, then we've read from a field outside the method, i.e. \textit{m} is non-deterministic i.e. locally impure.*
-
-A method \textit{m} that calls a locally impure method of an object is not marked impure if the object was fresh, i.e. created by \textit{m}.
+To handle the case mentioned in \autoref{sub:modifying-fresh-objects} where fresh objects are modified with their own locally impure methods, we do not have to check if objects modified inside an analyzed method \textit{m} are fresh objects due to the fact that our definition of local purity includes determinism. Because if a non-fresh object \textit{o} is modified with its locally impure method, then we must have read the pointer to \textit{o} from a field outside the method, meaning that \textit{m} is non-deterministic and therefore locally impure. There are two exceptions to this, which are covered by previous checks in our analysis:
+\begin{itemize}
+  \item The case of \textit{o} being a static field of an instantiated object has to be checked.
+  \item The case of \textit{o} being a parameter to \textit{m} however has to be checked - parametrical impurity.
+\end{itemize}
 
 \subsection{Code base} \label{sub:Code base}
 \textbf{Mostly pure code}
