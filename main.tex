@@ -137,7 +137,7 @@ Functional programming is on the rise and becoming more mainstream~\cite{interte
 Functional programs have many benefits over purely object oriented ones. Perhaps one of the most useful features of functional programming that the object oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about compared to object oriented ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are also easier to test since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
 For this reason it useful in software engineering to evaluate the level of functional purity in programs~\cite{purity-in-javascript}.
 
-C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language by developers? This paper will attempt to answer this by evaluting to what degree functional purity is used in C\# programs today.
+C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language by developers? This paper will attempt to answer this by evaluating to what degree functional purity is used in C\# programs today.
 
 % Yannis Smaragdakis and Brian McNamara showed that there are ways of converting the common OO design patterns Command, Observer, Adaptor, Visitor and Virtual Proxy in C++ to functional programs using FC++ -- a library that adds many functional features to C++~\cite{yannis-smaragdakis}. Would this kind of transformation be useful for programs written in C\#? If C\# is not currently being used primarily as a functional programming language, this tool could be useful to programmers that want to refactor an existing OO program to a functional one.
 
@@ -189,8 +189,8 @@ Following are definitions of functional and objected oriented programming respec
   % \item Functions can be locally pure and/or globally pure https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/linq/refactoring-into-pure-functions
   \item Control flow analysis
   % \item Could talk about Haskell in which all functions are pure and all values are immutable
-  \item Sometimes we call compiled methods, i.e. methods that we don’t have the code for, e.g. the .NET framework base class library (BCL)
-  \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/delegates/}{Delegates} and \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/statements-expressions-operators/anonymous-functions}{anomynous functions}.
+  \item Sometimes we call compiled methods, i.e. methods that we don't have the code for, e.g. the .NET framework base class library (BCL)
+  \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/delegates/}{Delegates} and \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/statements-expressions-operators/anonymous-functions}{anonymous functions}.
   \item Implicit and explicit variable declarations (C\# handles both)
   \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/inside-a-program/identifier-names}{Identifiers} are the names of types, members variables or namespaces used in source code. They reference \href{https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/work-with-semantics#symbols}{symbols}, representing a declared namespace, type, method, field, variable, etc. The compiler's process of associating identifiers with symbols is called \textit{binding}~\cite{microsoft-semantic-analysis}. % TODO explain symbols and identifiers
   \item Closures and how objects can be considered closures (if fields are \texttt{readonly}?), and whether or not they should be considered pure.
@@ -272,8 +272,7 @@ Following are more technical requirements for C\# programs to be pure that are u
   \item Functions that involve input/output (I/O) are impure.
 \end{itemize}
 
-Function parameters preceded with the \texttt{in} keyword are passed by reference and read-only inside the function~\cite{microsoft-in-modifier}. % This means that \texttt{in} parameters do not need to be checked (TODO: does this apply to data structures like lists?)
-This means that input parameters marked with \texttt{in} cannot be re-assigned inside the function, which may suggest functional purity. Consider the example in \autoref{fig:in-example1}, where the parameter \texttt{number} is preceded by the \texttt{in} keyword. Because of this, modifying it inside the function will raise an error.
+Function parameters preceded with the \texttt{in} keyword are passed by reference and read-only inside the function~\cite{microsoft-in-modifier}. This means that input parameters marked with \texttt{in} cannot be re-assigned inside the function, which may suggest functional purity. Consider the example in \autoref{fig:in-example1}, where the parameter \texttt{number} is preceded by the \texttt{in} keyword. Because of this, modifying it inside the function will raise an error.
 
 \begin{figure}[H]
   \centering
@@ -291,7 +290,7 @@ This means that input parameters marked with \texttt{in} cannot be re-assigned i
   \label{fig:in-example1}
 \end{figure}
 
-However, \texttt{in} is note a purity guarantee. Consider the example in \autoref{fig:in-example2}. The \texttt{in} keyword before the argument \texttt{list} ensures that \texttt{list} is readonly. This prevents \texttt{list} from being re-assigned after instantiation, but it doesn't prevent the data structure which \texttt{list} refers to from being modified~\cite{buchanan-static-lists}. In C\# there are two kinds of types: \textit{value types} and \textit{reference types}~\cite{microsoft-types}. Value types directly contain their data, while reference types -- also known as objects -- are simply pointers that refer to the location of their data. The \texttt{in} keyword therefore only implies purity if applied to a variable of a value type. For the function to be pure all its parameters have to be value types and preceded with the \texttt{in} keyword. Even though strings are of the reference type they are immutable, meaning that they cannot be modified after being created~\cite{microsoft-strings}. Therefore the same thing that in this case applies to value types also applies to strings.
+However, \texttt{in} is not a purity guarantee. Consider the example in \autoref{fig:in-example2}. The \texttt{in} keyword before the argument \texttt{list} ensures that \texttt{list} is readonly. This prevents \texttt{list} from being re-assigned after instantiation, but it doesn't prevent the data structure which \texttt{list} refers to from being modified~\cite{buchanan-static-lists}. In C\# there are two kinds of types: \textit{value types} and \textit{reference types}~\cite{microsoft-types}. Value types directly contain their data, while reference types -- also known as objects -- are simply pointers that refer to the location of their data.  Even though strings are of the reference type they are immutable, meaning that they cannot be modified after being created~\cite{microsoft-strings}. Therefore, value types and strings are passed to methods by value, which means that a method that modifies a value type parameter only modifies it locally, which doesn't affect its purity.
 
 \begin{figure}[H]
   \centering
@@ -310,7 +309,7 @@ However, \texttt{in} is note a purity guarantee. Consider the example in \autore
   \label{fig:in-example2}
 \end{figure}
 
-TODO
+Since the \texttt{in} keyword does not entirely prevent methods modifying their input parameters of reference type, and mutations to parameters of value type are not visible outside of methods regardless of the \texttt{in} keyword, it does not help us to determine the purity of a method.
 
 \subsection{The .NET Abstract Syntax Tree and the CodeAnalysis library} \label{The .NET Abstract Syntax Tree and the CodeAnalysis library}
 
@@ -363,6 +362,8 @@ The following methods that are built into C\# and have side-effects~\cite{dixin2
   \item \texttt{IDisposable.Dispose} interacts with the program's environment.
 \end{itemize}
 
+TODO % these methods can be used as a blacklist of definitively impure methods
+
 \subsection{Problems with determining purity in object oriented languages} \label{sub:Problems with determining purity in object oriented languages}
 
 \subsubsection{Inheritance and method overriding} \label{sub:inheritance}
@@ -405,7 +406,7 @@ Consider the following example:
   \label{fig:fresh-object-example}
 \end{figure}
 
-Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side-effect of \texttt{Add()}, \texttt{Add()} cannot be a pure method. Does that mean that the function \texttt{Foo()} calling \texttt{list.Add()} is also impure, because it calls a non-pure method? In general functions that invoce impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{sub:Definition of functional purity}:
+Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side-effect of \texttt{Add()}, \texttt{Add()} cannot be a pure method. Does that mean that the function \texttt{Foo()} calling \texttt{list.Add()} is also impure, because it calls a non-pure method? In general functions that invoke impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{sub:Definition of functional purity}:
 
 \textit{A function is pure if it is side-effect free and deterministic}.
 
@@ -434,7 +435,7 @@ To solve this we introduce the purity level \textit{locally impure}. Any method 
   \label{fig:locally-impure-example}
 \end{figure}
 
-The method \texttt{Increment()} in \autoref{fig:locally-impure-example} is locally impure because it modifies its object's field \texttt{value} but doesn't have any other side-effects. A function that calls a locally impure method on a fresh object is not contaminated by its local impurity.
+The method \texttt{Increment()} in \autoref{fig:locally-impure-example} is locally impure because it modifies its object's field \texttt{value} but doesn't have any other side-effects. A function that calls a fresh object's locally impure method \textit{m} is not contaminated by \textit{m}'s local impurity.
 
 There is however one more way to modify a fresh object: to pass it as an argument to a method that alters its state. Consider the following example:
 
@@ -461,9 +462,9 @@ There is however one more way to modify a fresh object: to pass it as an argumen
 
 Because the method \texttt{Increment()} in \autoref{fig:parametrically-impure-example} modifies its input parameter object it cannot be considered truly pure. However, since \texttt{Foo()} uses \texttt{Increment()} to modify a fresh object \texttt{Foo()} is still pure. I have chosen to categorize methods that are pure except for modifying the state of its input as \textit{parametrically impure}. There are two ways for a method to modify its input parameters: either by mutating a value belonging to a reference type input parameter, i.e. an object's field or property, or the cell of an array; or by calling a locally impure method belonging to a parameter object.
 
-The key thing in both the example where a method \textit{m} calls locally and parametrically impure methods is that they modify a fresh object, which therefore doesn't affect \textit{m}'s purity level. So as long as the analyzed method \textit{m} or any of its called methods don't perform any truly impure action like I/O operations or throw exceptions, \textit{m} is pure.
+The key thing in both the example where a method \textit{m} calls locally or parametrically impure methods is that they modify a fresh object, which therefore doesn't affect \textit{m}'s purity level. So as long as the analyzed method \textit{m} or any of its called methods don't perform any truly impure action like I/O operations or throw exceptions, \textit{m} is pure.
 
-What if a an object's method is both locally and parametrically impure? Just like in the previous cases, as long as the object is fresh the purity of the caller is not affected.
+What if an object's method is both locally and parametrically impure? Just like in the previous cases, as long as the object is fresh the purity of the caller is not affected.
 
 \subsubsection{Iterators}
 
@@ -487,7 +488,7 @@ As Pearce suggests, an iterator may at first glance look pure~\cite{pearce2011jp
 TODO: explain that this doesn't affect us because our definition of purity includes determinism, or because of the C\# compiler's implementation
 
 \subsubsection{Non-static property pointing to a static field} \label{ssub:non-static-property}
-\textit{Properties} in C\# are special \texttt{get} and \texttt{set} methods for reading, computing or writing to values of object fields~\cite{microsoft-properties}. Properties can, just like other fields or methods be set to \texttt{static}, which means that they are assigned to the class rather than any instantiated object. If a method reads from or modifies a static property, that method would be considered to be non-determinsitc or to have a side-effect, i.e. it would be impure, because static fields are accessible anywhere in a program.
+\textit{Properties} in C\# are special \texttt{get} and \texttt{set} methods for reading, computing or writing to values of object fields~\cite{microsoft-properties}. Properties can, just like other fields or methods be set to \texttt{static}, which means that they are assigned to the class rather than any instantiated object. If a method reads from or modifies a static property, that method would be considered to be non-deterministic or to have a side-effect, i.e. it would be impure, because static fields are accessible anywhere in a program.
 
 However, properties can also be non-static but still read or modify static fields. Consider the following:
 
@@ -518,37 +519,26 @@ However, properties can also be non-static but still read or modify static field
   \label{fig:non-static-property-example}
 \end{figure}
 
-In the example in \autoref{fig:non-static-property-example}, the method \texttt{Bar()} assigns to the field \texttt{Nationality} of the fresh object \texttt{stina}. Because the property \texttt{Nationality} is non-static it, it might look like a pure action at a first glance. But since the property writes method \texttt{get} itself modifies a static field, the \texttt{Bar()}'s assignment to \texttt{Nationality} is in fact a side-effect, which alterse all \texttt{Swede} objects' \texttt{Nationality}. Therefore, it is not enough to check if a property is static in order to determine whether a read or write is pure, but the property's \texttt{get} and \texttt{set} have to be checked as well.
+In the example in \autoref{fig:non-static-property-example}, the method \texttt{Bar()} assigns to the field \texttt{Nationality} of the fresh object \texttt{stina}. Because the property \texttt{Nationality} is non-static it, it might look like a pure action at a first glance. But since the property writes method \texttt{get} itself modifies a static field, the \texttt{Bar()}'s assignment to \texttt{Nationality} is in fact a side-effect, which alters all \texttt{Swede} objects' \texttt{Nationality}. Therefore, it is not enough to check if a property is static in order to determine whether a read or write is pure, but the property's \texttt{get} and \texttt{set} have to be checked as well.
 
 *Perhaps ignore cases like this for simplicity?*
 
 \subsection{The analysis} \label{sub:Analysis}
-There are five kinds of funcitonal purity levels for: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}.
+There are five kinds of functional purity levels for: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}.
 
 Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function. If during the traversal a call or reference to a compiled method or a field is found, mark the caller function's purity as \textit{unknown}.
 
 Because of the problem with inheritance and method overriding discussed in \autoref{sub:inheritance},
-% when calling a an object parameter's method $m_p$ we cannot know which method implementation will be called if the parameter type has subclasses that override $m_p$. Therefore
 when going through the AST and building the dependency set, if any object parameter's method is overridden by any of its subclasses, add all the overridden methods to the calling function's dependency set.
 Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. The purity of each function is initialized to \textit{pure}, except those that were explicitly marked \textit{unknown}.
 
-% Function identifier (\textit{f}):
-% \begin{itemize}
-%   \item \textit{f}'s dependency set $D_f$ (including overridden parameter methods).
-%   % \item Fields or properties read by \textit{f} that belong to \textit{f}'s object \texttt{this}. % if any field is static, \textit{f} is impure
-%   % \item Fields or properties assigned to by \textit{f} that belong to \textit{f}'s object \texttt{this}.
-%   \item \textit{f}'s purity level \textit{p} (initialized to \textit{pure}).
-% \end{itemize}
-
-Let the \textit{working set} \textit{W} be the set of all functions with empty dependency sets. Whenever a function's dependency set becomes empty, that function is added to \textit{W}.
-% After constructing the lookup table, start by analyzing the functions with empty dependency sets. These functions are the \textit{working set} \textit{W}.
-Calculate the purity level for each function in \textit{W} as described below. Then, for each function \textit{f} in the working set with the purity level \textit{impure} or \textit{unknown}, propagate that impurity to the functions dependant on \textit{f}, "contaminating" them, and remove \textit{f} from those functions' dependency sets as well as from the working set \textit{W}. Add functions that now have empty dependency sets to \textit{W}. Repeat this process until there are no more changes to the lookup table.
+Let the \textit{working set} \textit{W} be the set of all functions with empty dependency sets. Whenever a function's dependency set becomes empty, that function is added to \textit{W}. Calculate the purity level for each function in \textit{W} as described below. Then, for each function \textit{f} in the working set with the purity level \textit{impure} or \textit{unknown}, propagate that impurity to the functions dependant on \textit{f}, "contaminating" them, and remove \textit{f} from those functions' dependency sets as well as from the working set \textit{W}. Add functions that now have empty dependency sets to \textit{W}. Repeat this process until there are no more changes to the lookup table.
 
 A method can have multiple impurity levels. The following is how to determine the purity level \textit{p} for the currently analyzed method \textit{m}.
 
 \begin{itemize}
   \item If any object field or property of the currently analyzed method \textit{m}'s object is read from or modified, mark \textit{m} as \textit{locally impure}.
-  \item If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked impure. This is because reading a static field of an object is a non-deterministic action, and modifying a static field of an object is a side-effect since it mutates the field for all instantiations of that object's class. % TODO: reading a or modifying a non-static property which points to a static field.
+  \item If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked impure. This is because reading a static field of an object is a non-deterministic action, and modifying a static field of an object is a side-effect since it mutates the field for all instantiations of that object's class.
   \item If the currently analyzed method \textit{m} calls an input parameter's method $m_p$ and $m_p$ is overridden by any impure, locally impure and/or parametrically impure method, $m_p$ is temporarily marked with the impurities of all the overriding methods in the context of the analysis of the current method \textit{m}. % Moreover:
     % \begin{itemize} % Maybe these are covered by other cases?
     %   \item If $m_p$ is overridden by any impure method, \textit{m} is marked impure.
@@ -639,7 +629,7 @@ TODO
 % By parsing the Abstract Syntax Tree of the code they construct a \textit{dependency set} for each function \textit{f}, i.e. the set of functions being called by \textit{f} ... TODO (page 5 in \cite{pitidis2010purity}).
 
 \subsection{JPure: A Modular Purity System for Java} \label{sub:JPure: A Modular Purity System for Java}
-David J. Pearce built a purity system and analyzer for Java in his paper JPure: a modular purity system for Java~\cite{pearce2011jpure}. The system uses the properties \textit{freshness} and \textit{locality} to increase the the system's ability to classify methods as pure~\cite{pearce2011jpure}. An object is fresh if it is newly allocated inside a method~\cite{pearce2011jpure}. An object's locality is its local state~\cite{pearce2011jpure}. Their definition of a pure method is one that does not assign (directly or indirectly) to any field that exisetd before the method was called~\cite{pearce2011jpure}.
+David J. Pearce built a purity system and analyzer for Java in his paper JPure: a modular purity system for Java~\cite{pearce2011jpure}. The system uses the properties \textit{freshness} and \textit{locality} to increase the system's ability to classify methods as pure~\cite{pearce2011jpure}. An object is fresh if it is newly allocated inside a method~\cite{pearce2011jpure}. An object's locality is its local state~\cite{pearce2011jpure}. Their definition of a pure method is one that does not assign (directly or indirectly) to any field that existed before the method was called~\cite{pearce2011jpure}.
 
 The system uses uses annotations \texttt{@Pure}, \texttt{@Local}, \texttt{@Fresh}. \texttt{@Pure} indicates that a method is pure. \texttt{@Local} indicates that a method only modifies an object's locality. \texttt{@Fresh} indicates that a method only returns fresh objects. These three annotations are modularly checkable, i.e. one method's purity annotations to be checked in isolation from all other methods.
 
@@ -697,7 +687,7 @@ If its class is immutable it means that a method's global scope has a constant s
 Their verifier has a white list of fields and methods from Java libraries that do not expose the ability to observe a global mutable state, or provide access to nondeterminism, and it will reject any reference to a field or method that is not on the list~\cite{purity-in-java}.
 
 \subsection{Dynamic Purity Analysis For Java Programs} \label{sub:Dynamic Purity Analysis For Java Programs}
-TODO
+\cite{xu2007dynamic} TODO
 
 \section{Future Work and Conclusion} \label{sec:Conclusion and future Work}
 \subsection{Future work} \label{sub:Future work}
@@ -707,7 +697,7 @@ TODO
 \end{itemize}
 
 \subsection{Conclusion} \label{sub:Conclusion}
-\textit{Functional purity} is perhaps the most useful concept from functional programming that object oriented programmers can learn from. The definition of a pure program used in this paper is one that is side-effect free and determinstic.
+\textit{Functional purity} is perhaps the most useful concept from functional programming that object oriented programmers can learn from. The definition of a pure program used in this paper is one that is side-effect free and deterministic.
 
 \bibliography{references}
 
