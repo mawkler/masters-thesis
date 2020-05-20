@@ -112,7 +112,9 @@
 \frontmatter
 
 \begin{abstract}
-  TODO
+This thesis develops a method of statically determining the level of purity in a given C\# program. It investigates problems with determining purity in object oriented languages, with a focus on C\#. A function is defined to be pure if it side-effect free and deterministic.
+
+TODO
 \end{abstract}
 
 \begin{sammanfattning}
@@ -134,7 +136,7 @@
 
 Functional programming is on the rise and becoming more mainstream~\cite{intertech}. Object oriented (OO) programming has been the industry norm for quite some time now, and for a long time functional programming was considered by developers to only be applicable in academic domains. However it is now becoming popular in the IT industry as well. Many mainstream languages like Java, C\# and C++ have adopted first-class functions from the functional paradigm~\cite{intertech}. Moreover, functional programming can be used for building web applications and mobile apps~\cite{jonas-walter}.
 
-Functional programs have many benefits over purely object oriented ones. Perhaps one of the most useful features of functional programming that the object oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about compared to object oriented ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are also easier to test since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
+Functional programs have many benefits over purely object oriented ones. Perhaps one of the most useful features of functional programming that the object oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about impure ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are also easier to test since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
 For this reason it useful in software engineering to evaluate the level of functional purity in programs~\cite{purity-in-javascript}.
 
 C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language by developers? This paper will attempt to answer this by evaluating to what degree functional purity is used in C\# programs today.
@@ -144,19 +146,19 @@ C\# is among the top five most popular programming languages~\cite{tiobe}. To it
 \section{Background} \label{sec:Background} % (several sections depending on work)
 
 \subsection{Definitions} \label{sub:Definitions}
-Following are definitions of functional and objected oriented programming respectively.
-% Are there multiple definitions? Motivate choice of definitions?
+Functional programming and object oriented programming are two different programming paradigms. There is no universal definition of either of them. Following is how they have been chosen to be defined in this thesis.
 
-\textbf{Functional programming}
+\subsubsection{Functional programming} \label{sub:functional-programming}
 
 \begin{enumerate}
-  \item All functions are \emph{pure}, meaning that they do not have any side-effects, and their output depends only on the input~\cite{john-m-chambers}. The latter is what Finifter et al. call \textit{determinism}, as mentioned in \autoref{sub:Verifiable-Functional-Purity-in-Java}~\cite{purity-in-java}.
-    % We will go in more to this in \autoref{sub:Definition of functional purity}
+  %TODO: maybe only name pure, and say that it is defined later?
+  \item All functions are \emph{functionally pure}, meaning that they do not have any side-effects, and their output depends only on the input~\cite{john-m-chambers}. The latter is what Finifter et al. call \textit{determinism}~\cite{purity-in-java}. Not all definitions of functional purity include determinism, and the choice of definition used in this thesis is discussed in \autoref{sub:Verifiable-Functional-Purity-in-Java}.
+    % We will go in more to this in \autoref{ssub:functional-purity-definition}
 \item Functions are first-class and can be higher-order, meaning that functions can be passed to functions as parameters, and can be returned by functions~\cite{jonas-walter}. % page 3
 \item Variables are immutable, meaning that their value does not change after being initiated~\cite{jonas-walter}. % page 3
 \end{enumerate}
 
-\textbf{Object oriented programming} % Perhaps also mention imperative programming?
+\subsubsection{Object oriented programming} \label{ssub:object-oriented-programming} % Perhaps also mention imperative programming?
 
 \begin{enumerate}
 \item Computations are done via \emph{methods} belonging to \emph{objects}, whose structure suits the goal of whatever computation we're doing~\cite{john-m-chambers}.
@@ -164,9 +166,20 @@ Following are definitions of functional and objected oriented programming respec
 \item Classes can \emph{inherit} from other superclasses, such that a class is also an instance of its superclass~\cite{john-m-chambers}.
 \end{enumerate}
 
+\subsubsection{Definition of functional purity} \label{ssub:functional-purity-definition}
+% Maybe move this before subsection to lead up to this?
+As mentioned in \autoref{sub:functional-programming}, the definition of functional programming consists of three parts. \textit{Purity}, functions being \textit{first-class} and \textit{higher-order}, and variables being \textit{immutable}. To delimit the scope of this thesis it will only focus on purity, mainly because it seems like the most useful one out of the three for object oriented programming.% , and as it is the one that is the most emphasized as a benefit of using a more functional style in object oriented programming~\cite{alvin-alexander}. % page 19
+
+As seen in \autoref{sec:Related work} a lot of related work defines purity only as being synonymous with side-effect free. This definition therefore doesn't require functions' output to depend purely on their input -- what Finifter et al. call \textit{determinism}, as mentioned in \autoref{sub:Verifiable-Functional-Purity-in-Java} -- but allows them to read from variables defined outside of their scope. This definition is less functional. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}, % page 19
+the first two who's work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively. Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic does in a way also simplify the analysis because it means that any symbol used in a function \textit{F} but defined outside \textit{F} would make \textit{F} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{F} to see if it is being written to or if it is only being read before concluding if \textit{F} is pure.
+
+% The notion of purity only being synomynous with side-effect free seems to be more common in computer science, while also requireming determinism seems to be the more mathematical definition.
+
+Thus, a function is pure if it is side-effect free and deterministic.
+
 \noindent\makebox[\linewidth]{\rule{\textwidth}{0.4pt}} % -------- Line break --------
 
-\textbf{*Add a description of the following*}
+\textbf{*TODO: Add a description of the following*}
 \begin{itemize}
   \item Side-effects and referential transparency, which implies purity~\cite{purity-in-javascript}
   \item .NET Core/C\#
@@ -178,7 +191,7 @@ Following are definitions of functional and objected oriented programming respec
 
 % Microsoft has an article on refactoring none-pure C\# code to pure functions \cite{microsoft-refactoring}.
 
-\textbf{*Things to consider*}
+\textbf{*TODO: Things to consider*}
 
 \begin{itemize}
   \item Abstract syntax trees
@@ -199,17 +212,6 @@ Following are definitions of functional and objected oriented programming respec
 
 % \subsection{The C\# Language} \label{sub:The C\# Language}
 % TODO: short description of C\# and .NET
-
-\subsection{Definition of functional purity} \label{sub:Definition of functional purity}
-% Maybe move this before subsection to lead up to this?
-As mentioned in \autoref{sec:Background}, the definition of functional programming consists of three parts. \textit{Purity}, functions being \textit{first-class} and \textit{higher-order}, and variables being \textit{immutable}. To delimit the scope of this thesis it will only focus on purity, mainly because it is the one which seems the most useful for object oriented programming, and as it is the one that is the most emphasized as a benefit of using a more functional style in object oriented programming~\cite{alvin-alexander}. % page 19
-
-As seen in \autoref{sec:Related work} a lot of related work defines purity only as being synonymous with side-effect free. This definition therefore doesn't require functions' output to depend purely on their input -- what Finifter et al. call \textit{determinism}, as mentioned in \autoref{sub:Verifiable-Functional-Purity-in-Java} -- but allows them to read from variables defined outside of their scope. This definition is less functional. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}, % page 19
-the first two who's work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively. Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic does in a way also simplify the analysis because it means that any symbol used in a function \textit{F} but defined outside \textit{F} would make \textit{F} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{F} to see if it is being written to or if it is only being read before concluding if \textit{F} is pure.
-
-% The notion of purity only being synomynous with side-effect free seems to be more common in computer science, while also requireming determinism seems to be the more mathematical definition.
-
-Thus, a function is pure if it is side-effect free and deterministic.
 
 \subsection{What makes a C\# method pure?} \label{sub:What makes a Cs program functional?}
 \autoref{fig:impure-example} and \autoref{fig:pure-example} illustrate two very simple examples of pure and impure code, respectively. In \autoref{fig:impure-example} the function \texttt{addOne()} is impure because it is writing to the variable \texttt{number} which was defined outside \texttt{addOne()}'s scope, which is a side-effect. \autoref{fig:pure-example} illustrates how \texttt{addOne()} can be rewritten to a pure function while preserving the program's semantics.
@@ -253,24 +255,24 @@ Thus, a function is pure if it is side-effect free and deterministic.
   \label{fig:pure-example}
 \end{figure}
 
-Following are more technical requirements for C\# programs to be pure that are used as a basis for the implementation of the analysis tool. % maybe move to implementation?
+% Following are more technical requirements for C\# programs to be pure that are used as a basis for the implementation of the analysis tool. % maybe move to implementation? % TODO: maybe remove this part?
 
-% 1. Output depends only on input
-% 2. No side-effects
+% % 1. Output depends only on input
+% % 2. No side-effects
 
-\begin{itemize}
-  \item Functions that modify any value outside their scope, e.g. a class variable or global variable, are impure. Modifying a value could be done by assigning a new value to it, or changing a part of it like modifying an element of a list or an object property.
-  % Does this apply to all non-returning statements with no assignment, i.e. no '\texttt{=}' sign? Not if the data being modified through a method is inside the scope of the function.
-  \item Functions that read any value outside the function's scope are impure. Reading a value could be done in many ways, including using it as argument in a function, as a condition in an \texttt{if}-statement, assigning it to a variable, etc. Basically any non-local variable appearing in a function would imply an impure read (except for if it is assigned to, which is mentioned above).
-  % \item Functions that call other functions without reading the called function's return value are not pure?
-  \item Functions that return \texttt{void} are assumed to be impure (because in order for them to have an effect on the program, they must have a side-effect).
-  \item
-  % By looking at the return statement of a function \textit{F} we could trace the variables and functions involved backwards in order to figure out \textit{F}'s purity. If all variables used in \textit{F}'s return statement are either input parameters or instantiated inside \textit{F}, \textit{F} is considered pure.
-  This means that any variable read from or assigned to in a function \textit{F} must have been instantiated inside \textit{F} in order for \textit{F} to be pure.
-  If any of \textit{F}'s parameters is an object, that object cannot be modified inside \textit{F} (at least not for the highest level of purity).
-  \item Functions that call impure functions are themselves also impure.
-  \item Functions that involve input/output (I/O) are impure.
-\end{itemize}
+% \begin{itemize}
+%   \item Functions that modify any value outside their scope, e.g. a class variable or global variable, are impure. Modifying a value could be done by assigning a new value to it, or changing a part of it like modifying an element of a list or an object property.
+%   % Does this apply to all non-returning statements with no assignment, i.e. no '\texttt{=}' sign? Not if the data being modified through a method is inside the scope of the function.
+%   \item Functions that read any value outside the function's scope are impure. Reading a value could be done in many ways, including using it as argument in a function, as a condition in an \texttt{if}-statement, assigning it to a variable, etc. Basically any non-local variable appearing in a function would imply an impure read (except for if it is assigned to, which is mentioned above).
+%   % \item Functions that call other functions without reading the called function's return value are not pure?
+%   \item Functions that return \texttt{void} are assumed to be impure (because in order for them to have an effect on the program, they must have a side-effect).
+%   \item
+%   % By looking at the return statement of a function \textit{F} we could trace the variables and functions involved backwards in order to figure out \textit{F}'s purity. If all variables used in \textit{F}'s return statement are either input parameters or instantiated inside \textit{F}, \textit{F} is considered pure.
+%   This means that any variable read from or assigned to in a function \textit{F} must have been instantiated inside \textit{F} in order for \textit{F} to be pure.
+%   If any of \textit{F}'s parameters is an object, that object cannot be modified inside \textit{F} (at least not for the highest level of purity).
+%   \item Functions that call impure functions are themselves also impure.
+%   \item Functions that involve input/output (I/O) are impure.
+% \end{itemize}
 
 Function parameters preceded with the \texttt{in} keyword are passed by reference and read-only inside the function~\cite{microsoft-in-modifier}. This means that input parameters marked with \texttt{in} cannot be re-assigned inside the function, which may suggest functional purity. Consider the example in \autoref{fig:in-example1}, where the parameter \texttt{number} is preceded by the \texttt{in} keyword. Because of this, modifying it inside the function will raise an error.
 
@@ -406,13 +408,13 @@ Consider the following example:
   \label{fig:fresh-object-example}
 \end{figure}
 
-Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side-effect of \texttt{Add()}, \texttt{Add()} cannot be a pure method. Does that mean that the function \texttt{Foo()} calling \texttt{list.Add()} is also impure, because it calls a non-pure method? In general functions that invoke impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{sub:Definition of functional purity}:
+Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side-effect of \texttt{Add()}, \texttt{Add()} cannot be a pure method. Does that mean that the function \texttt{Foo()} calling \texttt{list.Add()} is also impure, because it calls a non-pure method? In general functions that invoke impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{ssub:functional-purity-definition}:
 
 \textit{A function is pure if it is side-effect free and deterministic}.
 
 Because the function \texttt{Foo()} only modifies an object exclusively visible inside the function, \texttt{Foo()} does not have any side-effect. Nor is the function non-deterministic since it does not read any value outside of the function besides its parameters, which it in this case doesn't have. This means that \texttt{Foo()} is pure.
 
-To solve this we introduce the purity level \textit{locally impure}. Any method that is pure except for reading or modifying its object's fields is locally impure. This includes methods that return \texttt{this} or pass \texttt{this} as an argument to a function. Consider the following:
+To solve this we introduce the purity level \textit{locally impure}. Any method that is pure except for reading or modifying its object's fields is locally impure. This includes methods that return \texttt{this} or pass \texttt{this} as an argument to a function. Consider the following example:
 
 \begin{figure}[H]
   \centering
@@ -538,7 +540,7 @@ A method can have multiple impurity levels. The following is how to determine th
 
 \begin{itemize}
   \item If any object field or property of the currently analyzed method \textit{m}'s object is read from or modified, mark \textit{m} as \textit{locally impure}.
-  \item If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked impure. This is because reading a static field of an object is a non-deterministic action, and modifying a static field of an object is a side-effect since it mutates the field for all instantiations of that object's class.
+  \item If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked \textit{impure}. This is because reading a static field of an object is a non-deterministic action, and modifying a static field of an object is a side-effect since it mutates the field for all instantiations of that object's class.
   \item If the currently analyzed method \textit{m} calls an input parameter's method $m_p$ and $m_p$ is overridden by any impure, locally impure and/or parametrically impure method, $m_p$ is temporarily marked with the impurities of all the overriding methods in the context of the analysis of the current method \textit{m}. % Moreover:
     % \begin{itemize} % Maybe these are covered by other cases?
     %   \item If $m_p$ is overridden by any impure method, \textit{m} is marked impure.
@@ -577,6 +579,8 @@ TODO: add example which follows the analysis step by step
   \item \href{https://github.com/SixLabors/ImageSharp/blob/master/src/ImageSharp}{ImageSharp}
   \item \href{https://github.com/geaz/sharpDox}{sharpDox}
 \end{itemize}
+
+TODO
 
 \section{Implementation of the analysis tool} \label{sec:Implementation of the analysis tool}
 % \item For performance reasons, first check general stuff and then do more specific checks.
@@ -689,15 +693,16 @@ Their verifier has a white list of fields and methods from Java libraries that d
 \subsection{Dynamic Purity Analysis For Java Programs} \label{sub:Dynamic Purity Analysis For Java Programs}
 \cite{xu2007dynamic} TODO
 
-\section{Future Work and Conclusion} \label{sec:Conclusion and future Work}
+\section{Conclusion and Future Work} \label{sec:Conclusion and future Work} % Maybe only "Conclusion"
+
+\subsection{Conclusion} \label{sub:Conclusion}
+\textit{Functional purity} is perhaps the most useful concept from functional programming that object oriented programmers can learn from. The definition of a pure program used in this paper is one that is side-effect free and deterministic. There are many benefits of using functionally pure methods in object oriented programming. Pure methods are generally easier to reason about due to their lack of side effects. Moreover, pure methods are easier to test, debug and maintain. The ability to automatically determine the level of purity in a given C\# program can help programmers to write less impure code, and thereby reap previously mentioned benefits.
+
 \subsection{Future work} \label{sub:Future work}
 
 \begin{itemize}
   \item Tool can point out exact position of impurity and suggest improvements to increase the purity. Because purity is determined by passing the purity level of impure functions to their callers, this could be implemented by also passing the identifier of the impure function to the caller.
 \end{itemize}
-
-\subsection{Conclusion} \label{sub:Conclusion}
-\textit{Functional purity} is perhaps the most useful concept from functional programming that object oriented programmers can learn from. The definition of a pure program used in this paper is one that is side-effect free and deterministic.
 
 \bibliography{references}
 
