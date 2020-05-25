@@ -5,9 +5,23 @@ public class LinkedList
     private Node head;
     private Node tail;
 
+    // For the sake of this example this method is static
+    public static int Length(LinkedList list)
+    {
+        Node current = list.head;
+        int length = 0;
+
+        while (current != null)
+        {
+            length++;
+            current = current.next;
+        }
+        return length;
+    }
+
     public void Add(Object data)
     {
-        if (head == null)
+        if (LinkedList.Length(this) == 0)
         {
             head = new Node(data);
             tail = head;
@@ -20,17 +34,16 @@ public class LinkedList
         }
     }
 
-    public static int Length(LinkedList list)
+    // Removes item at index from list. Assumes that list is non-empty and that
+    // index is less than list's length
+    //
+    // For the sake of this example this method is static.
+    static public LinkedList Remove(int index, LinkedList list)
     {
-        Node current = list.head;
-        int length = 0;
-
-        while (current != null)
+        for (int i = 0; i < Length(list); i++)
         {
-            length++;
-            current = current.next;
+            //...
         }
-        return length;
     }
 
     public static void PrintLength(LinkedList list)
