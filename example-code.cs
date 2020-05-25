@@ -17,28 +17,12 @@ public class LinkedList
             Node addedNode = new Node(data);
             tail.next = addedNode;
             tail = addedNode;
-            // Console.WriteLine(tail.data);
         }
     }
 
-    // public override string ToString()
-    // {
-    //     Node current = head;
-    //     string output = "[";
-
-    //     while (current != null)
-    //     {
-    //         output += current.data.ToString() + ", ";
-    //         current = current.next;
-    //     }
-    //     Console.WriteLine(output.Remove(output.Length - 1, 1) + "]");
-    //     output = output.Remove(output.Length - 1, 1) + "]";
-    //     return output;
-    // }
-
-    public void PrintLength()
+    public static int Length(LinkedList list)
     {
-        Node current = head;
+        Node current = list.head;
         int length = 0;
 
         while (current != null)
@@ -46,17 +30,12 @@ public class LinkedList
             length++;
             current = current.next;
         }
-        Console.WriteLine(length);
+        return length;
     }
 
-    public Object First()
+    public static void PrintLength(LinkedList list)
     {
-        return head.data;
-    }
-
-    public Object Last()
-    {
-        return tail.data;
+        Console.WriteLine(Length(list));
     }
 
     private class Node
@@ -76,7 +55,6 @@ public class LinkedList
     {
         LinkedList l = new LinkedList();
         l.Add("foo");
-        Console.WriteLine(l.First());
-        l.PrintLength();
+        PrintLength(l);
     }
 }
