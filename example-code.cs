@@ -5,7 +5,6 @@ public class LinkedList
     private Node head;
     private Node tail;
 
-    // For the sake of this example this method is static
     public static int Length(LinkedList list)
     {
         Node current = list.head;
@@ -35,20 +34,31 @@ public class LinkedList
     }
 
     // Removes item at index from list. Assumes that list is non-empty and that
-    // index is less than list's length
+    // index is non-negative and less than list's length
     //
-    // For the sake of this example this method is static.
-    static public LinkedList Remove(int index, LinkedList list)
+    // For the sake of this example this method is static quite simplified.
+    static public void Remove(int index, LinkedList list)
     {
-        for (int i = 0; i < Length(list); i++)
-        {
-            //...
+        if (index == 0) { list.head = list.head.next; }
+        else {
+            Node predecessor = list.head;
+
+            for (int i = 0; i < index - 1; i++)
+            {
+                predecessor = predecessor.next;
+            }
+            predecessor.next = predecessor.next.next;
         }
     }
 
-    public static void PrintLength(LinkedList list)
+    public static void PrintListLength(LinkedList list)
     {
         Console.WriteLine(Length(list));
+    }
+
+    public void PrintLength()
+    {
+        PrintListLength(this);
     }
 
     private class Node
@@ -68,6 +78,19 @@ public class LinkedList
     {
         LinkedList l = new LinkedList();
         l.Add("foo");
-        PrintLength(l);
+        l.Add("bar");
+        l.Add("baz");
+        l.Add("faz");
+        Console.WriteLine(l.ToString());
+        LinkedList.Remove(3, l);
+        Console.WriteLine(l.ToString());
+        Console.WriteLine(Length(l));
+        LinkedList.Remove(1, l);
+        Console.WriteLine(l.ToString());
+        Console.WriteLine(Length(l));
+        LinkedList.Remove(0, l);
+        Console.WriteLine(l.ToString());
+        Console.WriteLine(Length(l));
+        l.PrintLength();
     }
 }
