@@ -499,25 +499,25 @@ However, properties can also be non-static but still read or modify static field
 \begin{figure}[H]
   \centering
   \begin{lstlisting}
-    public class Foo {
-      public Swede gert = new Swede();
+  public class Foo {
+    public Swede gert = new Swede();
 
-      public void Bar() {
-        Swede stina = new Swede();
-        stina.Nationality = "Norway"; // assignment to non-static field
+    public void Bar() {
+      Swede stina = new Swede();
+      stina.Nationality = "Norway"; // assignment to non-static field
 
-        Console.WriteLine(gert.Nationality); // prints "Norway"
-      }
+      Console.WriteLine(gert.Nationality); // prints "Norway"
+    }
 
-      public class Swede {
-        static string nationality = "Sweden"; // This field is static
+    public class Swede {
+      static string nationality = "Sweden"; // This field is static
 
-        public string Nationality { // This property is non-static
-          get { return nationality; }
-          set { nationality = value; }
-        }
+      public string Nationality { // This property is non-static
+        get { return nationality; }
+        set { nationality = value; }
       }
     }
+  }
   \end{lstlisting}
   \caption{What looks like a non-static assignment to an object property does in fact mutate a static field, which is a clear side-effect of \texttt{Bar()}.}
   \label{fig:non-static-property-example}
@@ -536,14 +536,16 @@ Because of the problem with inheritance and method overriding discussed in \auto
 when going through the AST and building the dependency set, if any object parameter's method is overridden by any of its subclasses, add all the overridden methods to the calling function's dependency set.
 Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. The purity of each function is initialized to \textit{pure}, except those that were explicitly marked \textit{unknown}.
 
-Let the \textit{working set} \textit{W} be the set of all functions with empty dependency sets. Whenever a function's dependency set becomes empty, that function is added to \textit{W}. Calculate the purity level for each function in \textit{W} as described below. Then, for each function \textit{f} in the working set with the purity level \textit{impure} or \textit{unknown}, propagate that impurity to the functions dependant on \textit{f}, "contaminating" them, and remove \textit{f} from those functions' dependency sets as well as from the working set \textit{W}. Add functions that now have empty dependency sets to \textit{W}. Repeat this process until there are no more changes to the lookup table, in which case the analysis is complete. Each function in the lookup table will now have been marked with its corresponding purity level. Because the purity level of each function was initialized to \textit{pure}, any function who's purity level was unaffected by the analysis will be marked \textit{pure} at the end of the analysis.
+Let the \textit{working set} \textit{W} be the set of all functions with empty dependency sets. Whenever a function's dependency set becomes empty, that function is added to \textit{W}. Calculate the purity level for each function in \textit{W} as described below. Then, for each function \textit{f} in the working set, propagate the impurity of those with purity level \textit{impure} or \textit{unknown} to the functions dependant on \textit{f}, "contaminating" them. Remove \textit{f} from the dependency sets of all functions that depend on \textit{f}, as well as from the working set \textit{W}. Add functions that now have empty dependency sets to \textit{W}. Repeat this process until there are no more changes to the lookup table, in which case the analysis is complete. Each function in the lookup table will now have been marked with its corresponding purity level. Because the purity level of each function was initialized to \textit{pure}, any function who's purity level was unaffected by the analysis will be marked \textit{pure} at the end of the analysis.
 
 A method can have multiple impurity levels. The following is how to determine the purity level \textit{p} for the currently analyzed method \textit{m}.
 
 \begin{itemize}
   \item If any object field or property of the currently analyzed method \textit{m}'s object is read from or modified, mark \textit{m} as \textit{locally impure}.
+  \item If \textit{m} calls a locally impure method belonging to \textit{m}'s object (i.e. \texttt{this}) \textit{m} is marked \textit{locally impure}.
   \item If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked \textit{impure}. This is because reading a static field of an object is a non-deterministic action, and modifying a static field of an object is a side-effect since it mutates the field for all instantiations of that object's class.
-  \item If the currently analyzed method \textit{m} calls an input parameter's method $m_p$ and $m_p$ is overridden by any impure, locally impure and/or parametrically impure method, $m_p$ is temporarily marked with the impurities of all the overriding methods in the context of the analysis of the current method \textit{m}. % Moreover:
+  \item If the currently analyzed method \textit{m} calls an input parameter's method $m_p$ and $m_p$ is overridden by any locally impure and/or parametrically impure method, $m_p$ is temporarily marked with the impurities of all the overriding methods in the context of the analysis of the current method \textit{m}. If $m_p$ is overridden by any impure method, \textit{m} is permanently marked as impure.
+    % Moreover:
     % \begin{itemize} % Maybe these are covered by other cases?
     %   \item If $m_p$ is overridden by any impure method, \textit{m} is marked impure.
     %   \item If $m_p$ is overridden by any locally impure method, \textit{m} is marked parametrically impure.
@@ -558,7 +560,6 @@ A method can have multiple impurity levels. The following is how to determine th
   \item If a method returns \texttt{this} or passes it as an argument to a function it marked \textit{locally impure} since it is dependent on the state of its object, making it non-deterministic.
   \item Any method that raises an event or an exception is marked as \textit{impure}, as well as any method mentioned in the two lists of impure built-in C\# methods in \autoref{sub:Impure-built-in-methods}.
   % \item Build a lookup table with all evaluated functions, their purity and their dependency set~\cite{pitidis2010purity}.
-  \item If \textit{m} calls a locally impure method belonging to \textit{m}'s object (i.e. \texttt{this}) \textit{m} is marked \textit{impure}.
 \end{itemize}
 
 We do not have to explicitly handle the case mentioned in \autoref{sub:modifying-fresh-objects} where fresh objects are modified with their own locally impure methods due to the fact that our definition of local purity includes determinism. Because if a non-fresh object \textit{o} is modified with its locally impure method, then we must have read the pointer to \textit{o} from a field outside the method, meaning that \textit{m} is non-deterministic and therefore locally impure. This is why we only propagate the purity level of \textit{impure} functions to their callers, and not \textit{local impurity} or \textit{parametrical impurity}. There are however two exceptions to this, which are covered by previously mentioned checks in our analysis:
@@ -568,6 +569,101 @@ We do not have to explicitly handle the case mentioned in \autoref{sub:modifying
 \end{itemize}
 
 TODO: add example which follows the analysis step by step
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.49\linewidth}
+    \begin{lstlisting}[basicstyle={\fontsize{8}{9}\ttfamily}]
+
+public class LinkedList
+{
+  private Node head;
+  private Node tail;
+
+  // Returns length of list
+  public static int Length(LinkedList list)
+  {
+    Node current = list.head;
+    int length = 0;
+
+    while (current != null)
+    {
+      length++;
+      current = current.next;
+    }
+    return length;
+  }
+
+  // Appends data to the list
+  public void Add(Object data)
+  {
+    if (LinkedList.Length(this) == 0)
+    {
+      head = new Node(data);
+      tail = head;
+    }
+    else
+    {
+      Node addedNode = new Node(data);
+      tail.next = addedNode;
+      tail = addedNode;
+    }
+  }
+
+  // ... code continues in next column
+    \end{lstlisting}
+  \end{minipage}
+  % \qquad
+  \begin{minipage}[t]{0.49\linewidth}
+    \begin{lstlisting}[basicstyle={\fontsize{8}{9}\ttfamily}]
+  // Removes item at index from list.
+  // Assumes that list is non-empty and
+  // that index is non-negative and less
+  // than list's length
+  static public void Remove(int index, LinkedList list)
+  {
+    if (index == 0) {
+      list.head = list.head.next;
+    }
+    else {
+      Node pre = list.head;
+
+      for (int i = 0; i < index - 1; i++)
+      {
+        pre = pre.next;
+      }
+      pre.next = pre.next.next;
+    }
+  }
+
+  public static void PrintListLength(LinkedList list)
+  {
+    Console.WriteLine(Length(list));
+  }
+
+  public void PrintLength()
+  {
+    PrintListLength(this);
+  }
+
+  private class Node
+  {
+    public Node next;
+    public Object data;
+
+    public Node() { }
+
+    public Node(Object data)
+    {
+      this.data = data;
+    }
+  }
+}
+    \end{lstlisting}
+  \end{minipage}
+  \caption{Simple implementation of a linked list. For the sake of this example, it contains some odd design choices.}
+  \label{fig:example-code}
+\end{figure}
 
 \subsection{Code base} \label{sub:Code base}
 \textbf{Mostly pure code}
