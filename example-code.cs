@@ -18,6 +18,7 @@ public class LinkedList
         return length;
     }
 
+    // Appends data to the list
     public void Add(Object data)
     {
         if (LinkedList.Length(this) == 0)
@@ -39,7 +40,9 @@ public class LinkedList
     // For the sake of this example this method is static quite simplified.
     static public void Remove(int index, LinkedList list)
     {
-        if (index == 0) { list.head = list.head.next; }
+        if (index == 0) {
+            list.head = list.head.next;
+        }
         else {
             Node predecessor = list.head;
 
@@ -93,4 +96,5 @@ public class LinkedList
         Console.WriteLine(Length(l));
         l.PrintLength();
     }
+}
 }
