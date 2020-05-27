@@ -36,7 +36,7 @@ public class LinkedList
 
     // Removes item at index from list. Assumes that list is non-empty and that
     // index is non-negative and less than list's length
-    //
+ me    //
     // For the sake of this example this method is static quite simplified.
     static public void Remove(int index, LinkedList list)
     {
@@ -96,5 +96,4 @@ public class LinkedList
         Console.WriteLine(Length(l));
         l.PrintLength();
     }
-}
 }

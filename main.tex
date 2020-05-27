@@ -542,6 +542,9 @@ A method can have multiple impurity levels. The following is how to determine th
 
 \begin{itemize}
   \item If any object field or property of the currently analyzed method \textit{m}'s object is read from or modified, mark \textit{m} as \textit{locally impure}.
+    % TODO: mention indirectly modifing fields by modifing variables that point to fields
+    %   var foo = field;
+    %   foo.bar = null;
   \item If \textit{m} calls a locally impure method belonging to \textit{m}'s object (i.e. \texttt{this}) \textit{m} is marked \textit{locally impure}.
   \item If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked \textit{impure}. This is because reading a static field of an object is a non-deterministic action, and modifying a static field of an object is a side-effect since it mutates the field for all instantiations of that object's class.
   \item If the currently analyzed method \textit{m} calls an input parameter's method $m_p$ and $m_p$ is overridden by any locally impure and/or parametrically impure method, $m_p$ is temporarily marked with the impurities of all the overriding methods in the context of the analysis of the current method \textit{m}. If $m_p$ is overridden by any impure method, \textit{m} is permanently marked as impure.
@@ -568,55 +571,62 @@ We do not have to explicitly handle the case mentioned in \autoref{sub:modifying
   \item The case of \textit{o} being a parameter to \textit{m} has to be checked because this is parametrical impurity.
 \end{itemize}
 
-TODO: add example which follows the analysis step by step
+\subsubsection{Example} \label{ssub:Example}
+\autoref{fig:example-code} contains a simple implementation of a linked list in C\#. In order to illustrate all types of impurities, the implementation contains some odd design choices.
+
+The method \texttt{Length()} takes a \texttt{LinkedList} as input and returns its length. This method is deterministic since it only depends on its input argument, and it is side-effect free since it does not mutate any value that exists outside its scope, including its parameter object. Therefore, \texttt{Length()} is pure.
+
+\texttt{Add()} appends an \texttt{Object} to the end the list. It is not deterministic since it reads from and mutates the state of \texttt{this} in multiple locations. For instance, the first location where it modifies \texttt{this} is where it assigns \texttt{new Node} to \texttt{head}, which is a field that is visible outside the method. Therefore, \texttt{Add()} is locally impure -- it depends on and/or mutates the state of its object.
+
+\texttt{Remove()} deletes an item at a given index from a \texttt{LinkedList} which is passed as an argument to the method. To simplify the method and reduce its size, its input list is assumed to be non-empty and the index value is assumed to be a valid position inside the list. \texttt{Remove()} only operates based on its input and is therefore deterministic. However, it does modify fields of the parameter \texttt{list} and is therefore parametrically impure.
+
+\texttt{PrintListLength()} and \texttt{PrintLength()} both print the list length using the method \texttt{Length()}. The \texttt{PrintListLength()} uses I/O and is therefore impure. \texttt{PrintLength()} depends on the former method, and is therefore also impure. These two methods were added to illustrate the propagation of impurity.
 
 \begin{figure}[H]
   \centering
-  \begin{minipage}[t]{0.49\linewidth}
+  \begin{minipage}[t]{0.52\linewidth}
     \begin{lstlisting}[basicstyle={\fontsize{8}{9}\ttfamily}]
-
-public class LinkedList
-{
-  private Node head;
-  private Node tail;
-
-  // Returns length of list
-  public static int Length(LinkedList list)
+  public class LinkedList
   {
-    Node current = list.head;
-    int length = 0;
+    private Node head;
+    private Node tail;
 
-    while (current != null)
+    // Returns length of list
+    public static int Length(LinkedList list)
     {
-      length++;
-      current = current.next;
-    }
-    return length;
-  }
+      Node current = list.head;
+      int length = 0;
 
-  // Appends data to the list
-  public void Add(Object data)
-  {
-    if (LinkedList.Length(this) == 0)
+      while (current != null)
+      {
+        length++;
+        current = current.next;
+      }
+      return length;
+    }
+
+    // Appends data to the list
+    public void Add(Object data)
     {
-      head = new Node(data);
-      tail = head;
+      if (LinkedList.Length(this) == 0)
+      {
+        head = new Node(data);
+        tail = head;
+      }
+      else
+      {
+        Node addedNode = new Node(data);
+        tail.next = addedNode;
+        tail = addedNode;
+      }
     }
-    else
-    {
-      Node addedNode = new Node(data);
-      tail.next = addedNode;
-      tail = addedNode;
-    }
-  }
 
 
 
-  // code continues in next column
+    // code continues in next column
     \end{lstlisting}
   \end{minipage}
-  % \qquad
-  \begin{minipage}[t]{0.49\linewidth}
+  \begin{minipage}[t]{0.46\linewidth}
     \begin{lstlisting}[basicstyle={\fontsize{8}{9}\ttfamily}]
   // Removes item at index from list.
   // Assumes that list is non-empty and
@@ -666,6 +676,77 @@ public class LinkedList
   \caption{Simple implementation of a linked list. For the sake of this example, it contains some odd design choices.}
   \label{fig:example-code}
 \end{figure}
+
+The analysis starts off by building the dependency set for each function and setting all purities to \textit{pure}, as seen in \autoref{tab:lookup-table1}.
+
+\begin{table}[H]
+  \caption{Initial state of the lookup table and working set after computing each function's dependency set.}
+  \label{tab:lookup-table1}
+  \centering
+  \begin{tabular}{|l|c|c|}
+    \hline
+    $f$                         & $D_f$                  & $p$      \\ \hline
+    \texttt{Length()}           &                        & \textit{pure} \\
+    \texttt{Add()}              & \texttt{Length()}      & \textit{pure} \\
+    \texttt{Remove()}           &                        & \textit{pure} \\
+    \texttt{PrintLength()}      & \texttt{Length()}      & \textit{pure} \\
+    \texttt{PrintListLength()}  & \texttt{PrintLength()} & \textit{pure}   \\ \hline
+  \end{tabular}
+  \\
+  $W$ = \{\texttt{Length()}, \texttt{Remove()}\}
+\end{table}
+
+The working set is the set of functions with empty dependency sets, i.e. \texttt{Length()} and \texttt{Remove()}. We now go through each item in the list in \autoref{sub:Analysis} for both methods. Since none of them apply to \texttt{Length()}, its purity remains \textit{pure}. The following applies to \texttt{Remove()} since it directly mutates its input parameter \texttt{list} in multiple locations, and so \texttt{Remove()} is marked \textit{parametrically impure}:
+
+"If the analyzed method \textit{m} modifies an input parameter of reference type, mark \textit{m} as \textit{parametrically impure}."
+
+Since none of the two methods were marked \textit{impure} or \textit{unknown}, their purity levels are not propagated. \texttt{Length()} is then removed from the dependency sets of \texttt{Add()} and \texttt{PrintLength()}. \texttt{Length()} and \texttt{Remove()} are now removed from $W$, and \texttt{Add()} and \texttt{PrintLength()} are added to $W$, as their dependency sets are now empty. At this point the lookup table looks as shown in \autoref{tab:lookup-table2}.
+
+\begin{table}[H]
+  \caption{TODO}
+  \label{tab:lookup-table2}
+  \centering
+  \begin{tabular}{|l|c|c|}
+    \hline
+    $f$                        & $D_f$                  & $p$                     \\ \hline
+    \texttt{Length()}          &                        & \textit{pure}                  \\
+    \texttt{Add()}             &                        & \textit{pure}                  \\
+    \texttt{Remove()}          &                        & \textit{parametrically impure} \\
+    \texttt{PrintLength()}     &                        & \textit{pure}                  \\
+    \texttt{PrintListLength()} & \texttt{PrintLength()} & \textit{pure}                  \\ \hline
+  \end{tabular}
+  \\
+  $W$ = \{\texttt{Add}(), \texttt{PrintLength}()\}
+\end{table}
+
+Now we perform the same thing again with the new working set, starting with \texttt{Add()}. Out of the items in the list in \autoref{sub:Analysis}, the following applies to \texttt{Add()}, since it modifies its object in multiple locations, for instance by assigning to the field \texttt{tail}:
+
+"If any object field or property of the currently analyzed method \textit{m}'s object is read from or modified, mark \textit{m} as \textit{locally impure}."
+
+As for \texttt{PrintLength}, the following applies since it calls the impure built-in method \texttt{Console.WriteLine()}:
+
+"Any method that raises an event or an exception is marked as \textit{impure}, as well as any method mentioned in the two lists of impure built-in C\# methods in \autoref{sub:Impure-built-in-methods}."
+
+Since \texttt{PrintLength()} was marked \textit{impure} its impurity is propagated to all its callers, which in this case is \texttt{PrintListLength()}. \texttt{PrintLength()} is then removed from \texttt{PrintListLength()}'s dependency set. \texttt{Add()} and \texttt{PrintLength()} are both removed from $W$, and \texttt{PrintListLength()} is added since its dependency set now is empty.
+
+\begin{table}[H]
+  \caption{TODO}
+  \label{tab:lookup-table3}
+  \centering
+  \begin{tabular}{|l|c|c|}
+    \hline
+    $f$                        & $D_f$                  & $p$                     \\ \hline
+    \texttt{Length()}          &                        & \textit{pure}                  \\
+    \texttt{Add()}             &                        & \textit{locally impure}        \\
+    \texttt{Remove()}          &                        & \textit{parametrically impure} \\
+    \texttt{PrintLength()}     &                        & \textit{impure}                \\
+    \texttt{PrintListLength()} &                        & \textit{impure}                \\ \hline
+  \end{tabular}
+  \\
+  $W$ = \{PrintListLength()\}
+\end{table}
+
+TODO
 
 \subsection{Code base} \label{sub:Code base}
 \textbf{Mostly pure code}
