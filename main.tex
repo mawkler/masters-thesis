@@ -685,12 +685,12 @@ The analysis starts off by building the dependency set for each function and set
   \centering
   \begin{tabular}{|l|c|c|}
     \hline
-    $f$                         & $D_f$                  & $p$      \\ \hline
+    $f$                         & $D_f$                  & $p$    \\ \hline
     \texttt{Length()}           &                        & \textit{pure} \\
     \texttt{Add()}              & \texttt{Length()}      & \textit{pure} \\
     \texttt{Remove()}           &                        & \textit{pure} \\
     \texttt{PrintLength()}      & \texttt{Length()}      & \textit{pure} \\
-    \texttt{PrintListLength()}  & \texttt{PrintLength()} & \textit{pure}   \\ \hline
+    \texttt{PrintListLength()}  & \texttt{PrintLength()} & \textit{pure} \\ \hline
   \end{tabular}
   \\
   $W$ = \{\texttt{Length()}, \texttt{Remove()}\}
@@ -703,7 +703,7 @@ The working set is the set of functions with empty dependency sets, i.e. \texttt
 Since none of the two methods were marked \textit{impure} or \textit{unknown}, their purity levels are not propagated. \texttt{Length()} is then removed from the dependency sets of \texttt{Add()} and \texttt{PrintLength()}. \texttt{Length()} and \texttt{Remove()} are now removed from $W$, and \texttt{Add()} and \texttt{PrintLength()} are added to $W$, as their dependency sets are now empty. At this point the lookup table looks as shown in \autoref{tab:lookup-table2}.
 
 \begin{table}[H]
-  \caption{TODO}
+  \caption{\texttt{Remove()} has been marked \textit{parametrically impure}, and after analysing it and \texttt{Length()}, they are removed from the dependency set of their callers.}
   \label{tab:lookup-table2}
   \centering
   \begin{tabular}{|l|c|c|}
@@ -730,7 +730,7 @@ As for \texttt{PrintLength}, the following applies since it calls the impure bui
 Since \texttt{PrintLength()} was marked \textit{impure} its impurity is propagated to all its callers, which in this case is \texttt{PrintListLength()}. \texttt{PrintLength()} is then removed from \texttt{PrintListLength()}'s dependency set. \texttt{Add()} and \texttt{PrintLength()} are both removed from $W$, and \texttt{PrintListLength()} is added since its dependency set now is empty.
 
 \begin{table}[H]
-  \caption{TODO}
+  \caption{Since analysing \texttt{PrintListLength()} yields no change to the lookup table, this is the final result of the analysis.}
   \label{tab:lookup-table3}
   \centering
   \begin{tabular}{|l|c|c|}
@@ -743,10 +743,10 @@ Since \texttt{PrintLength()} was marked \textit{impure} its impurity is propagat
     \texttt{PrintListLength()} &                        & \textit{impure}                \\ \hline
   \end{tabular}
   \\
-  $W$ = \{PrintListLength()\}
+  $W$ = \{\texttt{PrintListLength()}\}
 \end{table}
 
-TODO
+At this point we only have \texttt{PrintListLength()} in the working set. Since it has already been marked \textit{impure} and analyzing it yields no more effects to the lookup table, the analysis stops here. The final result is what is shown in the lookup table in \autoref{tab:lookup-table3}.
 
 \subsection{Code base} \label{sub:Code base}
 \textbf{Mostly pure code}
