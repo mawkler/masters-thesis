@@ -152,16 +152,6 @@ In this thesis the term \textit{method} and \textit{function} will be used inter
 \subsection{Definitions} \label{sub:Definitions}
 Functional programming and object oriented programming are two different programming paradigms. There is no universal definition of either of them. Following is how they have been chosen to be defined in this thesis.
 
-\subsubsection{Functional programming} \label{sub:functional-programming}
-
-\begin{enumerate}
-  %TODO: maybe only name pure, and say that it is defined later?
-  \item All functions are \emph{functionally pure}, meaning that they do not have any side-effects, and their output depends only on the input~\cite{john-m-chambers}. The latter is what Finifter et al. call \textit{determinism}~\cite{purity-in-java}. Not all definitions of functional purity include determinism, and the choice of definition used in this thesis is discussed in \autoref{sub:Verifiable-Functional-Purity-in-Java}.
-    % We will go in more to this in \autoref{ssub:functional-purity-definition}
-\item Functions are first-class and can be higher-order, meaning that functions can be passed to functions as parameters, and can be returned by functions~\cite{jonas-walter}. % page 3
-\item Variables are immutable, meaning that their value does not change after being initiated~\cite{jonas-walter}. % page 3
-\end{enumerate}
-
 \subsubsection{Object oriented programming} \label{ssub:object-oriented-programming} % Perhaps also mention imperative programming?
 
 \begin{enumerate}
@@ -170,16 +160,32 @@ Functional programming and object oriented programming are two different program
 \item Classes can \emph{inherit} from other superclasses, such that a class is also an instance of its superclass~\cite{john-m-chambers}.
 \end{enumerate}
 
+\subsubsection{Functional programming} \label{sub:functional-programming}
+
+\begin{enumerate}
+  %TODO: maybe only name pure, and say that it is defined later?
+  \item All functions are \emph{functionally pure}. Functional purity is defined below in \autoref{ssub:functional-purity-definition}.
+    % , meaning that they do not have any side-effects, and their output depends only on the input~\cite{john-m-chambers}. The latter is what Finifter et al. call \textit{determinism}~\cite{purity-in-java}. Not all definitions of functional purity include determinism.
+    % , and the choice of definition used in this thesis is discussed in \autoref{sub:Verifiable-Functional-Purity-in-Java}.
+\item Functions are first-class and can be higher-order, meaning that functions can be passed to functions as parameters, and can be returned by functions~\cite{jonas-walter}. % page 3
+\item Variables are immutable, meaning that their value does not change after being initiated~\cite{jonas-walter}. % page 3
+\end{enumerate}
+
+% As mentioned in \autoref{sub:functional-programming}, the definition of functional programming consists of three parts. \textit{Purity}, functions being \textit{first-class} and \textit{higher-order}, and variables being \textit{immutable}.
+To delimit the scope of this thesis it will only focus on functional purity, mainly because it seems like the most useful one out of the three for object oriented programming.% , and as it is the one that is the most emphasized as a benefit of using a more functional style in object oriented programming~\cite{alvin-alexander}. % page 19
+
 \subsubsection{Definition of functional purity} \label{ssub:functional-purity-definition}
 % Maybe move this before subsection to lead up to this?
-As mentioned in \autoref{sub:functional-programming}, the definition of functional programming consists of three parts. \textit{Purity}, functions being \textit{first-class} and \textit{higher-order}, and variables being \textit{immutable}. To delimit the scope of this thesis it will only focus on purity, mainly because it seems like the most useful one out of the three for object oriented programming.% , and as it is the one that is the most emphasized as a benefit of using a more functional style in object oriented programming~\cite{alvin-alexander}. % page 19
 
-As seen in \autoref{sec:Related work} a lot of related work defines purity only as being synonymous with side-effect free. This definition therefore doesn't require functions' output to depend purely on their input -- what Finifter et al. call \textit{determinism}, as mentioned in \autoref{sub:Verifiable-Functional-Purity-in-Java} -- but allows them to read from variables defined outside of their scope. This definition is less functional. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}, % page 19
-the first two who's work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively. Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic does in a way also simplify the analysis because it means that any symbol used in a function \textit{F} but defined outside \textit{F} would make \textit{F} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{F} to see if it is being written to or if it is only being read before concluding if \textit{F} is pure.
+The definition that will be used in this thesis is that a function is functional pure if it is \textit{side-effect} free and \textit{deterministic}.
+
+A side-effect is any action performed by a function that is visible from the function's caller's point of view~\cite{purity-in-javascript}. A function is deterministic if its output depends purely on its input parameters, i.e. the method must return the same value for the same input regardless of the state of the program~\cite{purity-in-java}.
+
+As seen in \autoref{sec:Related work} a lot of related work define functional purity only as being synonymous with "side-effect free". This definition omits determinism and allows functions to read from variables defined outside of their scope, which is less functional. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
+% the first two who's work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively.
+Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic does in a way also simplify the analysis because it means that any symbol used in a function \textit{F} but defined outside \textit{F} would make \textit{F} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{F} to see if it is being written to or if it is only being read before concluding if \textit{F} is pure.
 
 % The notion of purity only being synomynous with side-effect free seems to be more common in computer science, while also requireming determinism seems to be the more mathematical definition.
-
-Thus, a function is pure if it is side-effect free and deterministic.
 
 \noindent\makebox[\linewidth]{\rule{\textwidth}{0.4pt}} % -------- Line break --------
 
@@ -368,9 +374,9 @@ The following methods that are built into C\# and have side-effects~\cite{dixin2
 
 The fact that previously mentioned methods are non-deterministic or have side-effects means that we know for sure that they are impure, which means that any function that uses them is also impure.
 
-\subsection{Problems with determining purity in object oriented languages} \label{sub:Problems with determining purity in object oriented languages}
+\section{Problems with determining purity in object oriented languages} \label{sec:Problems with determining purity in object oriented languages}
 
-\subsubsection{Inheritance and method overriding} \label{sub:inheritance}
+\subsection{Inheritance and method overriding} \label{sub:inheritance}
 
 When calling an object parameter's method, because of inheritance and method overriding we can never be sure of which method implementation will be called. Consider the following example~\cite{pearce2011jpure}:
 
@@ -391,7 +397,7 @@ One solution to this that David J. Pearce suggests is to demand that pure method
 
 This means that in the example in \autoref{fig:inheritance-example}, the function \texttt{f()} is pure iff all methods that override \texttt{List.Add()} are pure.
 
-\subsubsection{Modifying a fresh object} \label{sub:modifying-fresh-objects}
+\subsection{Modifying a fresh object} \label{sub:modifying-fresh-objects}
 
 If an object \textit{o} is allocated inside the analysed method \textit{m}, the object \textit{o} is said to be \textit{fresh}~\cite{pearce2011jpure}. To modify \textit{o}'s state we might call a method that looks impure (since that method would have the side-effect of modifying \textit{o}). However, this method should not make \textit{m} impure since \textit{o} is fresh, which means that the modification of \textit{o} is not a side-effect of \textit{m}.
 
@@ -412,7 +418,7 @@ Consider the following example:
 
 Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side-effect of \texttt{Add()}, \texttt{Add()} cannot be a pure method. Does that mean that the function \texttt{Foo()} calling \texttt{list.Add()} is also impure, because it calls a non-pure method? In general functions that invoke impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{ssub:functional-purity-definition}:
 
-\textit{A function is pure if it is side-effect free and deterministic}.
+\textit{A function is functionally pure if it is side-effect free and deterministic}.
 
 Because the function \texttt{Foo()} only modifies an object exclusively visible inside the function, \texttt{Foo()} does not have any side-effect. Nor is the function non-deterministic since it does not read any value outside of the function besides its parameters, which it in this case doesn't have. This means that \texttt{Foo()} is pure.
 
@@ -470,7 +476,7 @@ The key thing in both the example where a method \textit{m} calls locally or par
 
 What if an object's method is both locally and parametrically impure? Just like in the previous cases, as long as the object is fresh the purity of the caller is not affected.
 
-\subsubsection{Iterators}
+\subsection{Iterators} \label{sub:iterators}
 
 % This example would be parametrically impure, or locally impure if `items` were a field in `this`?
 % Maybe not due to the implementation of `foreach`?
@@ -491,7 +497,7 @@ As Pearce suggests, an iterator may at first glance look pure~\cite{pearce2011jp
 
 TODO: explain that this doesn't affect us because our definition of purity includes determinism, or because of the C\# compiler's implementation
 
-\subsubsection{Non-static property pointing to a static field} \label{ssub:non-static-property}
+\subsection{Non-static property pointing to a static field} \label{sub:non-static-property}
 \textit{Properties} in C\# are special \texttt{get} and \texttt{set} methods for reading, computing or writing to values of object fields~\cite{microsoft-properties}. Properties can, just like other fields or methods be set to \texttt{static}, which means that they are assigned to the class rather than any instantiated object. If a method reads from or modifies a static property, that method would be considered to be non-deterministic or to have a side-effect, i.e. it would be impure, because static fields are accessible anywhere in a program.
 
 However, properties can also be non-static but still read or modify static fields. Consider the following:
@@ -527,7 +533,7 @@ In the example in \autoref{fig:non-static-property-example}, the method \texttt{
 
 *Perhaps ignore cases like this for simplicity?*
 
-\subsection{The analysis} \label{sub:Analysis}
+\section{The analysis} \label{sub:Analysis}
 There are five kinds of functional purity levels for: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}.
 
 Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function. If during the traversal a call or reference to a compiled method or a field is found, mark the caller function's purity as \textit{unknown}.
@@ -571,7 +577,7 @@ We do not have to explicitly handle the case mentioned in \autoref{sub:modifying
   \item The case of \textit{o} being a parameter to \textit{m} has to be checked because this is parametrical impurity.
 \end{itemize}
 
-\subsubsection{Example} \label{ssub:Example}
+\subsection{Example} \label{ssub:Example}
 \autoref{fig:example-code} contains a simple implementation of a linked list in C\#. In order to illustrate all types of impurities, the implementation contains some odd design choices.
 
 The method \texttt{Length()} takes a \texttt{LinkedList} as input and returns its length. This method is deterministic since it only depends on its input argument, and it is side-effect free since it does not mutate any value that exists outside its scope, including its parameter object. Therefore, \texttt{Length()} is pure.
@@ -696,7 +702,7 @@ The analysis starts off by building the dependency set for each function and set
   $W$ = \{\texttt{Length()}, \texttt{Remove()}\}
 \end{table}
 
-The working set is the set of functions with empty dependency sets, i.e. \texttt{Length()} and \texttt{Remove()}. We now go through each item in the list in \autoref{sub:Analysis} for both methods. Since none of them apply to \texttt{Length()}, its purity remains \textit{pure}. The following applies to \texttt{Remove()} since it directly mutates its input parameter \texttt{list} in multiple locations, and so \texttt{Remove()} is marked \textit{parametrically impure}:
+The working set $W$ is the set of functions in the lookup table with empty dependency sets, i.e. \texttt{Length()} and \texttt{Remove()}. We now go through each item in the list in \autoref{sub:Analysis} for each method in $W$, and check which items apply to the methods. Since none of the items apply to \texttt{Length()}, its purity level remains \textit{pure}. The following item applies to \texttt{Remove()} since it directly mutates its input parameter \texttt{list} in multiple locations, and therefore \texttt{Remove()} is marked \textit{parametrically impure}:
 
 "If the analyzed method \textit{m} modifies an input parameter of reference type, mark \textit{m} as \textit{parametrically impure}."
 
@@ -716,7 +722,7 @@ Since none of the two methods were marked \textit{impure} or \textit{unknown}, t
     \texttt{PrintListLength()} & \texttt{PrintLength()} & \textit{pure}                  \\ \hline
   \end{tabular}
   \\
-  $W$ = \{\texttt{Add}(), \texttt{PrintLength}()\}
+  $W$ = \{\texttt{Add()}, \texttt{PrintLength()}\}
 \end{table}
 
 Now we perform the same thing again with the new working set, starting with \texttt{Add()}. Out of the items in the list in \autoref{sub:Analysis}, the following applies to \texttt{Add()}, since it modifies its object in multiple locations, for instance by assigning to the field \texttt{tail}:
@@ -748,21 +754,6 @@ Since \texttt{PrintLength()} was marked \textit{impure} its impurity is propagat
 
 At this point we only have \texttt{PrintListLength()} in the working set. Since it has already been marked \textit{impure} and analyzing it yields no more effects to the lookup table, the analysis stops here. The final result is what is shown in the lookup table in \autoref{tab:lookup-table3}.
 
-\subsection{Code base} \label{sub:Code base}
-\textbf{Mostly pure code}
-\begin{itemize}
-  \item \href{https://github.com/dotnet/roslyn/blob/master/src/Workspaces/SharedUtilitiesAndExtensions/Compiler/Core/Utilities/CompilerUtilities/ImmutableHashMap.cs}{\texttt{ImmutableHashMap.cs}} - has many methods marked with \texttt{[pure]}
-  \item \href{https://github.com/nodatime/nodatime/blob/master/src/NodaTime}{NodaTime} has many pure methods. NodaTime's \href{https://github.com/nodatime/nodatime/blob/master/src/NodaTime/AnnualDate.cs}{\texttt{AnnualDate.cs}} for instance has many pure methods not marked with \texttt{[pure]}
-\end{itemize}
-
-\textbf{Mostly impure code}
-\begin{itemize}
-  \item \href{https://github.com/SixLabors/ImageSharp/blob/master/src/ImageSharp}{ImageSharp}
-  \item \href{https://github.com/geaz/sharpDox}{sharpDox}
-\end{itemize}
-
-TODO
-
 \section{Implementation of the analysis tool} \label{sec:Implementation of the analysis tool}
 % \item For performance reasons, first check general stuff and then do more specific checks.
 
@@ -792,6 +783,21 @@ The analysis does not handle recursion, which could cause it finish before all f
 % Static method purity is calculated as the percentage of all methods in the call graph that are pure~\cite{xu2007dynamic}.
 
 The analysis uses a blacklist of built-in impure C\# functions, in order to spot functions that handle impure actions such as randomness and I/O. There may be other impure built-in similar functions that are not in the blacklist.
+
+TODO
+
+\subsection{Code base} \label{sub:Code base}
+\textbf{Mostly pure code}
+\begin{itemize}
+  \item \href{https://github.com/dotnet/roslyn/blob/master/src/Workspaces/SharedUtilitiesAndExtensions/Compiler/Core/Utilities/CompilerUtilities/ImmutableHashMap.cs}{\texttt{ImmutableHashMap.cs}} - has many methods marked with \texttt{[pure]}
+  \item \href{https://github.com/nodatime/nodatime/blob/master/src/NodaTime}{NodaTime} has many pure methods. NodaTime's \href{https://github.com/nodatime/nodatime/blob/master/src/NodaTime/AnnualDate.cs}{\texttt{AnnualDate.cs}} for instance has many pure methods not marked with \texttt{[pure]}
+\end{itemize}
+
+\textbf{Mostly impure code}
+\begin{itemize}
+  \item \href{https://github.com/SixLabors/ImageSharp/blob/master/src/ImageSharp}{ImageSharp}
+  \item \href{https://github.com/geaz/sharpDox}{sharpDox}
+\end{itemize}
 
 TODO
 
