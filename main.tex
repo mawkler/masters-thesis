@@ -155,7 +155,8 @@ Functional programming and object oriented programming are two different program
 \subsubsection{Object oriented programming} \label{ssub:object-oriented-programming} % Perhaps also mention imperative programming?
 
 \begin{enumerate}
-\item Computations are done via \emph{methods} belonging to \emph{objects}, whose structure suits the goal of whatever computation we're doing~\cite{john-m-chambers}.
+\item Computations are done via \textit{methods} belonging to \textit{objects}, whose structure suits the goal of whatever computation we're doing~\cite{john-m-chambers}.
+\item Each object has a unique \textit{object identity} which distinguishes it from all other objects~\cite{khoshafian1986object}.
 \item Objects are based on \emph{classes}, and objects belonging to a class have a shared set of properties~\cite{john-m-chambers}.
 \item Classes can \emph{inherit} from other superclasses, such that a class is also an instance of its superclass~\cite{john-m-chambers}.
 \end{enumerate}
@@ -181,7 +182,7 @@ The definition that will be used in this thesis is that a function is functional
 
 A side-effect is any action performed by a function that is visible from the function's caller's point of view~\cite{purity-in-javascript}. A function is deterministic if its output depends purely on its input parameters, i.e. the method must return the same value for the same input regardless of the state of the program~\cite{purity-in-java}.
 
-As seen in \autoref{sec:Related work} a lot of related work define functional purity only as being synonymous with "side-effect free". This definition omits determinism and allows functions to read from variables defined outside of their scope, which is less functional. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
+As seen in \autoref{sec:Related work} some related work define functional purity only as being synonymous with "side-effect free". This definition omits determinism and allows functions to read from variables defined outside of their scope, which is less functional. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
 % the first two who's work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively.
 Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic does in a way also simplify the analysis because it means that any symbol used in a function \textit{F} but defined outside \textit{F} would make \textit{F} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{F} to see if it is being written to or if it is only being read before concluding if \textit{F} is pure.
 
@@ -197,6 +198,7 @@ Moreover, requiring pure functions to be both side-effect free \textit{and} dete
   \item Abstract syntax trees (ASTs)
   \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/work-with-syntax}{.NET ASTs}~\cite{albahari2003nutshell}
   \item Objects: fields and properties % https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/members
+  \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/exceptions/}{Exceptions}.
 \end{itemize}
 
 % Microsoft has an article on refactoring none-pure C\# code to pure functions \cite{microsoft-refactoring}.
@@ -217,7 +219,6 @@ Moreover, requiring pure functions to be both side-effect free \textit{and} dete
   \item Implicit and explicit variable declarations (C\# handles both)
   \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/inside-a-program/identifier-names}{Identifiers} are the names of types, members variables or namespaces used in source code. They reference \href{https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/work-with-semantics#symbols}{symbols}, representing a declared namespace, type, method, field, variable, etc. The compiler's process of associating identifiers with symbols is called \textit{binding}~\cite{microsoft-semantic-analysis}. % TODO explain symbols and identifiers
   \item Closures and how objects can be considered closures (if fields are \texttt{readonly}?), and whether or not they should be considered pure.
-  \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/exceptions/}{Exceptions}.
 \end{itemize}
 
 % \subsection{The C\# Language} \label{sub:The C\# Language}
@@ -342,6 +343,7 @@ The abstract syntax tree (AST) generated by the texttt{Microsoft.CodeAnalysis} l
   \item The \texttt{ClassDeclarationSyntax} node represents the declaration of a class.
   \item The \texttt{MethodDeclarationSyntax} node represents the declaration of a meth-od. Each \texttt{MethodDeclarationSyntax} node has a \texttt{ParameterListSyn}- \texttt{tax} - a list of \texttt{ParameterSyntax} nodes represents, each representing a me-thod parameter.
   \item The \texttt{LocalFunctionStatementSyntax} node represents a function decla-red inside a method. Just like the \texttt{MethodDeclarationSyntax} it has a \texttt{Param}-\texttt{eterListSyntax} representing the local function's parameters.
+  \item The \texttt{InvocationExpressionSyntax} node represents a call (invocation) to a method.
   \item The \texttt{ReturnStatementSyntax} node represents the \texttt{return} token.
   \item The \texttt{VariableDeclarationSyntax} node represents declarations of new variables.
   \item The \texttt{LocalDeclarationStatementSyntax} node represents declarations of new local variables. This node contains a \texttt{VariableDeclarationSyntax} node.
