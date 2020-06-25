@@ -158,7 +158,7 @@ Functional programming and object oriented programming are two different program
 \item Computations are done via \textit{methods} belonging to \textit{objects}, whose structure suits the goal of whatever computation we're doing~\cite{john-m-chambers}.
 \item Each object has a unique \textit{object identity} which distinguishes it from all other objects~\cite{khoshafian1986object}.
 \item Objects are based on \emph{classes}, and objects belonging to a class have a shared set of properties~\cite{john-m-chambers}.
-\item Classes can \emph{inherit} from other superclasses, such that a class is also an instance of its superclass~\cite{john-m-chambers}.
+\item Classes can \emph{inherit} from other superclasses, such that an object of a class is also an object of its superclass~\cite{john-m-chambers}.
 \end{enumerate}
 
 \subsubsection{Functional programming} \label{sub:functional-programming}
@@ -540,11 +540,13 @@ There are five kinds of functional purity levels for: \textit{pure}, \textit{loc
 
 Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function. If during the traversal a call or reference to a compiled method or a field is found, mark the caller function's purity as \textit{unknown}.
 
+Since object constructors can perfom impure actions just like methods, they are in this section included in the term "function".
+
 Because of the problem with inheritance and method overriding discussed in \autoref{sub:inheritance},
 when going through the AST and building the dependency set, if any object parameter's method is overridden by any of its subclasses, add all the overridden methods to the calling function's dependency set.
 Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. The purity of each function is initialized to \textit{pure}, except those that were explicitly marked \textit{unknown}.
 
-Let the \textit{working set} \textit{W} be the set of all functions with empty dependency sets. Whenever a function's dependency set becomes empty, that function is added to \textit{W}. Calculate the purity level for each function in \textit{W} as described below. Then, for each function \textit{f} in the working set, propagate the impurity of those with purity level \textit{impure} or \textit{unknown} to the functions dependant on \textit{f}, "contaminating" them. Remove \textit{f} from the dependency sets of all functions that depend on \textit{f}, as well as from the working set \textit{W}. Add functions that now have empty dependency sets to \textit{W}. Repeat this process until there are no more changes to the lookup table, in which case the analysis is complete. Each function in the lookup table will now have been marked with its corresponding purity level. Because the purity level of each function was initialized to \textit{pure}, any function who's purity level was unaffected by the analysis will be marked \textit{pure} at the end of the analysis.
+Let the \textit{working set} \textit{W} be the set of all functions with empty dependency sets. Whenever a function's dependency set becomes empty, that function is added to \textit{W}. Calculate the purity level for each function in \textit{W} as described below. Then, for each function \textit{f} in \textit{W}, propagate the impurity of those with purity level \textit{impure} or \textit{unknown} to the functions dependant on \textit{f}, "contaminating" them. Remove \textit{f} from the dependency sets of all functions that depend on \textit{f}, as well as from the working set \textit{W}. Add functions that now have empty dependency sets to \textit{W}. Repeat this process until there are no more changes to the lookup table, in which case the analysis is complete. Each function in the lookup table will now have been marked with its corresponding purity level. Because the purity level of each function was initialized to \textit{pure}, any function who's purity level was unaffected by the analysis will be marked \textit{pure} at the end of the analysis.
 
 A method can have multiple impurity levels. The following is how to determine the purity level \textit{p} for the currently analyzed method \textit{m}.
 
@@ -785,6 +787,8 @@ The analysis does not handle recursion, which could cause it finish before all f
 % Static method purity is calculated as the percentage of all methods in the call graph that are pure~\cite{xu2007dynamic}.
 
 The analysis uses a blacklist of built-in impure C\# functions, in order to spot functions that handle impure actions such as randomness and I/O. There may be other impure built-in similar functions that are not in the blacklist.
+
+An alternative way to compare programs' total purity levels could be to profile each program and weight the purity level of each method depending on how often that method is called. For example, let's say that only 10\% of program \textit{A}'s methods are pure compared to program \textit{B} where 20\% of its methods are pure. Now say that \textit{A}'s pure methods make up 90\% of the total function calls during execution and \textit{B}'s pure methods only are called 10\% of the times during execution. In this case, one could argue that \textit{A} is purer than \textit{B} since it makes more calls to pure methods than impure ones compared to \textit{B}, even though \textit{B} has a higher ratio of the number of pure methods.
 
 TODO
 
