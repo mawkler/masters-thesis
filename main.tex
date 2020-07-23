@@ -771,7 +771,7 @@ The code analysis tool is built in .NET core and C\#. It can be compiled, run an
 
 To find the declaration/definition of symbols (in the form of \texttt{IdentifierNameSyn\allowbreak tax}) the method \texttt{SemanticModel.GetSym\allowbreak bolInfo()} is used, which uses the semantic model of the program.
 
-% A very simple implementation could be one that only looks at input parameters and checks if they are all
+The tool is not able to determine the purity of higher-order functions which invoke methods that are passed to them as arguments.
 
 TODO
 
@@ -789,6 +789,10 @@ The analysis does not handle recursion, which could cause it finish before all f
 The analysis uses a blacklist of built-in impure C\# functions, in order to spot functions that handle impure actions such as randomness and I/O. There may be other impure built-in similar functions that are not in the blacklist.
 
 An alternative way to compare programs' total purity levels could be to profile each program and weight the purity level of each method depending on how often that method is called. For example, let's say that only 10\% of program \textit{A}'s methods are pure compared to program \textit{B} where 20\% of its methods are pure. Now say that \textit{A}'s pure methods make up 90\% of the total function calls during execution and \textit{B}'s pure methods only are called 10\% of the times during execution. In this case, one could argue that \textit{A} is purer than \textit{B} since it makes more calls to pure methods than impure ones compared to \textit{B}, even though \textit{B} has a higher ratio of the number of pure methods.
+
+Because most methods use built-in C\# methods for which the source code is not necessarily public, a majority of the analyzed get the purity level \textit{unknown}.
+
+One way of tackling this was to search online for the source code of classes like \texttt{List}, run the analyzer on them and permanently store the calculated purity levels in a dictionary in the program, so that whenever a call to a built-in \texttt{List} method is made its purity level (if it is not \textit{unknown}) can be retrieved from the dictionary. However, this relies on the fact that the source code for a particular built in method is available online, and the process of searching for its code, running the analyser on it and adding any known result to the program's dictionary is cumbersome.
 
 TODO
 
