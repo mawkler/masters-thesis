@@ -790,9 +790,9 @@ The analysis uses a blacklist of built-in impure C\# functions, in order to spot
 
 An alternative way to compare programs' total purity levels could be to profile each program and weight the purity level of each method depending on how often that method is called. For example, let's say that only 10\% of program \textit{A}'s methods are pure compared to program \textit{B} where 20\% of its methods are pure. Now say that \textit{A}'s pure methods make up 90\% of the total function calls during execution and \textit{B}'s pure methods only are called 10\% of the times during execution. In this case, one could argue that \textit{A} is purer than \textit{B} since it makes more calls to pure methods than impure ones compared to \textit{B}, even though \textit{B} has a higher ratio of the number of pure methods.
 
-Because most methods use built-in C\# methods for which the source code is not necessarily public, a majority of the analyzed get the purity level \textit{unknown}.
+Because most methods use built-in C\# methods for which the source code is not necessarily public, a majority of the analyzed get the purity level \textit{unknown}. One way of tackling this was to search online for the source code of classes like \texttt{List}, run the analyzer on them and permanently store the calculated purity levels in a dictionary in the program, so that whenever a call to a built-in \texttt{List} method is made its purity level (if it is not \textit{unknown}) can be retrieved from the dictionary. However, this relies on the fact that the source code for a particular built in method is available online, and the process of searching for its code, running the analyser on it and adding any known result to the program's dictionary is cumbersome.
 
-One way of tackling this was to search online for the source code of classes like \texttt{List}, run the analyzer on them and permanently store the calculated purity levels in a dictionary in the program, so that whenever a call to a built-in \texttt{List} method is made its purity level (if it is not \textit{unknown}) can be retrieved from the dictionary. However, this relies on the fact that the source code for a particular built in method is available online, and the process of searching for its code, running the analyser on it and adding any known result to the program's dictionary is cumbersome.
+Since the implementation is unable to determine local and parametrical impurity it cannot for certain determine the purity of a program. It does however for certain identifiy impurities, and does therefore compute a lower bound to a program's impurity level.
 
 TODO
 
@@ -893,6 +893,7 @@ Their verifier has a white list of fields and methods from Java libraries that d
 \section{Conclusion and Future Work} \label{sec:Conclusion and future Work} % Maybe only "Conclusion"
 
 \subsection{Conclusion} \label{sub:Conclusion}
+
 \textit{Functional purity} is perhaps the most useful concept from functional programming that object oriented programmers can learn from. The definition of a pure program used in this paper is one that is side-effect free and deterministic. There are many benefits of using functionally pure methods in object oriented programming. Pure methods are generally easier to reason about due to their lack of side effects. Moreover, pure methods are easier to test, debug and maintain. The ability to automatically determine the level of purity in a given C\# program can help programmers to write less impure code, and thereby reap previously mentioned benefits.
 
 \subsection{Future work} \label{sub:Future work}
