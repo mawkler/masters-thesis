@@ -5,6 +5,10 @@ public class LinkedList
     private Node head;
     private Node tail;
 
+    // Static counter used by Concatenate()
+    public static int numberOfConcatenates;
+
+    // Returns length of list
     public static int Length(LinkedList list)
     {
         Node current = list.head;
@@ -34,16 +38,21 @@ public class LinkedList
         }
     }
 
-    // Removes item at index from list. Assumes that list is non-empty and that
-    // index is non-negative and less than list's length
- me    //
-    // For the sake of this example this method is static quite simplified.
-    static public void Remove(int index, LinkedList list)
+    // Removes item at index from list.
+    // Assumes that list is non-empty and
+    // that index is non-negative and less
+    // than list's length
+    //
+    // For the sake of this example this
+    // method is static quite simplified.
+    public static void Remove(int index, LinkedList list)
     {
-        if (index == 0) {
+        if (index == 0)
+        {
             list.head = list.head.next;
         }
-        else {
+        else
+        {
             Node predecessor = list.head;
 
             for (int i = 0; i < index - 1; i++)
@@ -54,14 +63,26 @@ public class LinkedList
         }
     }
 
-    public static void PrintListLength(LinkedList list)
+    // Concatenates two lists by
+    // appending a list to the end of
+    // this list
+    public LinkedList Concatenate(LinkedList list)
     {
-        Console.WriteLine(Length(list));
+        this.tail.next = list.head;
+        this.tail = list.tail
+        list.head = this.head;
+
+        // This gives the method a
+        // side-effect
+        this.numberOfConcatenates++;
     }
 
-    public void PrintLength()
+    // Overloading of Concatenate that
+    // allows passing both lists as
+    // parameters
+    public static LinkedList Concatenate(LinkedList l1, LinkedList l2)
     {
-        PrintListLength(this);
+        l1.Concatenate(LinkedList l2);
     }
 
     private class Node
