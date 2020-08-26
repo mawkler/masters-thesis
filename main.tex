@@ -65,9 +65,11 @@
 \begin{document}
 
 % Set title, and subtitle if you have one
-\title{To what extent is C\# being used as a functional programming language?}
+% \title{To what extent is C\# being used as a functional programming language?}
+\title{To what extent is functional purity being used in C\# open source programs?}
 % Use this if you have a subtitle
-\subtitle{An evaluation of functional purity in C\#}
+% \subtitle{An evaluation of functional purity in C\#}
+\subtitle{A methodology for measuring functional purity in C\#}
 % Set author names, separated by "\\ " (don't forget the space)
 % List authors alphabetically by last name (unless someone did significantly more/less)
 \author{Melker Österberg}
@@ -219,6 +221,7 @@ Moreover, requiring pure functions to be both side-effect free \textit{and} dete
   \item Implicit and explicit variable declarations (C\# handles both)
   \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/inside-a-program/identifier-names}{Identifiers} are the names of types, members variables or namespaces used in source code. They reference \href{https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/work-with-semantics#symbols}{symbols}, representing a declared namespace, type, method, field, variable, etc. The compiler's process of associating identifiers with symbols is called \textit{binding}~\cite{microsoft-semantic-analysis}. % TODO explain symbols and identifiers
   \item Closures and how objects can be considered closures (if fields are \texttt{readonly}?), and whether or not they should be considered pure.
+  \item Overloading - each overloading of a method counts as its own function, even though they share the same name
 \end{itemize}
 
 % \subsection{The C\# Language} \label{sub:The C\# Language}
@@ -586,11 +589,11 @@ We do not have to explicitly handle the case mentioned in \autoref{sub:modifying
 
 The method \texttt{Length()} takes a \texttt{LinkedList} as input and returns its length. This method is deterministic since it only depends on its input argument, and it is side-effect free since it does not mutate any value that exists outside its scope, including its parameter object. Therefore, \texttt{Length()} is pure.
 
-\texttt{Add()} appends an \texttt{Object} to the end the list. It is not deterministic since it reads from and mutates the state of \texttt{this} in multiple locations. For instance, the first location where it modifies \texttt{this} is where it assigns \texttt{new Node} to \texttt{head}, which is a field that is visible outside the method. Therefore, \texttt{Add()} is locally impure -- it depends on and/or mutates the state of its object.
+\texttt{Add()} appends an \texttt{Object} to the end the list. It is not deterministic since it reads from and mutates the state of \texttt{this} in multiple locations. For instance, the first location where it modifies \texttt{this} is where it assigns a \texttt{new Node} to \texttt{head}, which is a field that is visible outside the method. Therefore, \texttt{Add()} is locally impure -- it depends on and/or mutates the state of its object.
 
 \texttt{Remove()} deletes an item at a given index from a \texttt{LinkedList} which is passed as an argument to the method. To simplify the method and reduce its size, its input list is assumed to be non-empty and the index value is assumed to be a valid position inside the list. \texttt{Remove()} only operates based on its input and is therefore deterministic. However, it does modify fields of the parameter \texttt{list} and is therefore parametrically impure.
 
-\texttt{PrintListLength()} and \texttt{PrintLength()} both print the list length using the method \texttt{Length()}. The \texttt{PrintListLength()} uses I/O and is therefore impure. \texttt{PrintLength()} depends on the former method, and is therefore also impure. These two methods were added to illustrate the propagation of impurity.
+The first overloading of the method \texttt{Concatenate()} modifies the static class field \texttt{numberOfConcatenates} and therefore has a side-effect, making it impure. The second overloading of \texttt{Concatenate()} depends on the former method, and is therefore also impure. The static field \texttt{numberOfConcatenates} was added to illustrate the propagation of impurity.
 
 \begin{figure}[H]
   \centering
@@ -600,6 +603,9 @@ The method \texttt{Length()} takes a \texttt{LinkedList} as input and returns it
   {
     private Node head;
     private Node tail;
+
+    // Static counter used by Concatenate()
+    public static int numberOfConcatenates;
 
     // Returns length of list
     public static int Length(LinkedList list)
@@ -633,7 +639,7 @@ The method \texttt{Length()} takes a \texttt{LinkedList} as input and returns it
 
 
 
-    // code continues in next column
+    // code continues in next column...
     \end{lstlisting}
   \end{minipage}
   \begin{minipage}[t]{0.46\linewidth}
@@ -642,7 +648,8 @@ The method \texttt{Length()} takes a \texttt{LinkedList} as input and returns it
   // Assumes that list is non-empty and
   // that index is non-negative and less
   // than list's length
-  static public void Remove(int index, LinkedList list)
+
+  public static void Remove(int index, LinkedList list)
   {
     if (index == 0) {
       list.head = list.head.next;
@@ -658,14 +665,26 @@ The method \texttt{Length()} takes a \texttt{LinkedList} as input and returns it
     }
   }
 
-  public static void PrintListLength(LinkedList list)
+  // Concatenates two lists by
+  // appending a list to the end of
+  // this list
+  public LinkedList Concatenate(LinkedList list)
   {
-    Console.WriteLine(Length(list));
+    this.tail.next = list.head;
+    this.tail = list.tail
+    list.head = this.head;
+
+    // This gives the method a
+    // side-effect
+    this.numberOfConcatenates++;
   }
 
-  public void PrintLength()
+  // Overloading of Concatenate that
+  // allows passing both lists as
+  // parameters
+  public static LinkedList Concatenate(LinkedList l1, LinkedList l2)
   {
-    PrintListLength(this);
+    l1.Concatenate(LinkedList l2);
   }
 
   private class Node
@@ -771,7 +790,9 @@ The code analysis tool is built in .NET core and C\#. It can be compiled, run an
 
 To find the declaration/definition of symbols (in the form of \texttt{IdentifierNameSyn\allowbreak tax}) the method \texttt{SemanticModel.GetSym\allowbreak bolInfo()} is used, which uses the semantic model of the program.
 
-The tool is not able to determine the purity of higher-order functions which invoke methods that are passed to them as arguments.
+The tool is not able to determine the purity of methods that invoke delegate functions. Delegate functions are higher-order functions that invoke methods are passed to them as arguments. Invoking delegate functions is done relatively sparsely in C\# and handling them would require an unproportional amount of extra work. The delegate functions themselves however are analyzed just like regular methods.
+
+Something I realized while implementing the tool is that the C\# compiler does not perform tail call recursion. Recursion is a very common technique when it comes to functional programming. The initial implementation of the program built the lookup table by calculating each function's dependency set recursively. When analyzing larger code bases the program crashed due to an immense memory usage. Therefore, its recursive implementaiton had to be changed to an iterative one which worked C\# better.
 
 TODO
 
