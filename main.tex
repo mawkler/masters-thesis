@@ -538,7 +538,7 @@ In the example in \autoref{fig:non-static-property-example}, the method \texttt{
 
 *Perhaps ignore cases like this for simplicity?*
 
-\section{The analysis} \label{sub:Analysis}
+\section{The analysis} \label{sec:Analysis}
 There are five kinds of functional purity levels for: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}.
 
 Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function. If during the traversal a call or reference to a compiled method or a field is found, mark the caller function's purity as \textit{unknown}.
@@ -549,24 +549,26 @@ Because of the problem with inheritance and method overriding discussed in \auto
 when going through the AST and building the dependency set, if any object parameter's method is overridden by any of its subclasses, add all the overridden methods to the calling function's dependency set.
 Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. The purity of each function is initialized to \textit{pure}, except those that were explicitly marked \textit{unknown}.
 
-Let the \textit{working set} \textit{W} be the set of all functions with empty dependency sets. Whenever a function's dependency set becomes empty, that function is added to \textit{W}. Calculate the purity level for each function in \textit{W} as described below. Then, for each function \textit{f} in \textit{W}, propagate the impurity of those with purity level \textit{impure} or \textit{unknown} to the functions dependant on \textit{f}, "contaminating" them. Remove \textit{f} from the dependency sets of all functions that depend on \textit{f}, as well as from the working set \textit{W}. Add functions that now have empty dependency sets to \textit{W}. Repeat this process until there are no more changes to the lookup table, in which case the analysis is complete. Each function in the lookup table will now have been marked with its corresponding purity level. Because the purity level of each function was initialized to \textit{pure}, any function who's purity level was unaffected by the analysis will be marked \textit{pure} at the end of the analysis.
+Let the \textit{working set} \textit{W} be the set of all functions with empty dependency sets. Whenever a function's dependency set becomes empty, that function is added to \textit{W}. Calculate the purity level for each function in \textit{W} as described in the checklist in \autoref{sub:checklist-to-determine-the-purity-level} below. Then, for each function \textit{f} in \textit{W}, propagate the impurity of those with purity level \textit{impure} or \textit{unknown} to the functions dependant on \textit{f}, "contaminating" them. Remove \textit{f} from the dependency sets of all functions that depend on \textit{f}, as well as from the working set \textit{W}. Add functions that now have empty dependency sets to \textit{W}. Repeat this process until there are no more changes to the lookup table, in which case the analysis is complete. Each function in the lookup table will now have been marked with its corresponding purity level. Because the purity level of each function was initialized to \textit{pure}, any function who's purity level was unaffected by the analysis will be marked \textit{pure} at the end of the analysis.
+
+\subsection{Checklist to determine the purity level} \label{sub:checklist-to-determine-the-purity-level}
 
 A method can have multiple impurity levels. The following is how to determine the purity level \textit{p} for the currently analyzed method \textit{m}.
 
-\begin{itemize}
-  \item If any object field or property of the currently analyzed method \textit{m}'s object is read from or modified, mark \textit{m} as \textit{locally impure}.
+\begin{enumerate}
+  \item If any object field or property of the currently analyzed method \textit{m}'s object is read from or modified, mark \textit{m} as \textit{locally impure}. \label{itm:locally-impure}
     % TODO: mention indirectly modifing fields by modifing variables that point to fields
     %   var foo = field;
     %   foo.bar = null;
   \item If \textit{m} calls a locally impure method belonging to \textit{m}'s object (i.e. \texttt{this}) \textit{m} is marked \textit{locally impure}.
-  \item If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked \textit{impure}. This is because reading a static field of an object is a non-deterministic action, and modifying a static field of an object is a side-effect since it mutates the field for all instantiations of that object's class.
+  \item If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked \textit{impure}. This is because reading a static field of an object is a non-deterministic action, and modifying a static field of an object is a side-effect since it mutates the field for all instantiations of that object's class. \label{itm:static-impure}
   \item If the currently analyzed method \textit{m} calls an input parameter's method $m_p$ and $m_p$ is overridden by any locally impure and/or parametrically impure method, $m_p$ is temporarily marked with the impurities of all the overriding methods in the context of the analysis of the current method \textit{m}. If $m_p$ is overridden by any impure method, \textit{m} is permanently marked as impure.
     % Moreover:
     % \begin{itemize} % Maybe these are covered by other cases?
     %   \item If $m_p$ is overridden by any impure method, \textit{m} is marked impure.
     %   \item If $m_p$ is overridden by any locally impure method, \textit{m} is marked parametrically impure.
     % \end{itemize}
-  \item If the analyzed method \textit{m} modifies an input parameter of reference type, mark \textit{m} as \textit{parametrically impure}. This could be done in a couple of ways:
+  \item If the analyzed method \textit{m} modifies an input parameter of reference type, mark \textit{m} as \textit{parametrically impure}. This could be done in a couple of ways: \label{itm:parametrically-impure}
     \begin{itemize}
       \item By calling an object type parameter's method that has been marked as \textit{locally impure}.
       \item By passing an object type parameter as an argument to a method that has been marked as \textit{parametrically impure}.
@@ -576,7 +578,7 @@ A method can have multiple impurity levels. The following is how to determine th
   \item If a method returns \texttt{this} or passes it as an argument to a function it marked \textit{locally impure} since it is dependent on the state of its object, making it non-deterministic.
   \item Any method that raises an event or an exception is marked as \textit{impure}, as well as any method mentioned in the two lists of impure built-in C\# methods in \autoref{sub:Impure-built-in-methods}.
   % \item Build a lookup table with all evaluated functions, their purity and their dependency set~\cite{pitidis2010purity}.
-\end{itemize}
+\end{enumerate}
 
 We do not have to explicitly handle the case mentioned in \autoref{sub:modifying-fresh-objects} where fresh objects are modified with their own locally impure methods due to the fact that our definition of local purity includes determinism. Because if a non-fresh object \textit{o} is modified with its locally impure method, then we must have read the pointer to \textit{o} from a field outside the method, meaning that \textit{m} is non-deterministic and therefore locally impure. This is why we only propagate the purity level of \textit{impure} functions to their callers, and not \textit{local impurity} or \textit{parametrical impurity}. There are however two exceptions to this, which are covered by previously mentioned checks in our analysis:
 \begin{itemize}
@@ -709,73 +711,69 @@ The first overloading of the method \texttt{Concatenate()} modifies the static c
 The analysis starts off by building the dependency set for each function and setting all purities to \textit{pure}, as seen in \autoref{tab:lookup-table1}.
 
 \begin{table}[H]
-  \caption{Initial state of the lookup table and working set after computing each function's dependency set.}
+  \caption{Initial state of the lookup table after computing each function's dependency set. The working set $W$ is the set of all functions with empty dependency sets.}
   \label{tab:lookup-table1}
   \centering
   \begin{tabular}{|l|c|c|}
     \hline
-    $f$                         & $D_f$                  & $p$    \\ \hline
-    \texttt{Length()}           &                        & \textit{pure} \\
-    \texttt{Add()}              & \texttt{Length()}      & \textit{pure} \\
-    \texttt{Remove()}           &                        & \textit{pure} \\
-    \texttt{PrintLength()}      & \texttt{Length()}      & \textit{pure} \\
-    \texttt{PrintListLength()}  & \texttt{PrintLength()} & \textit{pure} \\ \hline
+    $f$                         & $D_f$                     & $p$    \\ \hline
+    \texttt{Length()}           &                           & \textit{pure} \\
+    \texttt{Add()}              & \texttt{Length()}         & \textit{pure} \\
+    \texttt{Remove()}           &                           & \textit{pure} \\
+    \texttt{Concatenate$_1()$}   &                           & \textit{pure} \\
+    \texttt{Concatenate$_2()$}   & \texttt{Concatenate$_1()$} & \textit{pure} \\ \hline
   \end{tabular}
   \\
-  $W$ = \{\texttt{Length()}, \texttt{Remove()}\}
+  $W$ = \{\texttt{Length()}, \texttt{Remove()}, \texttt{Concatenate$_1()$}\}
 \end{table}
 
-The working set $W$ is the set of functions in the lookup table with empty dependency sets, i.e. \texttt{Length()} and \texttt{Remove()}. We now go through each item in the list in \autoref{sub:Analysis} for each method in $W$, and check which items apply to the methods. Since none of the items apply to \texttt{Length()}, its purity level remains \textit{pure}. The following item applies to \texttt{Remove()} since it directly mutates its input parameter \texttt{list} in multiple locations, and therefore \texttt{Remove()} is marked \textit{parametrically impure}:
+The working set $W$ is the set of functions in the lookup table with empty dependency sets, i.e. \texttt{Length()}, \texttt{Remove()} and \texttt{Concatenate$_1()$} (the first overloading of \texttt{Concatenate()} in \autoref{fig:example-code}). We now go through each item in the checklist in \autoref{sub:checklist-to-determine-the-purity-level} for each method in $W$, and check which items apply to the methods:
 
-"If the analyzed method \textit{m} modifies an input parameter of reference type, mark \textit{m} as \textit{parametrically impure}."
+Since none of the items in the checklist apply to \texttt{Length()}, its purity level remains \textit{pure}. As for \texttt{Remove()}, \autoref{itm:parametrically-impure} applies since \texttt{Remove()} directly mutates its input parameter \texttt{list} in multiple locations. Therefore \texttt{Remove()} is marked \textit{parametrically impure}. As for the method \texttt{Concatenate$_1()$} the items \ref{itm:locally-impure}, \ref{itm:static-impure} and \ref{itm:parametrically-impure} apply to it. Item \ref{itm:parametrically-impure} since \texttt{Concatenate$_1()$} modifies the fields \texttt{list} and \texttt{tail} of its input parameter, item \autoref{itm:locally-impure} since it modifies its own \texttt{head} and \texttt{tail}, and \autoref{itm:static-impure} since \texttt{Concatenate()} modifies the static class field \texttt{numberOfConcatenates}. Thus \texttt{Concatenate$_1()$} is marked with the purity levels \textit{locally impure}, \textit{parametrically impure} and \textit{impure}.
 
-Since none of the two methods were marked \textit{impure} or \textit{unknown}, their purity levels are not propagated. \texttt{Length()} is then removed from the dependency sets of \texttt{Add()} and \texttt{PrintLength()}. \texttt{Length()} and \texttt{Remove()} are now removed from $W$, and \texttt{Add()} and \texttt{PrintLength()} are added to $W$, as their dependency sets are now empty. At this point the lookup table looks as shown in \autoref{tab:lookup-table2}.
+Since \texttt{Concatenate$_1()$}'s purity level was marked \textit{impure} its purity level is propagated to its callers, which in this case is \texttt{Concatenate$_2()$}. \texttt{Concatenate$_1()$} is then removed from the dependency set of \texttt{Concatenate$_2()$}, and \texttt{Length()} is removed from  \texttt{Add()}'s depenedency set. The three methods \texttt{Length()}, \texttt{Remove()} and \texttt{Concatenate$_1()$} are now removed from the working set $W$, and \texttt{Add()} and \texttt{Concatenate$_2()$} are added to $W$, as their dependency sets now are empty. At this point the state of the lookup table is as shown in \autoref{tab:lookup-table2}.
 
 \begin{table}[H]
-  \caption{\texttt{Remove()} has been marked \textit{parametrically impure}, and after analysing it and \texttt{Length()}, they are removed from the dependency set of their callers.}
+  \caption{\texttt{Remove()} and \texttt{Concatenate$_1()$}'s purity levels have been updated, and after analysing them they are removed from the dependency set of their callers. Also \texttt{Concatenate$_1()$}'s purity level has been propagated to \texttt{Concatenate$_2()$}.}
   \label{tab:lookup-table2}
   \centering
   \begin{tabular}{|l|c|c|}
     \hline
-    $f$                        & $D_f$                  & $p$                     \\ \hline
-    \texttt{Length()}          &                        & \textit{pure}                  \\
-    \texttt{Add()}             &                        & \textit{pure}                  \\
-    \texttt{Remove()}          &                        & \textit{parametrically impure} \\
-    \texttt{PrintLength()}     &                        & \textit{pure}                  \\
-    \texttt{PrintListLength()} & \texttt{PrintLength()} & \textit{pure}                  \\ \hline
+    $f$                        & $D_f$                  & $p$                                                 \\ \hline
+    \texttt{Length()}          &                        & \textit{pure}                                              \\
+    \texttt{Add()}             &                        & \textit{pure}                                              \\
+    \texttt{Remove()}          &                        & \textit{parametrically impure}                             \\
+    \texttt{Concatenate$_1()$}  &                        & \textit{locally impure}, \textit{parametrically impure}, \textit{impure} \\
+    \texttt{Concatenate$_2()$}  &                        & \textit{impure}                                            \\ \hline
   \end{tabular}
   \\
-  $W$ = \{\texttt{Add()}, \texttt{PrintLength()}\}
+  $W$ = \{\texttt{Add()}, \texttt{Concatenate$_2()$}\}
 \end{table}
 
-Now we perform the same thing again with the new working set, starting with \texttt{Add()}. Out of the items in the list in \autoref{sub:Analysis}, the following applies to \texttt{Add()}, since it modifies its object in multiple locations, for instance by assigning to the field \texttt{tail}:
+Now we perform the same actions again with the new working set $W$ = \{\texttt{Add()}, \texttt{Concatenate$_2()$}\}, starting with \texttt{Add()}. Out of the items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, \autoref{itm:locally-impure} applies to \texttt{Add()}, since it modifies its object in multiple locations, for instance by assigning to the field \texttt{tail}, and so \texttt{Add()}'s purity level is set to \textit{locall impure}.
 
-"If any object field or property of the currently analyzed method \textit{m}'s object is read from or modified, mark \textit{m} as \textit{locally impure}."
+As for \texttt{Concatenate$_2()$}, none of the items in the checklist apply, and so it remains its purity level \textit{impure} that was propagated to it from \texttt{Concatenate$_1()$}.
 
-As for \texttt{PrintLength}, the following applies since it calls the impure built-in method \texttt{Console.WriteLine()}:
-
-"Any method that raises an event or an exception is marked as \textit{impure}, as well as any method mentioned in the two lists of impure built-in C\# methods in \autoref{sub:Impure-built-in-methods}."
-
-Since \texttt{PrintLength()} was marked \textit{impure} its impurity is propagated to all its callers, which in this case is \texttt{PrintListLength()}. \texttt{PrintLength()} is then removed from \texttt{PrintListLength()}'s dependency set. \texttt{Add()} and \texttt{PrintLength()} are both removed from $W$, and \texttt{PrintListLength()} is added since its dependency set now is empty.
+\texttt{Add()} and \texttt{Concatenate$_2()$} are then both removed from $W$.
 
 \begin{table}[H]
-  \caption{Since analysing \texttt{PrintListLength()} yields no change to the lookup table, this is the final result of the analysis.}
+  \caption{\texttt{Add()}'s purity level has been updated to \textit{locally impure}, and $W$ is now empty. Therefore, this is the result of the analysis.}
   \label{tab:lookup-table3}
   \centering
   \begin{tabular}{|l|c|c|}
     \hline
-    $f$                        & $D_f$                  & $p$                     \\ \hline
-    \texttt{Length()}          &                        & \textit{pure}                  \\
-    \texttt{Add()}             &                        & \textit{locally impure}        \\
-    \texttt{Remove()}          &                        & \textit{parametrically impure} \\
-    \texttt{PrintLength()}     &                        & \textit{impure}                \\
-    \texttt{PrintListLength()} &                        & \textit{impure}                \\ \hline
+    $f$                        & $D_f$                  & $p$                                                 \\ \hline
+    \texttt{Length()}          &                        & \textit{pure}                                              \\
+    \texttt{Add()}             &                        & \textit{locally impure}                                    \\
+    \texttt{Remove()}          &                        & \textit{parametrically impure}                             \\
+    \texttt{Concatenate$_1()$}  &                        & \textit{locally impure}, \textit{parametrically impure}, \textit{impure} \\
+    \texttt{Concatenate$_2()$}  &                        & \textit{impure}                                            \\ \hline
   \end{tabular}
   \\
-  $W$ = \{\texttt{PrintListLength()}\}
+  $W$ = \{\}
 \end{table}
 
-At this point we only have \texttt{PrintListLength()} in the working set. Since it has already been marked \textit{impure} and analyzing it yields no more effects to the lookup table, the analysis stops here. The final result is what is shown in the lookup table in \autoref{tab:lookup-table3}.
+At this point the working set $W$ = \{\} is empty, and so there can be no more changes to the lookup table. Therefore the analysis stops here. The final result is thus what is shown in the lookup table in \autoref{tab:lookup-table3}.
 
 \section{Implementation of the analysis tool} \label{sec:Implementation of the analysis tool}
 % \item For performance reasons, first check general stuff and then do more specific checks.
