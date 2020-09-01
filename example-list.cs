@@ -22,6 +22,33 @@ public class LinkedList
         return length;
     }
 
+    // Removes item at an index from list.
+    // Assumes that list is non-empty and
+    // that index is non-negative and less
+    // than list's length
+    public static void Remove(int index, LinkedList list)
+    {
+        if (index == 0)
+        {
+            list.head = list.head.next;
+        }
+        else
+        {
+            Node pre = list.head;
+
+            for (int i = 0; i < index - 1; i++)
+            {
+                pre = pre.next;
+            }
+            pre.next = pre.next.next;
+
+            if (index == Length(list)) // last element
+            {
+                list.tail = pre;
+            }
+        }
+    }
+
     // Appends data to the list
     public void Add(Object data)
     {
@@ -38,51 +65,47 @@ public class LinkedList
         }
     }
 
-    // Removes item at index from list.
-    // Assumes that list is non-empty and
-    // that index is non-negative and less
-    // than list's length
-    //
-    // For the sake of this example this
-    // method is static quite simplified.
-    public static void Remove(int index, LinkedList list)
-    {
-        if (index == 0)
-        {
-            list.head = list.head.next;
-        }
-        else
-        {
-            Node predecessor = list.head;
-
-            for (int i = 0; i < index - 1; i++)
-            {
-                predecessor = predecessor.next;
-            }
-            predecessor.next = predecessor.next.next;
-        }
-    }
-
     // Concatenates two lists by
     // appending a list to the end of
     // this list
-    public LinkedList Concatenate(LinkedList list)
+    public void Concatenate(LinkedList list)
     {
-        this.tail.next = list.head;
-        this.tail = list.tail
-        list.head = this.head;
+        if (head == null) head = list.head;
+        else
+        {
+            this.tail.next = list.head;
+            this.tail = list.tail;
+            list.head = this.head;
 
-        // This gives the method a
-        // side-effect
-        this.numberOfConcatenates++;
+            // This gives the method a
+            // side-effect
+            numberOfConcatenates++;
+        }
     }
 
     // Overloading of Concatenate that
     // allows passing both lists as
     // parameters
-    public static LinkedList Concatenate(LinkedList l1, LinkedList l2)
+    public static void Concatenate(LinkedList l1, LinkedList l2)
     {
-        l1.Concatenate(LinkedList l2);
+        l1.Concatenate(l2);
+    }
+
+    public override string ToString()
+    {
+        if (head == null) return "";
+        else
+        {
+            string result = "";
+            Node current = head;
+            do
+            {
+                result += current.ToString() + ", ";
+                current = current.next;
+            }
+            while (current != null);
+            return result;
+        }
     }
 
     private class Node
@@ -96,6 +119,8 @@ public class LinkedList
         {
             this.data = data;
         }
+
+        public override string ToString() => data.ToString();
     }
 
     public static void Main(string[] args)
@@ -108,13 +133,15 @@ public class LinkedList
         Console.WriteLine(l.ToString());
         LinkedList.Remove(3, l);
         Console.WriteLine(l.ToString());
-        Console.WriteLine(Length(l));
         LinkedList.Remove(1, l);
         Console.WriteLine(l.ToString());
-        Console.WriteLine(Length(l));
         LinkedList.Remove(0, l);
         Console.WriteLine(l.ToString());
-        Console.WriteLine(Length(l));
-        l.PrintLength();
+        Console.WriteLine(l.head);
+        Console.WriteLine(l.tail);
+        LinkedList l2 = new LinkedList();
+        l2.Add("far");
+        l.Concatenate(l2);
+        Console.WriteLine(l);
     }
 }

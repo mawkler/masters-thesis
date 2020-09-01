@@ -33,7 +33,6 @@
   aboveskip=3mm,
   belowskip=3mm,
   showstringspaces=false,
-  columns=flexible,
   basicstyle={\fontsize{10}{11}\ttfamily},
 % numbers=left,
 % numberstyle=\tiny\color{gray},
@@ -623,34 +622,10 @@ The first overloading of the method \texttt{Concatenate()} modifies the static c
       return length;
     }
 
-    // Appends data to the list
-    public void Add(Object data)
-    {
-      if (LinkedList.Length(this) == 0)
-      {
-        head = new Node(data);
-        tail = head;
-      }
-      else
-      {
-        Node addedNode = new Node(data);
-        tail.next = addedNode;
-        tail = addedNode;
-      }
-    }
-
-
-
-    // code continues in next column...
-    \end{lstlisting}
-  \end{minipage}
-  \begin{minipage}[t]{0.46\linewidth}
-    \begin{lstlisting}[basicstyle={\fontsize{8}{9}\ttfamily}]
-  // Removes item at index from list.
+  // Removes item at an index from list.
   // Assumes that list is non-empty and
   // that index is non-negative and less
   // than list's length
-
   public static void Remove(int index, LinkedList list)
   {
     if (index == 0) {
@@ -664,27 +639,56 @@ The first overloading of the method \texttt{Concatenate()} modifies the static c
         pre = pre.next;
       }
       pre.next = pre.next.next;
+
+      // If index referes to the last element
+      if (index == Length(list))
+      {
+          list.tail = pre;
+      }
+    }
+  }
+    \end{lstlisting}
+  \end{minipage}
+  \begin{minipage}[t]{0.46\linewidth}
+    \begin{lstlisting}[basicstyle={\fontsize{8}{9}\ttfamily}]
+  // Appends data to the list
+  public void Add(Object data)
+  {
+    if (LinkedList.Length(this) == 0)
+    {
+      head = new Node(data);
+      tail = head;
+    }
+    else
+    {
+      Node addedNode = new Node(data);
+      tail.next = addedNode;
+      tail = addedNode;
     }
   }
 
   // Concatenates two lists by
   // appending a list to the end of
   // this list
-  public LinkedList Concatenate(LinkedList list)
+  public void Concatenate(LinkedList list)
   {
-    this.tail.next = list.head;
-    this.tail = list.tail
-    list.head = this.head;
+    if (head == null) head = list.head;
+    else
+    {
+      this.tail.next = list.head;
+      this.tail = list.tail;
+      list.head = this.head;
 
-    // This gives the method a
-    // side-effect
-    this.numberOfConcatenates++;
+      // This gives the method a
+      // side-effect
+      numberOfConcatenates++;
+    }
   }
 
   // Overloading of Concatenate that
   // allows passing both lists as
   // parameters
-  public static LinkedList Concatenate(LinkedList l1, LinkedList l2)
+  public static void Concatenate(LinkedList l1, LinkedList l2)
   {
     l1.Concatenate(LinkedList l2);
   }
@@ -718,20 +722,20 @@ The analysis starts off by building the dependency set for each function and set
     \hline
     $f$                         & $D_f$                     & $p$    \\ \hline
     \texttt{Length()}           &                           & \textit{pure} \\
+    \texttt{Remove()}           & \texttt{Length()}         & \textit{pure} \\
     \texttt{Add()}              & \texttt{Length()}         & \textit{pure} \\
-    \texttt{Remove()}           &                           & \textit{pure} \\
     \texttt{Concatenate$_1()$}   &                           & \textit{pure} \\
     \texttt{Concatenate$_2()$}   & \texttt{Concatenate$_1()$} & \textit{pure} \\ \hline
   \end{tabular}
   \\
-  $W$ = \{\texttt{Length()}, \texttt{Remove()}, \texttt{Concatenate$_1()$}\}
+  $W$ = \{\texttt{Length()}, \texttt{Concatenate$_1()$}\}
 \end{table}
 
-The working set $W$ is the set of functions in the lookup table with empty dependency sets, i.e. \texttt{Length()}, \texttt{Remove()} and \texttt{Concatenate$_1()$} (the first overloading of \texttt{Concatenate()} in \autoref{fig:example-code}). We now go through each item in the checklist in \autoref{sub:checklist-to-determine-the-purity-level} for each method in $W$, and check which items apply to the methods:
+The working set $W$ is the set of all functions in the lookup table with empty dependency sets, which in this case is \texttt{Length()} and \texttt{Concatenate$_1()$} (the first overloading of \texttt{Concatenate()} in \autoref{fig:example-code}). We now go through each item in the checklist in \autoref{sub:checklist-to-determine-the-purity-level} for each method in $W$, and check which items apply to the methods:
 
-Since none of the items in the checklist apply to \texttt{Length()}, its purity level remains \textit{pure}. As for \texttt{Remove()}, \autoref{itm:parametrically-impure} applies since \texttt{Remove()} directly mutates its input parameter \texttt{list} in multiple locations. Therefore \texttt{Remove()} is marked \textit{parametrically impure}. As for the method \texttt{Concatenate$_1()$} the items \ref{itm:locally-impure}, \ref{itm:static-impure} and \ref{itm:parametrically-impure} apply to it. Item \ref{itm:parametrically-impure} since \texttt{Concatenate$_1()$} modifies the fields \texttt{list} and \texttt{tail} of its input parameter, item \autoref{itm:locally-impure} since it modifies its own \texttt{head} and \texttt{tail}, and \autoref{itm:static-impure} since \texttt{Concatenate()} modifies the static class field \texttt{numberOfConcatenates}. Thus \texttt{Concatenate$_1()$} is marked with the purity levels \textit{locally impure}, \textit{parametrically impure} and \textit{impure}.
+Since none of the items in the checklist apply to \texttt{Length()}, its purity level remains \textit{pure}. As for the method \texttt{Concatenate$_1()$} the items \ref{itm:locally-impure}, \ref{itm:static-impure} and \ref{itm:parametrically-impure} apply to it. Item \ref{itm:parametrically-impure} since \texttt{Concatenate$_1()$} modifies the fields \texttt{list} and \texttt{tail} of its input parameter, item \autoref{itm:locally-impure} since it modifies its own \texttt{head} and \texttt{tail}, and \autoref{itm:static-impure} since \texttt{Concatenate()} modifies the static class field \texttt{numberOfConcatenates}. Thus \texttt{Concatenate$_1()$} is marked with the purity levels \textit{locally impure}, \textit{parametrically impure} and \textit{impure}.
 
-Since \texttt{Concatenate$_1()$}'s purity level was marked \textit{impure} its purity level is propagated to its callers, which in this case is \texttt{Concatenate$_2()$}. \texttt{Concatenate$_1()$} is then removed from the dependency set of \texttt{Concatenate$_2()$}, and \texttt{Length()} is removed from  \texttt{Add()}'s depenedency set. The three methods \texttt{Length()}, \texttt{Remove()} and \texttt{Concatenate$_1()$} are now removed from the working set $W$, and \texttt{Add()} and \texttt{Concatenate$_2()$} are added to $W$, as their dependency sets now are empty. At this point the state of the lookup table is as shown in \autoref{tab:lookup-table2}.
+Since \texttt{Concatenate$_1()$}'s purity level was marked \textit{impure} its purity level is propagated to its callers, which in this case is \texttt{Concatenate$_2()$}. \texttt{Concatenate$_1()$} is then removed from the dependency set of \texttt{Concatenate$_2()$}, and \texttt{Length()} is removed from \texttt{Add()} and \texttt{Remove()}'s depenedency sets. The methods \texttt{Length()} and \texttt{Concatenate$_1()$} are now removed from the working set $W$, and \texttt{Remove()}, \texttt{Add()} and \texttt{Concatenate$_2()$} are added to $W$, as their dependency sets now are empty. At this point the state of the lookup table is as shown in \autoref{tab:lookup-table2}.
 
 \begin{table}[H]
   \caption{\texttt{Remove()} and \texttt{Concatenate$_1()$}'s purity levels have been updated, and after analysing them they are removed from the dependency set of their callers. Also \texttt{Concatenate$_1()$}'s purity level has been propagated to \texttt{Concatenate$_2()$}.}
@@ -741,31 +745,33 @@ Since \texttt{Concatenate$_1()$}'s purity level was marked \textit{impure} its p
     \hline
     $f$                        & $D_f$                  & $p$                                                 \\ \hline
     \texttt{Length()}          &                        & \textit{pure}                                              \\
-    \texttt{Add()}             &                        & \textit{pure}                                              \\
     \texttt{Remove()}          &                        & \textit{parametrically impure}                             \\
+    \texttt{Add()}             &                        & \textit{pure}                                              \\
     \texttt{Concatenate$_1()$}  &                        & \textit{locally impure}, \textit{parametrically impure}, \textit{impure} \\
     \texttt{Concatenate$_2()$}  &                        & \textit{impure}                                            \\ \hline
   \end{tabular}
   \\
-  $W$ = \{\texttt{Add()}, \texttt{Concatenate$_2()$}\}
+  $W$ = \{\texttt{\texttt{Remove()}, Add()}, \texttt{Concatenate$_2()$}\}
 \end{table}
 
-Now we perform the same actions again with the new working set $W$ = \{\texttt{Add()}, \texttt{Concatenate$_2()$}\}, starting with \texttt{Add()}. Out of the items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, \autoref{itm:locally-impure} applies to \texttt{Add()}, since it modifies its object in multiple locations, for instance by assigning to the field \texttt{tail}, and so \texttt{Add()}'s purity level is set to \textit{locall impure}.
+Now we perform the same actions again with the new working set $W$ = \{\texttt{Remove()}, \texttt{Add()}, \texttt{Concatenate$_2()$}\}, starting with \texttt{Remove()}. Out of the items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}. \autoref{itm:parametrically-impure} applies since \texttt{Remove()} directly mutates its input parameter \texttt{list} in multiple locations. Therefore \texttt{Remove()} is marked \textit{parametrically impure}.
 
-As for \texttt{Concatenate$_2()$}, none of the items in the checklist apply, and so it remains its purity level \textit{impure} that was propagated to it from \texttt{Concatenate$_1()$}.
+As for \texttt{Add()}, \autoref{itm:locally-impure} applies to \texttt{Add()}, since it modifies its object in multiple locations, for instance by assigning to the field \texttt{tail}, and so \texttt{Add()}'s purity level is set to \textit{locally impure}.
 
-\texttt{Add()} and \texttt{Concatenate$_2()$} are then both removed from $W$.
+Looking at \texttt{Concatenate$_2()$}, none of the items in the checklist apply, and so it remains its purity level \textit{impure} that was propagated to it from \texttt{Concatenate$_1()$}.
+
+\texttt{Remove()}, \texttt{Add()} and \texttt{Concatenate$_2()$} are then removed from $W$.
 
 \begin{table}[H]
-  \caption{\texttt{Add()}'s purity level has been updated to \textit{locally impure}, and $W$ is now empty. Therefore, this is the result of the analysis.}
+  \caption{\texttt{Add()}'s purity level has been updated to \textit{locally impure}. Since $W$ is now empty, this is the result of the analysis.}
   \label{tab:lookup-table3}
   \centering
   \begin{tabular}{|l|c|c|}
     \hline
     $f$                        & $D_f$                  & $p$                                                 \\ \hline
     \texttt{Length()}          &                        & \textit{pure}                                              \\
-    \texttt{Add()}             &                        & \textit{locally impure}                                    \\
     \texttt{Remove()}          &                        & \textit{parametrically impure}                             \\
+    \texttt{Add()}             &                        & \textit{locally impure}                                    \\
     \texttt{Concatenate$_1()$}  &                        & \textit{locally impure}, \textit{parametrically impure}, \textit{impure} \\
     \texttt{Concatenate$_2()$}  &                        & \textit{impure}                                            \\ \hline
   \end{tabular}
@@ -780,11 +786,11 @@ At this point the working set $W$ = \{\} is empty, and so there can be no more c
 
 % Because of the poor documentation of the \texttt{CodeAnalysis} library, a lot of time was spent on playing around with it and figuring out how it is intended to be used.
 
-Because there was a clear goal for the software and it's requirements, test driven development was used.
+Because there was a clear goal for the software and it's requirements, test driven development was used when implementing the analysis tool in C\#.
 
-Because .NET has many libraries with functions of unknown purity, the purity level "unknown" has to be added.
+Because .NET has many libraries in the form of pre-compiled assemblies, the source code of the functions used in these libraries is not always available. Because of this, the purity level "unknown" has to be added for when we cannot compute a function's purity level.
 
-The code analysis tool is built in .NET core and C\#. It can be compiled, run and tested from the command line using the command \href{https://docs.microsoft.com/en-us/dotnet/core/tools/}{\texttt{dotnet}}, followed by \texttt{run}, \texttt{build} or \texttt{test}, respectively.
+The code analysis tool is built in .NET core and C\#. It can be compiled, run and tested from the command line using the command \href{https://docs.microsoft.com/en-us/dotnet/core/tools/}{\texttt{dotnet}}, followed by \texttt{run}, \texttt{build} or \texttt{test}, respectively. Upon calling the program it can be provided either with a single file to be analyzed, or a directory. In the second case, all C\#-files in the directory and all sub-directories are analyzed as one program.
 
 To find the declaration/definition of symbols (in the form of \texttt{IdentifierNameSyn\allowbreak tax}) the method \texttt{SemanticModel.GetSym\allowbreak bolInfo()} is used, which uses the semantic model of the program.
 
@@ -812,6 +818,20 @@ An alternative way to compare programs' total purity levels could be to profile 
 Because most methods use built-in C\# methods for which the source code is not necessarily public, a majority of the analyzed get the purity level \textit{unknown}. One way of tackling this was to search online for the source code of classes like \texttt{List}, run the analyzer on them and permanently store the calculated purity levels in a dictionary in the program, so that whenever a call to a built-in \texttt{List} method is made its purity level (if it is not \textit{unknown}) can be retrieved from the dictionary. However, this relies on the fact that the source code for a particular built in method is available online, and the process of searching for its code, running the analyser on it and adding any known result to the program's dictionary is cumbersome.
 
 Since the implementation is unable to determine local and parametrical impurity it cannot for certain determine the purity of a program. It does however for certain identifiy impurities, and does therefore compute a lower bound to a program's impurity level.
+
+\subsection{Results from scanning the example} \label{sub:results-from-scanning-the-example}
+
+\begin{minipage}{\linewidth} % Forces code to be on same page
+      \begin{lstlisting}[basicstyle={\fontsize{8}{9}\ttfamily}]
+METHOD                   PURITY LEVEL
+-------------------------------------
+LinkedList.Length        Pure
+LinkedList.Add           Pure
+LinkedList.Remove        Pure
+LinkedList.Concatenate   Impure
+LinkedList.Concatenate   Impure
+\end{lstlisting}
+    \end{minipage}
 
 TODO
 
