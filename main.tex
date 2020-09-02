@@ -801,17 +801,17 @@ Something I realized while implementing the tool is that the C\# compiler does n
 TODO
 
 \section{Results} \label{sec:Results}
-The analysis works backwards through the analyzed program's function dependencies and for each function visited its functional purity level is calculated. The purity levels \textit{impure} and \textit{unknown} also get propagated from callee to caller.
+The implemented analysis program works backwards through the analyzed program's function dependencies and for each function visited its functional purity level is calculated. The purity levels \textit{impure} and \textit{unknown} also get propagated from callee to caller. Out of all the items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, the only one that was implemented is \autoref{itm:static-impure}: "If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked \textit{impure}". This was due to the sheer amount of time that the implementation took. After implementing the whole lookup table and all of its functionality, calculation of each method's dependency set, propagation of impurities from callee to caller, etc. there was only time left to implement one of the items in the checklist. Because of this, the program is unable to detect local and parametrical impurity, and can only detect full impurity cased by side-effects.
 
 Due to the choice of including determinism in the definition of functional purity, which is not included in some definitions, the analysis could be somewhat simplified. The main advantage of including determinism is that we don't have to explicitly check if objects read from or modified by a function \textit{f} are fresh or not in order to determine \textit{f}'s purity.
 
 % One could however argue that objects are similar to closures, in which case a method reading the field of \texttt{this} would be considered pure, and not locally impure as it would be marked now.
 
-The analysis does not handle recursion, which could cause it finish before all functions' purities have been calculated, because no more functions are added to the working set. Support for recursive functions can be added by searching for independent strongly connected components~\cite{pitidis2010purity}.
+The analysis does not handle recursion, which if a recursive program is analyzed could cause it finish before all functions' purities have been calculated, because no more functions will be added to the working set. Support for recursive functions can be added by searching for independent strongly connected components~\cite{pitidis2010purity}.
 
 % Static method purity is calculated as the percentage of all methods in the call graph that are pure~\cite{xu2007dynamic}.
 
-The analysis uses a blacklist of built-in impure C\# functions, in order to spot functions that handle impure actions such as randomness and I/O. There may be other impure built-in similar functions that are not in the blacklist.
+The analysis uses a blacklist of built-in impure C\# functions in order to spot functions that handle impure actions such as randomness and I/O. There may be other impure built-in similar functions that are not in the blacklist.
 
 An alternative way to compare programs' total purity levels could be to profile each program and weight the purity level of each method depending on how often that method is called. For example, let's say that only 10\% of program \textit{A}'s methods are pure compared to program \textit{B} where 20\% of its methods are pure. Now say that \textit{A}'s pure methods make up 90\% of the total function calls during execution and \textit{B}'s pure methods only are called 10\% of the times during execution. In this case, one could argue that \textit{A} is purer than \textit{B} since it makes more calls to pure methods than impure ones compared to \textit{B}, even though \textit{B} has a higher ratio of the number of pure methods.
 
@@ -821,17 +821,26 @@ Since the implementation is unable to determine local and parametrical impurity 
 
 \subsection{Results from scanning the example} \label{sub:results-from-scanning-the-example}
 
-\begin{minipage}{\linewidth} % Forces code to be on same page
-      \begin{lstlisting}[basicstyle={\fontsize{8}{9}\ttfamily}]
-METHOD                   PURITY LEVEL
--------------------------------------
-LinkedList.Length        Pure
-LinkedList.Add           Pure
-LinkedList.Remove        Pure
-LinkedList.Concatenate   Impure
-LinkedList.Concatenate   Impure
-\end{lstlisting}
-    \end{minipage}
+\begin{figure}[htpb]
+  \centering
+  \begin{minipage}{\linewidth} % Forces code to be on same page
+    \begin{lstlisting}
+    METHOD                   PURITY LEVEL
+    -------------------------------------
+    LinkedList.Length        Pure
+    LinkedList.Add           Pure
+    LinkedList.Remove        Pure
+    LinkedList.Concatenate   Impure
+    LinkedList.Concatenate   Impure
+    \end{lstlisting}
+  \end{minipage}
+  \caption{Result from running the analyzer on the implementation of \texttt{LinkedList} in \autoref{fig:example-code}.}
+  \label{fig:example-result}
+\end{figure}
+
+As seen in \autoref{fig:example-result} the analyzer correctly identifies the impurity of both overloads of \texttt{Concatenate()}, who's implementations can be seen in \autoref{fig:example-code}. The analyzer has thereby successfully spotted the first overload's side-effect and propagated its impurity to the second overload, which depends on the first.
+
+However, the three other analyzed methods \texttt{Length()}, \texttt{Add()} and \texttt{Remove()}'s purity levels -- which are always initialized to \textit{pure} in the lookup table -- were unaffected by the analysis. As seen in \autoref{tab:lookup-table3}, \texttt{Length()}'s purity level should be unaffected and remain \textit{pure}. However,
 
 TODO
 
