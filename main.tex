@@ -424,7 +424,7 @@ Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the s
 
 \textit{A function is functionally pure if it is side-effect free and deterministic}.
 
-Because the function \texttt{Foo()} only modifies an object exclusively visible inside the function, \texttt{Foo()} does not have any side-effect. Nor is the function non-deterministic since it does not read any value outside of the function besides its parameters, which it in this case doesn't have. This means that \texttt{Foo()} is pure.
+Because the function \texttt{Foo()} only modifies an object exclusively visible inside the function, \texttt{Foo()} does not have any side-effect. The function is also deterministic since it does not read any value outside of the function besides its own parameters, which it in this case doesn't have. This means that \texttt{Foo()} is pure.
 
 To solve this we introduce the purity level \textit{locally impure}. Any method that is pure except for reading or modifying its object's fields is locally impure. This includes methods that return \texttt{this} or pass \texttt{this} as an argument to a function. Consider the following example:
 
@@ -479,6 +479,12 @@ Because the method \texttt{Increment()} in \autoref{fig:parametrically-impure-ex
 The key thing in both the example where a method \textit{m} calls locally or parametrically impure methods is that they modify a fresh object, which therefore doesn't affect \textit{m}'s purity level. So as long as the analyzed method \textit{m} or any of its called methods don't perform any truly impure action like I/O operations or throw exceptions, \textit{m} is pure.
 
 What if an object's method is both locally and parametrically impure? Just like in the previous cases, as long as the object is fresh the purity of the caller is not affected.
+
+In Python, which also is an object-oriented programming language, the instance object \texttt{this} (in Python usually referred to as \texttt{self}) always has to be explicitly listed as the first parameter of a method when declaring it, and gets automatically passed as as the method's first argument when the method is called~\cite{python-classes}. Similarly, in C\# the reference \texttt{this} to the instance object is an implicit parameter for all methods~\cite{michaelis2018essential}. Therefore one could argue that the purity level \textit{locally impure} falls under the same criterion as \textit{parametrically pure}. However, a method could still be parametrically impure without being locally impure. Therefore, methods that are locally impure are also parametrically impure, but methods that are parametrically impure are not necessarily locally impure.
+
+Separating between the two could also be useful for programmers when implementing other methods in the same class since locally impure methods modify the state of their class, and those object-local side effects are still side-effects.
+
+TODO
 
 \subsection{Iterators} \label{sub:iterators}
 
@@ -819,7 +825,7 @@ Because most methods use built-in C\# methods for which the source code is not n
 
 Since the implementation is unable to determine local and parametrical impurity it cannot for certain determine the purity of a program. It does however for certain identifiy impurities, and does therefore compute a lower bound to a program's impurity level.
 
-\subsection{Results from scanning the example} \label{sub:results-from-scanning-the-example}
+\subsection{Results from scanning implementation of linked list} \label{sub:results-from-scanning-the-example}
 
 \begin{figure}[htpb]
   \centering
@@ -834,13 +840,13 @@ Since the implementation is unable to determine local and parametrical impurity 
     LinkedList.Concatenate   Impure
     \end{lstlisting}
   \end{minipage}
-  \caption{Result from running the analyzer on the implementation of \texttt{LinkedList} in \autoref{fig:example-code}.}
+  \caption{Result from running the analyzer on the implementation of linked list in \autoref{fig:example-code}.}
   \label{fig:example-result}
 \end{figure}
 
 As seen in \autoref{fig:example-result} the analyzer correctly identifies the impurity of both overloads of \texttt{Concatenate()}, who's implementations can be seen in \autoref{fig:example-code}. The analyzer has thereby successfully spotted the first overload's side-effect and propagated its impurity to the second overload, which depends on the first.
 
-However, the three other analyzed methods \texttt{Length()}, \texttt{Add()} and \texttt{Remove()}'s purity levels -- which are always initialized to \textit{pure} in the lookup table -- were unaffected by the analysis. As seen in \autoref{tab:lookup-table3}, \texttt{Length()}'s purity level should be unaffected and remain \textit{pure}. However,
+However, the three other analyzed methods \texttt{Length()}, \texttt{Add()} and \texttt{Remove()}'s purity levels -- which are always initialized to \textit{pure} in the lookup table -- were unchanged by the analysis. As seen in \autoref{tab:lookup-table3}, \texttt{Length()}'s purity level should be unaffected and remain \textit{pure}. However,
 
 TODO
 
