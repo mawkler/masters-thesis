@@ -61,8 +61,10 @@
 \floatstyle{boxed} \restylefloat{figure}
 % \floatstyle{plain} \restylefloat{figure}
 
-\begin{document}
+\newtheorem{definition}{Definition} % Adds the \begin{definition}...
+\newcommand*{\definitionautorefname}{definition} % Allows autoref to definition
 
+\begin{document}
 % Set title, and subtitle if you have one
 % \title{To what extent is C\# being used as a functional programming language?}
 \title{To what extent is functional purity being used in C\# open source programs?}
@@ -179,9 +181,21 @@ To delimit the scope of this thesis it will only focus on functional purity, mai
 \subsubsection{Definition of functional purity} \label{ssub:functional-purity-definition}
 % Maybe move this before subsection to lead up to this?
 
-The definition that will be used in this thesis is that a function is functional pure if it is \textit{side-effect} free and \textit{deterministic}.
+Following is the definition of functional purity that will be used in this thesis:
 
-A side-effect is any action performed by a function that is visible from the function's caller's point of view~\cite{purity-in-javascript}. A function is deterministic if its output depends purely on its input parameters, i.e. the method must return the same value for the same input regardless of the state of the program~\cite{purity-in-java}.
+\begin{definition}[Functional purity] \label{def:functional-purity}
+  A function is functionally pure if it is \textit{side-effect} free and \textit{deterministic}.
+\end{definition}
+
+\textit{Side-effect} and \textit{determinism} are defined as follows:
+
+\begin{definition}[Side-effect] \label{def:side-effect}
+  A side-effect is any action performed by a function that is visible from the function's caller's point of view~\cite{purity-in-javascript}.
+\end{definition}
+
+\begin{definition}[Determinism] \label{def:determinism}
+  A function is deterministic if its output depends purely on its input parameters, i.e. the method must return the same value for the same input regardless of the state of the program~\cite{purity-in-java}.
+\end{definition}
 
 As seen in \autoref{sec:Related work} some related work define functional purity only as being synonymous with "side-effect free". This definition omits determinism and allows functions to read from variables defined outside of their scope, which is less functional. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
 % the first two who's work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively.
@@ -420,13 +434,19 @@ Consider the following example:
   \label{fig:fresh-object-example}
 \end{figure}
 
-Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side-effect of \texttt{Add()}, \texttt{Add()} cannot be a pure method. Does that mean that the function \texttt{Foo()} calling \texttt{list.Add()} is also impure, because it calls a non-pure method? In general functions that invoke impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{ssub:functional-purity-definition}:
+Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side-effect of \texttt{Add()}, \texttt{Add()} cannot be a pure method. Does that mean that the function \texttt{Foo()} calling \texttt{list.Add()} is also impure, because it calls a non-pure method? In general functions that invoke impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{def:functional-purity}:
 
-\textit{A function is functionally pure if it is side-effect free and deterministic}.
+\begin{quote}
+  \textit{A function is functionally pure if it is side-effect free and deterministic}.
+\end{quote}
 
-Because the function \texttt{Foo()} only modifies an object exclusively visible inside the function, \texttt{Foo()} does not have any side-effect. The function is also deterministic since it does not read any value outside of the function besides its own parameters, which it in this case doesn't have. This means that \texttt{Foo()} is pure.
+Because the function \texttt{Foo()} only modifies an object exclusively visible inside the function, \texttt{Foo()} does not have any side-effect. The function is also deterministic since it does not read any value outside of the function besides its own parameters, which it in this case doesn't have. This means that \texttt{Foo()} is pure. To solve this we introduce the purity level \textit{locally impure}:
 
-To solve this we introduce the purity level \textit{locally impure}. Any method that is pure except for reading or modifying its object's fields is locally impure. This includes methods that return \texttt{this} or pass \texttt{this} as an argument to a function. Consider the following example:
+\begin{definition}[Local Impurity] \label{def:locally-impure}
+  Any method that is functionally pure except for modifying any of its own object's fields is locally impure.
+\end{definition}
+
+Consider the following example:
 
 \begin{figure}[H]
   \centering
@@ -474,19 +494,25 @@ There is however one more way to modify a fresh object: to pass it as an argumen
   \label{fig:parametrically-impure-example}
 \end{figure}
 
-Because the method \texttt{Increment()} in \autoref{fig:parametrically-impure-example} modifies its input parameter object it cannot be considered truly pure. However, since \texttt{Foo()} uses \texttt{Increment()} to modify a fresh object \texttt{Foo()} is still pure. I have chosen to categorize methods that are pure except for modifying the state of its input as \textit{parametrically impure}. There are two ways for a method to modify its input parameters: either by mutating a value belonging to a reference type input parameter, i.e. an object's field or property, or the cell of an array; or by calling a locally impure method belonging to a parameter object.
+Because the method \texttt{Increment()} in \autoref{fig:parametrically-impure-example} modifies its input parameter object it cannot be considered truly pure. However, since \texttt{Foo()} uses \texttt{Increment()} to modify a fresh object \texttt{Foo()} is still pure. I have chosen to categorize methods like this \textit{parametrically impure}:
+
+\begin{definition}[Parametericall impurity] \label{def:parametrically-impure}
+  Any method that is pure except for modifying the state of its input is parametrically impure.
+\end{definition}
+
+There are two ways for a method to modify its input parameters: either by mutating a value belonging to a reference type input parameter, i.e. an object's field or property, or the cell of an array; or by calling a locally impure method belonging to a parameter object.
 
 The key thing in both the example where a method \textit{m} calls locally or parametrically impure methods is that they modify a fresh object, which therefore doesn't affect \textit{m}'s purity level. So as long as the analyzed method \textit{m} or any of its called methods don't perform any truly impure action like I/O operations or throw exceptions, \textit{m} is pure.
 
-What if an object's method is both locally and parametrically impure? Just like in the previous cases, as long as the object is fresh the purity of the caller is not affected.
+In Python, which also is an object-oriented programming language, the instance object equivalent to C\#'s \texttt{this} (in Python usually referred to as \texttt{self}) always has to be explicitly listed as the first parameter of a method when declaring it, and gets automatically passed as as the method's first argument when the method is called~\cite{python-classes}. Similarly, in C\# the reference to the instance object \texttt{this} is in fact an implicit parameter for all methods~\cite{michaelis2018essential}. This means that a method \textit{m} that reads the value of a field of its own object still is considered deterministic even though that field has not been explicitly added as a method parameter. Recall from \autoref{def:determinism} that \textit{m} is deterministic if \textit{m}'s output depends purely on its input parameters. This still holds with \textit{m}, since its entire object \texttt{this} where that field lives gets implicitly passed as an argument to \textit{m}.
 
-In Python, which also is an object-oriented programming language, the instance object \texttt{this} (in Python usually referred to as \texttt{self}) always has to be explicitly listed as the first parameter of a method when declaring it, and gets automatically passed as as the method's first argument when the method is called~\cite{python-classes}. Similarly, in C\# the reference \texttt{this} to the instance object is an implicit parameter for all methods~\cite{michaelis2018essential}. Therefore one could argue that the purity level \textit{locally impure} falls under the same criterion as \textit{parametrically pure}. However, a method could still be parametrically impure without being locally impure. Therefore, methods that are locally impure are also parametrically impure, but methods that are parametrically impure are not necessarily locally impure.
+Moreover, the implicit passing of \texttt{this} to every method also implies that any method that is locally impure is also parametrically impure. As \autoref{def:locally-impure} states, a method \textit{m} that is locally impure modifies its object \texttt{this}'s fields. Since \texttt{this} is always the first parameter of any method, this means that modifying a field in \texttt{this} always means modifying a parameter, which implies parametrical impurity.
 
-Separating between the two could also be useful for programmers when implementing other methods in the same class since locally impure methods modify the state of their class, and those object-local side effects are still side-effects.
-
-TODO
+Although local impurity implies parametrical impurity, the opposite does always neccesarily hold since a method could be parametrically impure without modifying a field in \texttt{this}. Therefore, distinguishing between local and parametrical impurity could be of value, for instance when implementing other methods in the same class; since locally impure methods modify the state of their object, and those object-local side-effects are visible for methods inside the same object.
 
 \subsection{Iterators} \label{sub:iterators}
+
+*Perhaps just remove this part*
 
 % This example would be parametrically impure, or locally impure if `items` were a field in `this`?
 % Maybe not due to the implementation of `foreach`?
@@ -497,8 +523,8 @@ As Pearce suggests, an iterator may at first glance look pure~\cite{pearce2011jp
   \centering
   \begin{lstlisting}
     bool ListHas(List<int> items, int item) {
-        foreach(int i in items) if(i == item)  return true;
-        return false;
+      foreach(int i in items) if(i == item)  return true;
+      return false;
     }
   \end{lstlisting}
   \caption{\texttt{ListHas()} may at first glance look pure, TODO}
@@ -541,24 +567,25 @@ However, properties can also be non-static but still read or modify static field
 
 In the example in \autoref{fig:non-static-property-example}, the method \texttt{Bar()} assigns to the field \texttt{Nationality} of the fresh object \texttt{stina}. Because the property \texttt{Nationality} is non-static it, it might look like a pure action at a first glance. But since the property writes method \texttt{get} itself modifies a static field, the \texttt{Bar()}'s assignment to \texttt{Nationality} is in fact a side-effect, which alters all \texttt{Swede} objects' \texttt{Nationality}. Therefore, it is not enough to check if a property is static in order to determine whether a read or write is pure, but the property's \texttt{get} and \texttt{set} have to be checked as well.
 
-*Perhaps ignore cases like this for simplicity?*
+% Perhaps ignore cases like this for simplicity?
 
 \section{The analysis} \label{sec:Analysis}
-There are five kinds of functional purity levels for: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}.
+There are five kinds of functional purity levels for: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}. The latter was added for the case where the purity level of a method cannot be determined.
 
 Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function. If during the traversal a call or reference to a compiled method or a field is found, mark the caller function's purity as \textit{unknown}.
 
-Since object constructors can perfom impure actions just like methods, they are in this section included in the term "function".
+Since object constructors can perform impure actions just like methods, they are in this section included in the term "function".
 
-Because of the problem with inheritance and method overriding discussed in \autoref{sub:inheritance},
-when going through the AST and building the dependency set, if any object parameter's method is overridden by any of its subclasses, add all the overridden methods to the calling function's dependency set.
-Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. The purity of each function is initialized to \textit{pure}, except those that were explicitly marked \textit{unknown}.
+Because of the problem with inheritance and method overriding discussed in \autoref{sub:inheritance}, when going through the AST and building the dependency set, if any object parameter's method is overridden by any of its subclasses, add all the overridden methods to the calling function's dependency set. Each function together with its dependency set is stored in a lookup table where the key is the function identifier \textit{f} and the values are \textit{f}'s dependency set $D_f$ as well as \textit{f}'s purity level \textit{p}. The purity of each function is initialized to \textit{pure}, except those that were explicitly marked \textit{unknown}.
 
 Let the \textit{working set} \textit{W} be the set of all functions with empty dependency sets. Whenever a function's dependency set becomes empty, that function is added to \textit{W}. Calculate the purity level for each function in \textit{W} as described in the checklist in \autoref{sub:checklist-to-determine-the-purity-level} below. Then, for each function \textit{f} in \textit{W}, propagate the impurity of those with purity level \textit{impure} or \textit{unknown} to the functions dependant on \textit{f}, "contaminating" them. Remove \textit{f} from the dependency sets of all functions that depend on \textit{f}, as well as from the working set \textit{W}. Add functions that now have empty dependency sets to \textit{W}. Repeat this process until there are no more changes to the lookup table, in which case the analysis is complete. Each function in the lookup table will now have been marked with its corresponding purity level. Because the purity level of each function was initialized to \textit{pure}, any function who's purity level was unaffected by the analysis will be marked \textit{pure} at the end of the analysis.
 
+Ignoring the purity level \textit{unknown}, the other four purity levels can be ordered in terms of impuirty, from least impure to most impure, like so: \textit{pure} $<$ \textit{locally impure} $<$ \textit{parametrically impure} $<$ \textit{impure}. A method \textit{m}'s purity level should during the analysis only be updated if the new purity level is less impure than \textit{m}'s current one. For instance, if in an arbitrary instance during the analysis, \textit{m} has the purity level \textit{parametrically impure}, and a check determines its purity level to be \textit{impure}, it's purity level should be updated since \textit{impure} is more impure than \textit{locally impure}. However, if for instance another check says that \textit{m} is \textit{locally impure}, its purity level should not be updated since \textit{locally impure} is less impure than \textit{impure}.
+
 \subsection{Checklist to determine the purity level} \label{sub:checklist-to-determine-the-purity-level}
 
-A method can have multiple impurity levels. The following is how to determine the purity level \textit{p} for the currently analyzed method \textit{m}.
+% A method can have multiple impurity levels.
+The following is how to determine the purity level \textit{p} for the currently analyzed method \textit{m}.
 
 \begin{enumerate}
   \item If any object field or property of the currently analyzed method \textit{m}'s object is read from or modified, mark \textit{m} as \textit{locally impure}. \label{itm:locally-impure}
@@ -739,7 +766,7 @@ The analysis starts off by building the dependency set for each function and set
 
 The working set $W$ is the set of all functions in the lookup table with empty dependency sets, which in this case is \texttt{Length()} and \texttt{Concatenate$_1()$} (the first overloading of \texttt{Concatenate()} in \autoref{fig:example-code}). We now go through each item in the checklist in \autoref{sub:checklist-to-determine-the-purity-level} for each method in $W$, and check which items apply to the methods:
 
-Since none of the items in the checklist apply to \texttt{Length()}, its purity level remains \textit{pure}. As for the method \texttt{Concatenate$_1()$} the items \ref{itm:locally-impure}, \ref{itm:static-impure} and \ref{itm:parametrically-impure} apply to it. Item \ref{itm:parametrically-impure} since \texttt{Concatenate$_1()$} modifies the fields \texttt{list} and \texttt{tail} of its input parameter, item \autoref{itm:locally-impure} since it modifies its own \texttt{head} and \texttt{tail}, and \autoref{itm:static-impure} since \texttt{Concatenate()} modifies the static class field \texttt{numberOfConcatenates}. Thus \texttt{Concatenate$_1()$} is marked with the purity levels \textit{locally impure}, \textit{parametrically impure} and \textit{impure}.
+Since none of the items in the checklist apply to \texttt{Length()}, its purity level remains \textit{pure}. As for the method \texttt{Concatenate$_1()$} the items \ref{itm:locally-impure}, \ref{itm:static-impure} and \ref{itm:parametrically-impure} apply to it. Item \ref{itm:parametrically-impure} since \texttt{Concatenate$_1()$} modifies the fields \texttt{list} and \texttt{tail} of its input parameter, item \autoref{itm:locally-impure} since it modifies its own \texttt{head} and \texttt{tail}, and \autoref{itm:static-impure} since \texttt{Concatenate()} modifies the static class field \texttt{numberOfConcatenates}. Thus \texttt{Concatenate$_1()$} should marked with the purity levels \textit{locally impure}, \textit{parametrically impure} and \textit{impure}, and since \textit{impure} is the impurest of the three the method gets marked \textit{impure}.
 
 Since \texttt{Concatenate$_1()$}'s purity level was marked \textit{impure} its purity level is propagated to its callers, which in this case is \texttt{Concatenate$_2()$}. \texttt{Concatenate$_1()$} is then removed from the dependency set of \texttt{Concatenate$_2()$}, and \texttt{Length()} is removed from \texttt{Add()} and \texttt{Remove()}'s depenedency sets. The methods \texttt{Length()} and \texttt{Concatenate$_1()$} are now removed from the working set $W$, and \texttt{Remove()}, \texttt{Add()} and \texttt{Concatenate$_2()$} are added to $W$, as their dependency sets now are empty. At this point the state of the lookup table is as shown in \autoref{tab:lookup-table2}.
 
@@ -749,12 +776,12 @@ Since \texttt{Concatenate$_1()$}'s purity level was marked \textit{impure} its p
   \centering
   \begin{tabular}{|l|c|c|}
     \hline
-    $f$                        & $D_f$                  & $p$                                                 \\ \hline
-    \texttt{Length()}          &                        & \textit{pure}                                              \\
-    \texttt{Remove()}          &                        & \textit{parametrically impure}                             \\
-    \texttt{Add()}             &                        & \textit{pure}                                              \\
-    \texttt{Concatenate$_1()$}  &                        & \textit{locally impure}, \textit{parametrically impure}, \textit{impure} \\
-    \texttt{Concatenate$_2()$}  &                        & \textit{impure}                                            \\ \hline
+    $f$                        & $D_f$                  & $p$                            \\ \hline
+    \texttt{Length()}          &                        & \textit{pure}                         \\
+    \texttt{Remove()}          &                        & \textit{parametrically impure}        \\
+    \texttt{Add()}             &                        & \textit{pure}                         \\
+    \texttt{Concatenate$_1()$}  &                        & \textit{impure}                       \\
+    \texttt{Concatenate$_2()$}  &                        & \textit{impure}                       \\ \hline
   \end{tabular}
   \\
   $W$ = \{\texttt{\texttt{Remove()}, Add()}, \texttt{Concatenate$_2()$}\}
@@ -774,12 +801,12 @@ Looking at \texttt{Concatenate$_2()$}, none of the items in the checklist apply,
   \centering
   \begin{tabular}{|l|c|c|}
     \hline
-    $f$                        & $D_f$                  & $p$                                                 \\ \hline
-    \texttt{Length()}          &                        & \textit{pure}                                              \\
-    \texttt{Remove()}          &                        & \textit{parametrically impure}                             \\
-    \texttt{Add()}             &                        & \textit{locally impure}                                    \\
-    \texttt{Concatenate$_1()$}  &                        & \textit{locally impure}, \textit{parametrically impure}, \textit{impure} \\
-    \texttt{Concatenate$_2()$}  &                        & \textit{impure}                                            \\ \hline
+    $f$                        & $D_f$                  & $p$                            \\ \hline
+    \texttt{Length()}          &                        & \textit{pure}                         \\
+    \texttt{Remove()}          &                        & \textit{parametrically impure}        \\
+    \texttt{Add()}             &                        & \textit{locally impure}               \\
+    \texttt{Concatenate$_1()$}  &                        & \textit{impure}                       \\
+    \texttt{Concatenate$_2()$}  &                        & \textit{impure}                       \\ \hline
   \end{tabular}
   \\
   $W$ = \{\}
