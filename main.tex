@@ -239,7 +239,9 @@ Moreover, requiring pure functions to be both side-effect free \textit{and} dete
   \item Overloading - each overloading of a method counts as its own function, even though they share the same name
 \end{itemize}
 
-% \subsection{The C\# Language} \label{sub:The C\# Language}
+\subsection{The C\# Language and .NET} \label{sub:The C\# Language}
+C\# is a type safe object oriented programming language developed by Microsoft~\cite{intro-to-Csharp}. Most C\# applications use the .NET ecosystem.
+
 % TODO: short description of C\# and .NET
 
 \subsection{What makes a C\# method pure?} \label{sub:What makes a Cs program functional?}
@@ -595,7 +597,7 @@ The following is how to determine the purity level \textit{p} for the currently 
     %   var foo = field;
     %   foo.bar = null;
   \item If \textit{m} calls a locally impure method belonging to \textit{m}'s object (i.e. \texttt{this}) \textit{m} is marked \textit{locally impure}.
-  \item If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked \textit{impure}. This is because reading a static field of an object is a non-deterministic action, and modifying a static field of an object is a side-effect since it mutates the field for all instantiations of that object's class. \label{itm:static-impure}
+  \item If the method \textit{m} reads or modifies a static field of any class or object, \textit{m} is marked \textit{impure}. This is because reading a static field is a non-deterministic action, and modifying a static field is a side-effect since it mutates the field for all instantiations of that object's class. \label{itm:static-impure}
   \item If the currently analyzed method \textit{m} calls an input parameter's method $m_p$ and $m_p$ is overridden by any locally impure and/or parametrically impure method, $m_p$ is temporarily marked with the impurities of all the overriding methods in the context of the analysis of the current method \textit{m}. If $m_p$ is overridden by any impure method, \textit{m} is permanently marked as impure.
     % Moreover:
     % \begin{itemize} % Maybe these are covered by other cases?
@@ -789,9 +791,9 @@ Since \texttt{Concatenate$_1()$}'s purity level was marked \textit{impure} its p
   $W$ = \{\texttt{\texttt{Remove()}, Add()}, \texttt{Concatenate$_2()$}\}
 \end{table}
 
-Now we perform the same actions again with the new working set $W$ = \{\texttt{Remove()}, \texttt{Add()}, \texttt{Concatenate$_2()$}\}, starting with \texttt{Remove()}. Out of the items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}. \autoref{itm:parametrically-impure} applies since \texttt{Remove()} directly mutates its input parameter \texttt{list} in multiple locations. Therefore \texttt{Remove()} is marked \textit{parametrically impure}.
+Now we perform the same actions again with the new working set $W$ = \{\texttt{Remove()}, \texttt{Add()}, \texttt{Concatenate$_2()$}\}, starting with \texttt{Remove()}. Out of the items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, \autoref{itm:parametrically-impure} applies since \texttt{Remove()} directly mutates its input parameter \texttt{list} in multiple locations. Therefore \texttt{Remove()} is marked \textit{parametrically impure}.
 
-As for \texttt{Add()}, \autoref{itm:locally-impure} applies to \texttt{Add()}, since it modifies its object in multiple locations, for instance by assigning to the field \texttt{tail}, and so \texttt{Add()}'s purity level is set to \textit{locally impure}.
+As for \texttt{Add()} \autoref{itm:locally-impure} applies to it since \texttt{Add()} modifies its object in multiple locations, for instance by assigning to the field \texttt{tail}, and so \texttt{Add()}'s purity level is set to \textit{locally impure}.
 
 Looking at \texttt{Concatenate$_2()$}, none of the items in the checklist apply, and so it remains its purity level \textit{impure} that was propagated to it from \texttt{Concatenate$_1()$}.
 
@@ -875,7 +877,7 @@ Since the implementation is unable to determine local and parametrical impurity 
 
 As seen in \autoref{fig:example-result} the analyzer correctly identifies the impurity of both overloads of \texttt{Concatenate()}, who's implementations can be seen in \autoref{fig:example-code}. The analyzer has thereby successfully spotted the first overload's side-effect and propagated its impurity to the second overload, which depends on the first.
 
-However, the three other analyzed methods \texttt{Length()}, \texttt{Add()} and \texttt{Remove()}'s purity levels -- which are always initialized to \textit{pure} in the lookup table -- were unchanged by the analysis. As seen in \autoref{tab:lookup-table3}, \texttt{Length()}'s purity level should be unaffected and remain \textit{pure}. However, \texttt{Add()}'s and \texttt{Remove()}'s purity levels are not identified.
+However, the three other analyzed methods \texttt{Length()}, \texttt{Add()} and \texttt{Remove()}'s purity levels -- which are always initialized to \textit{pure} in the lookup table -- were unchanged by the analysis. As seen in \autoref{tab:lookup-table3}, \texttt{Length()}'s purity level should be unaffected and remain \textit{pure}. However, \texttt{Add()}'s and \texttt{Remove()}'s purity levels are not identified, since the analysis tool only was implemented to detect methods with impurity level \textit{impure} -- i.e. \autoref{itm:static-impure} in the checklist -- and not local or parametrical impurity.
 
 TODO
 
