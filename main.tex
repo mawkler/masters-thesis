@@ -152,9 +152,9 @@ In this thesis the term \textit{method} and \textit{function} will be used inter
 
 % \subsection{Contricutions} \label{sub:Contricutions}
 
-\section{Background} \label{sec:Background} % (several sections depending on work)
+\section{Background} \label{sec:background} % (several sections depending on work)
 
-\subsection{Definitions} \label{sub:Definitions}
+\subsection{Definitions} \label{sub:definitions}
 Functional programming and object oriented programming are two different programming paradigms. There is no universal definition of either of them. Following is how they have been chosen to be defined in this thesis.
 
 \subsubsection{Object oriented programming} \label{ssub:object-oriented-programming} % Perhaps also mention imperative programming?
@@ -399,6 +399,8 @@ The fact that previously mentioned methods are non-deterministic or have side-ef
 
 \section{Problems with determining purity in object oriented languages} \label{sec:Problems with determining purity in object oriented languages}
 
+Analyzing functional purity in object oriented programming languages yields a number of dilemmas. This section describes them, as well as how they were dealt with.
+
 \subsection{Inheritance and method overriding} \label{sub:inheritance}
 
 When calling an object parameter's method, because of inheritance and method overriding we can never be sure of which method implementation will be called. Consider the following example~\cite{pearce2011jpure}:
@@ -507,7 +509,7 @@ Because the method \texttt{Increment()} in \autoref{fig:parametrically-impure-ex
 
 There are two ways for a method to modify its input parameters: either by mutating a value belonging to a reference type input parameter, i.e. an object's field or property, or the cell of an array; or by calling a locally impure method belonging to a parameter object.
 
-The key thing in both the example where a method \textit{m} calls locally or parametrically impure methods is that they modify a fresh object, which therefore doesn't affect \textit{m}'s purity level. So as long as the analyzed method \textit{m} or any of its called methods don't perform any truly impure action like I/O operations or throw exceptions, \textit{m} is pure.
+The key thing in both the example where a method \textit{m} calls locally or parametrically impure methods is that they modify a fresh object, which therefore doesn't affect \textit{m}'s purity level. So as long as the analyzed method \textit{m} or any of its called methods don't perform any truly impure action like I/O operations (e.g. writing to a file on the file system) or throw exceptions, \textit{m} is pure.
 
 In Python, which also is an object-oriented programming language, the instance object equivalent to C\#'s \texttt{this} (in Python usually referred to as \texttt{self}) always has to be explicitly listed as the first parameter of a method when declaring it, and gets automatically passed as as the method's first argument when the method is called~\cite{python-classes}. Similarly, in C\# the reference to the instance object \texttt{this} is in fact an implicit parameter for all methods~\cite{michaelis2018essential}. This means that a method \textit{m} that reads the value of a field of its own object still is considered deterministic even though that field has not been explicitly added as a method parameter. Recall from \autoref{def:determinism} that \textit{m} is deterministic if \textit{m}'s output depends purely on its input parameters. This still holds with \textit{m}, since its entire object \texttt{this} where that field lives gets implicitly passed as an argument to \textit{m}.
 
