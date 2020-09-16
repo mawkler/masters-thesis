@@ -272,8 +272,8 @@ C\# applications run in the .NET ecosystem~\cite{intro-to-Csharp}. There are mul
   \centering
   \begin{lstlisting}
     public class Program {
-      public static int addOne(int number) { //this method is now pure
-        return number + 1;
+      public static int addOne(int number) {
+        return number + 1; // this method is now pure
       }
 
       public static void Main()  {
@@ -336,7 +336,7 @@ However, \texttt{in} is not a purity guarantee. Consider the example in \autoref
     void addOne(in List<int> list) // note the `in` keyword
     {
       list.Add(1); // this will _not_ raise an error even though
-                       // Add(1) modifies the list
+                   // Add(1) modifies the list
     }
   \end{lstlisting}
   \caption{The expression \texttt{list.Add(1)} which writes a value to \texttt{list} is allowed, even though \texttt{list} is read-only due to its preceding \texttt{in} keyword.}
@@ -382,7 +382,6 @@ The following methods that are built into C\# and are non-deterministic~\cite{di
   \item \texttt{Console.Read}, \texttt{Console.ReadLine}, \texttt{Console.ReadKey}, \texttt{DateTime\allowbreak.Now} and \texttt{DateTimeOffset.Now} depend on the outside world.
 \item \texttt{Random.Next}, \texttt{Guid.NewGuid} and \texttt{System.IO.Path.GetRandom}-\\\texttt{\allowbreak FileName} give random output.
 \end{itemize}
-
 
 The following methods that are built into C\# and have side-effects~\cite{dixin2015}:
 
@@ -615,7 +614,9 @@ The following is how to determine the purity level \textit{p} for the currently 
     \end{itemize}
     If \textit{m} does at least one of the above, mark it as \textit{parametrically impure}.
   \item If a method returns \texttt{this} or passes it as an argument to a function it marked \textit{locally impure} since it is dependent on the state of its object, making it non-deterministic.
-  \item Any method that raises an event or an exception is marked as \textit{impure}, as well as any method mentioned in the two lists of impure built-in C\# methods in \autoref{sub:Impure-built-in-methods}.
+  \item Any method that raises an event is marked \textit{impure}. \label{itm:raises-event}
+  \item Any method that raises an exception is marked \textit{impure}. \label{itm:raises-exception}
+  \item Any method mentioned in the two lists of impure built-in C\# methods in \autoref{sub:Impure-built-in-methods} is marked \textit{impure}. \label{itm:impure-built-in}
   % \item Build a lookup table with all evaluated functions, their purity and their dependency set~\cite{pitidis2010purity}.
 \end{enumerate}
 
@@ -834,14 +835,22 @@ The code analysis tool is built using .NET Core and C\#. It can be compiled, run
 
 To find the declaration/definition of symbols (in the form of \texttt{IdentifierNameSyn\allowbreak tax}) the method \texttt{SemanticModel.GetSym\allowbreak bolInfo()} is used, which uses the semantic model of the program.
 
-The tool is not able to determine the purity of methods that invoke delegate functions. Delegate functions are higher-order functions that invoke methods are passed to them as arguments. Invoking delegate functions is done relatively sparsely in C\# and handling them would require a disproportional amount of extra work. The delegate functions themselves however are analyzed just like regular methods.
+The tool is not able to determine the purity of methods that invoke delegate functions. Delegate functions are higher-order functions that invoke methods passed to them as arguments. Invoking delegate functions is done relatively sparsely in C\# and handling them would require a disproportional amount of extra work. The delegate functions themselves however are analyzed just like regular methods.
 
 Something that was realized while implementing the tool is that the C\# compiler does not perform tail call recursion. Recursion is a very common technique when it comes to functional programming. The initial implementation of the program built the lookup table by calculating each function's dependency set recursively. When analyzing larger code bases the program crashed due to an immense memory usage. Therefore, its recursive implementation had to be changed to an iterative one which worked C\# better.
 
 TODO
 
-\section{Results} \label{sec:Results}
-The implemented analysis program works backwards through the analyzed program's function dependencies and for each function visited its functional purity level is calculated. The purity levels \textit{impure} and \textit{unknown} also get propagated from callee to caller. Out of all the items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, the only one that was implemented is \autoref{itm:static-impure}: "If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked \textit{impure}". This was due to the sheer amount of time that the implementation took. After implementing the whole lookup table and all of its functionality, calculation of each method's dependency set, propagation of impurities from callee to caller, etc. there was only time left to implement one of the items in the checklist. Because of this, the program is unable to detect local and parametrical impurity, and can only detect full impurity caused by side-effects.
+\section{Results and discussion} \label{sec:results-and-discussion}
+The implemented analysis program works backwards through the analyzed program's function dependencies and for each function visited its functional purity level is calculated. The purity levels \textit{impure} and \textit{unknown} also get propagated from callee to caller. Out of all nine items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, the following three were implemented:
+
+\begin{itemize}
+  \item \autoref{itm:static-impure}: "If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked \textit{impure}".
+  \item \autoref{itm:raises-exception}: "Any method that raises an exception is marked \textit{impure}".
+  \item \autoref{itm:impure-built-in}: "Any method mentioned in the two lists of impure built-in C\# methods in \autoref{sub:Impure-built-in-methods} is marked \textit{impure}".
+\end{itemize}
+
+This was due to the sheer amount of time that the implementation took. After implementing the whole lookup table and all of its functionality, calculation of each method's dependency set, propagation of impurities from callee to caller, etc. there was only time left to implement one of the items in the checklist. Because of this, the program is unable to detect local and parametrical impurity, and can only detect full impurity caused by side-effects.
 
 Due to the choice of including determinism in the definition of functional purity, which is not included in some definitions, the analysis could be somewhat simplified. The main advantage of including determinism is that we don't have to explicitly check if objects read from or modified by a function \textit{f} are fresh or not in order to determine \textit{f}'s purity.
 
@@ -884,20 +893,20 @@ However, the three other analyzed methods \texttt{Length()}, \texttt{Add()} and 
 
 TODO
 
-\subsection{Code base} \label{sub:Code base}
-\textbf{Mostly pure code}
-\begin{itemize}
-  \item \href{https://github.com/dotnet/roslyn/blob/master/src/Workspaces/SharedUtilitiesAndExtensions/Compiler/Core/Utilities/CompilerUtilities/ImmutableHashMap.cs}{\texttt{ImmutableHashMap.cs}} - has many methods marked with \texttt{[pure]}
-  \item \href{https://github.com/nodatime/nodatime/blob/master/src/NodaTime}{NodaTime} has many pure methods. NodaTime's \href{https://github.com/nodatime/nodatime/blob/master/src/NodaTime/AnnualDate.cs}{\texttt{AnnualDate.cs}} for instance has many pure methods not marked with \texttt{[pure]}
-\end{itemize}
+% \subsection{Code base} \label{sub:Code base}
+% \textbf{Mostly pure code}
+% \begin{itemize}
+%   \item \href{https://github.com/dotnet/roslyn/blob/master/src/Workspaces/SharedUtilitiesAndExtensions/Compiler/Core/Utilities/CompilerUtilities/ImmutableHashMap.cs}{\texttt{ImmutableHashMap.cs}} - has many methods marked with \texttt{[pure]}
+%   \item \href{https://github.com/nodatime/nodatime/blob/master/src/NodaTime}{NodaTime} has many pure methods. NodaTime's \href{https://github.com/nodatime/nodatime/blob/master/src/NodaTime/AnnualDate.cs}{\texttt{AnnualDate.cs}} for instance has many pure methods not marked with \texttt{[pure]}
+% \end{itemize}
 
-\textbf{Mostly impure code}
-\begin{itemize}
-  \item \href{https://github.com/SixLabors/ImageSharp/blob/master/src/ImageSharp}{ImageSharp}
-  \item \href{https://github.com/geaz/sharpDox}{sharpDox}
-\end{itemize}
+% \textbf{Mostly impure code}
+% \begin{itemize}
+%   \item \href{https://github.com/SixLabors/ImageSharp/blob/master/src/ImageSharp}{ImageSharp}
+%   \item \href{https://github.com/geaz/sharpDox}{sharpDox}
+% \end{itemize}
 
-TODO
+% TODO
 
 \section{Related work} \label{sec:Related work} % (If not part of introduction)
 
