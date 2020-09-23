@@ -148,16 +148,12 @@ C\# is among the top five most popular programming languages~\cite{tiobe}. To it
 
 % Yannis Smaragdakis and Brian McNamara showed that there are ways of converting the common OO design patterns Command, Observer, Adaptor, Visitor and Virtual Proxy in C++ to functional programs using FC++ -- a library that adds many functional features to C++~\cite{yannis-smaragdakis}. Would this kind of transformation be useful for programs written in C\#? If C\# is not currently being used primarily as a functional programming language, this tool could be useful to programmers that want to refactor an existing OO program to a functional one.
 
-In this thesis the term \textit{method} and \textit{function} will be used interchangeably.
-
 % \subsection{Contricutions} \label{sub:Contricutions}
 
-\section{Background} \label{sec:background} % (several sections depending on work)
-
-\subsection{Definitions} \label{sub:definitions}
+\section{Definitions} \label{sub:definitions}
 Functional programming and object oriented programming are two different programming paradigms. There is no universal definition of either of them. Following is how they have been chosen to be defined in this thesis.
 
-\subsubsection{Object oriented programming} \label{ssub:object-oriented-programming} % Perhaps also mention imperative programming?
+\subsection{Object oriented programming} \label{ssub:object-oriented-programming} % Perhaps also mention imperative programming?
 
 \begin{enumerate}
 \item Computations are done via \textit{methods} belonging to \textit{objects}, whose structure suits the goal of whatever computation we're doing~\cite{john-m-chambers}.
@@ -166,7 +162,7 @@ Functional programming and object oriented programming are two different program
 \item Classes can \emph{inherit} from other superclasses, such that an object of a class is also an object of its superclass~\cite{john-m-chambers}.
 \end{enumerate}
 
-\subsubsection{Functional programming} \label{sub:functional-programming}
+\subsection{Functional programming} \label{sub:functional-programming}
 
 \begin{enumerate}
   %TODO: maybe only name pure, and say that it is defined later?
@@ -180,7 +176,7 @@ Functional programming and object oriented programming are two different program
 % As mentioned in \autoref{sub:functional-programming}, the definition of functional programming consists of three parts. \textit{Purity}, functions being \textit{first-class} and \textit{higher-order}, and variables being \textit{immutable}.
 To delimit the scope of this thesis it will only focus on functional purity, mainly because it seems like the most useful one out of the three for object oriented programming.% , and as it is the one that is the most emphasized as a benefit of using a more functional style in object oriented programming~\cite{alvin-alexander}. % page 19
 
-\subsubsection{Definition of functional purity} \label{ssub:functional-purity-definition}
+\subsection{Definition of functional purity} \label{ssub:functional-purity-definition}
 % Maybe move this before subsection to lead up to this?
 
 Following is the definition of functional purity that will be used in this thesis:
@@ -239,7 +235,7 @@ Moreover, requiring pure functions to be both side-effect free \textit{and} dete
 %   \item Overloading - each overloading of a method counts as its own function, even though they share the same name
 % \end{itemize}
 
-\subsection{The C\# language and .NET} \label{sub:the-csharp-language}
+\section{The C\# language and .NET} \label{sub:the-csharp-language}
 C\# is a type safe object oriented programming language developed by Microsoft~\cite{albahari2003nutshell}. C\# is syntactically quite similar to C, C++ and Java, and includes features like nullable types, enumerations, higher-order functions, and direct memory access~\cite{intro-to-Csharp}. While C\# historically has primarily been used for writing code for Windows platforms only, C\# has recently spread to most other platforms, including mobile, due to its increased cross-platform support~\cite{albahari2003nutshell}.
 
 C\# applications run in the .NET ecosystem~\cite{intro-to-Csharp}. There are multiple implementations of .NET, including .NET Core and the .NET Framework~\cite{intro-to-Csharp}. .NET includes a virtual execution environment called the common language runtime (CLR) on which C\# programs run, as well as a common set of class libraries~\cite{albahari2003nutshell}. Before execution C\# source code is compiled to the so called intermediate language (IL) and stored on disk~\cite{intro-to-Csharp}. Upon execution the IL code is just-in-time-compiled to native machine instructions that can be executed by the operating system~\cite{intro-to-Csharp}.
@@ -578,7 +574,7 @@ In the example in \autoref{fig:non-static-property-example}, the method \texttt{
 
 % Perhaps ignore cases like this for simplicity?
 
-\section{The analysis} \label{sec:Analysis}
+\section{The analysis method} \label{sec:the-analysis-method}
 There are five kinds of functional purity levels for: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}. The latter was added for the case where the purity level of a method cannot be determined.
 
 Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function. If during the traversal a call or reference to a compiled method or a field is found, mark the caller function's purity as \textit{unknown}.
