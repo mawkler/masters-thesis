@@ -165,12 +165,9 @@ Functional programming and object oriented programming are two different program
 \subsection{Functional programming} \label{sub:functional-programming}
 
 \begin{enumerate}
-  %TODO: maybe only name pure, and say that it is defined later?
   \item All functions are \emph{functionally pure}. Functional purity is defined below in \autoref{ssub:functional-purity-definition}.
-    % , meaning that they do not have any side-effects, and their output depends only on the input~\cite{john-m-chambers}. The latter is what Finifter et al. call \textit{determinism}~\cite{purity-in-java}. Not all definitions of functional purity include determinism.
-    % , and the choice of definition used in this thesis is discussed in \autoref{sub:Verifiable-Functional-Purity-in-Java}.
-\item Functions are first-class and can be higher-order, meaning that functions can be passed to functions as parameters, and can be returned by functions~\cite{jonas-walter}. % page 3
-\item Variables are immutable, meaning that their value does not change after being initiated~\cite{jonas-walter}. % page 3
+  \item Functions are first-class and can be higher-order, meaning that functions can be passed to functions as parameters, and can be returned by functions~\cite{jonas-walter}. % page 3
+  \item Variables are immutable, meaning that their value does not change after being initiated~\cite{jonas-walter}. % page 3
 \end{enumerate}
 
 % As mentioned in \autoref{sub:functional-programming}, the definition of functional programming consists of three parts. \textit{Purity}, functions being \textit{first-class} and \textit{higher-order}, and variables being \textit{immutable}.
@@ -199,40 +196,32 @@ As seen in \autoref{sec:Related work} some related work define functional purity
 % the first two who's work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively.
 Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic does in a way also simplify the analysis because it means that any symbol used in a function \textit{F} but defined outside \textit{F} would make \textit{F} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{F} to see if it is being written to or if it is only being read before concluding if \textit{F} is pure.
 
-% The notion of purity only being synomynous with side-effect free seems to be more common in computer science, while also requireming determinism seems to be the more mathematical definition.
+% The notion of purity only being synomynous with side-effect free seems to be more common in computer science, while also requireing determinism seems to be the more mathematical definition.
 
 % \noindent\makebox[\linewidth]{\rule{\textwidth}{0.4pt}} % -------- Line break --------
 
-% \textbf{*TODO: Add a description of the following*}
+% \textbf{*Add a description of the following*}
 % \begin{itemize}
 %   \item Side-effects and referential transparency, which implies purity~\cite{purity-in-javascript}
-%   \item .NET Core/C\#
-%   \item Compilers
-%   \item Abstract syntax trees (ASTs)
-%   \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/work-with-syntax}{.NET ASTs}~\cite{albahari2003nutshell}
 %   \item Objects: fields and properties % https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/members
 %   \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/exceptions/}{Exceptions}.
 % \end{itemize}
 
 % % Microsoft has an article on refactoring none-pure C\# code to pure functions \cite{microsoft-refactoring}.
 
-% \textbf{*TODO: Things to consider*}
+% \textbf{*Things to consider*}
 
 % \begin{itemize}
-%   \item Abstract syntax trees
 %   \item Input/output
-%   \item Recursion
 %   \item Monads
 %   \item Call-by-value vs. call-by-reference: % \textit{"For reference types, if you pass a parameter by value, it results in a copy of the reference to an object being passed. This copy is still associated with the same instance data as the original reference (until the reference variable is assigned to a new object). Call-by-reference is not necessarily required for a function to modify a parameter."} - \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/linq/refactoring-into-pure-functions}{link}.
 %   % \item Functions can be locally pure and/or globally pure https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/linq/refactoring-into-pure-functions
 %   \item Control flow analysis
 %   % \item Could talk about Haskell in which all functions are pure and all values are immutable
-%   \item Sometimes we call compiled methods, i.e. methods that we don't have the code for, e.g. the .NET framework base class library (BCL)
 %   \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/delegates/}{Delegates} and \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/statements-expressions-operators/anonymous-functions}{anonymous functions}.
 %   \item Implicit and explicit variable declarations (C\# handles both)
 %   \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/inside-a-program/identifier-names}{Identifiers} are the names of types, members variables or namespaces used in source code. They reference \href{https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/work-with-semantics#symbols}{symbols}, representing a declared namespace, type, method, field, variable, etc. The compiler's process of associating identifiers with symbols is called \textit{binding}~\cite{microsoft-semantic-analysis}. % TODO explain symbols and identifiers
 %   \item Closures and how objects can be considered closures (if fields are \texttt{readonly}?), and whether or not they should be considered pure.
-%   \item Overloading - each overloading of a method counts as its own function, even though they share the same name
 % \end{itemize}
 
 \section{The C\# language and .NET} \label{sub:the-csharp-language}
@@ -240,7 +229,7 @@ C\# is a type safe object oriented programming language developed by Microsoft~\
 
 C\# applications run in the .NET ecosystem~\cite{intro-to-Csharp}. There are multiple implementations of .NET, including .NET Core and the .NET Framework~\cite{intro-to-Csharp}. .NET includes a virtual execution environment called the common language runtime (CLR) on which C\# programs run, as well as a common set of class libraries~\cite{albahari2003nutshell}. Before execution C\# source code is compiled to the so called intermediate language (IL) and stored on disk~\cite{intro-to-Csharp}. Upon execution the IL code is just-in-time-compiled to native machine instructions that can be executed by the operating system~\cite{intro-to-Csharp}.
 
-Similarly to many other programming languages, functions in C\# are generally referred to as \textit{methods}~\cite{albahari2003nutshell}. These two terms will be used interchangeably in this thesis. Each method belongs to a \textit{class}, which is an encapsulations of data and behaviours~\cite{albahari2003nutshell}. C\# also supports anomynous functions~\cite{albahari2003nutshell}.
+Similarly to many other programming languages, functions in C\# are generally referred to as \textit{methods}~\cite{albahari2003nutshell}. These two terms will be used interchangeably in this thesis. Each method belongs to a \textit{class}, which is an encapsulations of data and behaviours~\cite{albahari2003nutshell}. C\# also supports anonymous functions~\cite{albahari2003nutshell}.
 
 \subsection{What makes a C\# method pure?} \label{sub:What makes a Cs program functional?}
 \autoref{fig:impure-example} and \autoref{fig:pure-example} illustrate two very simple examples of pure and impure code, respectively. In \autoref{fig:impure-example} the function \texttt{addOne()} is impure because it is writing to the variable \texttt{number} which was defined outside \texttt{addOne()}'s scope, which is a side-effect. \autoref{fig:pure-example} illustrates how \texttt{addOne()} can be rewritten to a pure function while preserving the program's semantics.
@@ -284,25 +273,6 @@ Similarly to many other programming languages, functions in C\# are generally re
   \label{fig:pure-example}
 \end{figure}
 
-% Following are more technical requirements for C\# programs to be pure that are used as a basis for the implementation of the analysis tool. % maybe move to implementation? % TODO: maybe remove this part?
-
-% % 1. Output depends only on input
-% % 2. No side-effects
-
-% \begin{itemize}
-%   \item Functions that modify any value outside their scope, e.g. a class variable or global variable, are impure. Modifying a value could be done by assigning a new value to it, or changing a part of it like modifying an element of a list or an object property.
-%   % Does this apply to all non-returning statements with no assignment, i.e. no '\texttt{=}' sign? Not if the data being modified through a method is inside the scope of the function.
-%   \item Functions that read any value outside the function's scope are impure. Reading a value could be done in many ways, including using it as argument in a function, as a condition in an \texttt{if}-statement, assigning it to a variable, etc. Basically any non-local variable appearing in a function would imply an impure read (except for if it is assigned to, which is mentioned above).
-%   % \item Functions that call other functions without reading the called function's return value are not pure?
-%   \item Functions that return \texttt{void} are assumed to be impure (because in order for them to have an effect on the program, they must have a side-effect).
-%   \item
-%   % By looking at the return statement of a function \textit{F} we could trace the variables and functions involved backwards in order to figure out \textit{F}'s purity. If all variables used in \textit{F}'s return statement are either input parameters or instantiated inside \textit{F}, \textit{F} is considered pure.
-%   This means that any variable read from or assigned to in a function \textit{F} must have been instantiated inside \textit{F} in order for \textit{F} to be pure.
-%   If any of \textit{F}'s parameters is an object, that object cannot be modified inside \textit{F} (at least not for the highest level of purity).
-%   \item Functions that call impure functions are themselves also impure.
-%   \item Functions that involve input/output (I/O) are impure.
-% \end{itemize}
-
 Function parameters preceded with the \texttt{in} keyword are passed by reference and read-only inside the function~\cite{microsoft-in-modifier}. This means that input parameters marked with \texttt{in} cannot be re-assigned inside the function, which may suggest functional purity. Consider the example in \autoref{fig:in-example1}, where the parameter \texttt{number} is preceded by the \texttt{in} keyword. Because of this, modifying it inside the function will raise an error.
 
 \begin{figure}[H]
@@ -321,7 +291,7 @@ Function parameters preceded with the \texttt{in} keyword are passed by referenc
   \label{fig:in-example1}
 \end{figure}
 
-However, \texttt{in} is not a purity guarantee. Consider the example in \autoref{fig:in-example2}. The \texttt{in} keyword before the argument \texttt{list} ensures that \texttt{list} is readonly. This prevents \texttt{list} from being re-assigned after instantiation, but it doesn't prevent the data structure which \texttt{list} refers to from being modified~\cite{buchanan-static-lists}. In C\# there are two kinds of types: \textit{value types} and \textit{reference types}~\cite{microsoft-types}. Value types directly contain their data, while reference types -- also known as objects -- are simply pointers that refer to the location of their data.  Even though strings are of the reference type they are immutable, meaning that they cannot be modified after being created~\cite{microsoft-strings}. Therefore, value types and strings are passed to methods by value, which means that a method that modifies a value type parameter only modifies it locally, which doesn't affect its purity.
+However, \texttt{in} is not a purity guarantee. Consider the example in \autoref{fig:in-example2}. The \texttt{in} keyword before the argument \texttt{list} ensures that \texttt{list} is read-only. This prevents \texttt{list} from being re-assigned after instantiation, but it doesn't prevent the data structure which \texttt{list} refers to from being modified~\cite{buchanan-static-lists}. In C\# there are two kinds of types: \textit{value types} and \textit{reference types}~\cite{microsoft-types}. Value types directly contain their data, while reference types -- also known as objects -- are simply pointers that refer to the location of their data.  Even though strings are of the reference type they are immutable, meaning that they cannot be modified after being created~\cite{microsoft-strings}. Therefore, value types and strings are passed to methods by value, which means that a method that modifies a value type parameter only modifies it locally, which doesn't affect its purity.
 
 \begin{figure}[H]
   \centering
@@ -347,29 +317,10 @@ Since the \texttt{in} keyword does not entirely prevent methods modifying their 
 % Abstract syntax trees in general
 Abstract syntax trees (ASTs) are the primary data structure used when analysing source code~\cite{microsoft-work-with-syntax}. It encapsulates every piece of information held in the source code~\cite{microsoft-work-with-syntax}. A syntax tree generated by a parser can be be re-built into the exact same text that was originally parsed~\cite{microsoft-work-with-syntax}.
 
-The abstract syntax tree (AST) generated by the \texttt{Microsoft.CodeAnalysis} library represents the lexical and syntactic structure of a .NET program~\cite{microsoft-work-with-syntax}. The tree consists primarily of \textit{syntax nodes} which represent syntactic constructs including declarations, statements, clauses and expressions~\cite{microsoft-work-with-syntax}. Each node is derived from the \texttt{Syntax}-\texttt{Node} class~\cite{microsoft-work-with-syntax}. Every node is non-terminal, meaning that they always have children - either other nodes or \textit{tokens}~\cite{microsoft-work-with-syntax}. Tokens are the smallest syntactic pieces of the program, consisting of keywords identifiers, literals and punctuation~\cite{microsoft-work-with-syntax}.
+The abstract syntax tree (AST) generated from a given piece of C\# code by Microsoft's code analysis library \texttt{Microsoft.CodeAnalysis} represents the lexical and syntactic structure of the C\# program~\cite{microsoft-work-with-syntax}. The tree consists primarily of \textit{syntax nodes} which represent syntactic constructs including declarations, statements, clauses and expressions~\cite{microsoft-work-with-syntax}. Each node is derived from the \texttt{Syntax}-\texttt{Node} class~\cite{microsoft-work-with-syntax}. Every node is non-terminal, meaning that they always have children - either other nodes or \textit{tokens}~\cite{microsoft-work-with-syntax}. Tokens are the smallest syntactic pieces of the program, consisting of keywords, identifiers, literals and punctuation~\cite{microsoft-work-with-syntax}.
 
 % An \textit{expression} consists of zero or more operators with one or more operands, which can be evaluated to a single value, method, object or namespace.
 % https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/statements-expressions-operators/expressions
-
-\subsubsection{Microsoft Syntax Analysis API CodeAnalysis} \label{ssub:Microsoft Syntax Analysis API}
-*Maybe remove this part?*
-
-\texttt{Microsoft.CodeAnalysis} is a Syntax API developed by Microsoft which allows programmers to convert a C\# program to an abstract syntax tree and traverse it~\cite{microsoft-syntax-API}. TODO
-
-\textbf{AST nodes}
-
-\begin{itemize}
-  \item The \texttt{ClassDeclarationSyntax} node represents the declaration of a class.
-  \item The \texttt{MethodDeclarationSyntax} node represents the declaration of a meth-od. Each \texttt{MethodDeclarationSyntax} node has a \texttt{ParameterListSyn}- \texttt{tax} - a list of \texttt{ParameterSyntax} nodes represents, each representing a me-thod parameter.
-  \item The \texttt{LocalFunctionStatementSyntax} node represents a function decla-red inside a method. Just like the \texttt{MethodDeclarationSyntax} it has a \texttt{Param}-\texttt{eterListSyntax} representing the local function's parameters.
-  \item The \texttt{InvocationExpressionSyntax} node represents a call (invocation) to a method.
-  \item The \texttt{ReturnStatementSyntax} node represents the \texttt{return} token.
-  \item The \texttt{VariableDeclarationSyntax} node represents declarations of new variables.
-  \item The \texttt{LocalDeclarationStatementSyntax} node represents declarations of new local variables. This node contains a \texttt{VariableDeclarationSyntax} node.
-  \item The \texttt{AssignmentExpressionSyntax} node represents assignments to already instantiated variables.
-  \item The \texttt{IdentifierNameSyntax} node represents symbols used in the code, including variable names and method names.
-\end{itemize}
 
 \subsection{C\# Events} \label{sub:Events}
 Events are a way for classes or object to notify other classes or objects when something happens~\cite{microsoft-events}. The class raising the event is called the \textit{publisher} and the class handling the event is called the \textit{subscriber} (there can be more than one subscriber)~\cite{microsoft-events}. When an event is raised the subscriber's handler method is executed. Since events clearly are side-effects, a method that raises events or handles events is not considered pure
@@ -513,30 +464,7 @@ In Python, which also is an object-oriented programming language, the instance o
 
 Moreover, the implicit passing of \texttt{this} to every method also implies that any method that is locally impure is also parametrically impure. As \autoref{def:locally-impure} states, a method \textit{m} that is locally impure modifies its object \texttt{this}'s fields. Since \texttt{this} is always the first parameter of any method, this means that modifying a field in \texttt{this} always means modifying a parameter, which implies parametrical impurity.
 
-Although local impurity implies parametrical impurity, the opposite does always neccesarily hold since a method could be parametrically impure without modifying a field in \texttt{this}. Therefore, distinguishing between local and parametrical impurity could be of value, for instance when implementing other methods in the same class; since locally impure methods modify the state of their object, and those object-local side-effects are visible for methods inside the same object.
-
-\subsection{Iterators} \label{sub:iterators}
-
-*Perhaps just remove this part*
-
-% This example would be parametrically impure, or locally impure if `items` were a field in `this`?
-% Maybe not due to the implementation of `foreach`?
-
-As Pearce suggests, an iterator may at first glance look pure~\cite{pearce2011jpure}. However, consider the following (\href{https://docs.microsoft.com/en-us/archive/msdn-magazine/2017/april/essential-net-understanding-csharp-foreach-internals-and-custom-iterators-with-yield}{link}):
-
-\begin{figure}[H]
-  \centering
-  \begin{lstlisting}
-    bool ListHas(List<int> items, int item) {
-      foreach(int i in items) if(i == item)  return true;
-      return false;
-    }
-  \end{lstlisting}
-  \caption{\texttt{ListHas()} may at first glance look pure, TODO}
-  \label{fig:iterator-example}
-\end{figure}
-
-TODO: explain that this doesn't affect us because our definition of purity includes determinism, or because of the C\# compiler's implementation
+Although local impurity implies parametrical impurity, the opposite does always necessarily hold since a method could be parametrically impure without modifying a field in \texttt{this}. Therefore, distinguishing between local and parametrical impurity could be of value, for instance when implementing other methods in the same class; since locally impure methods modify the state of their object, and those object-local side-effects are visible for methods inside the same object.
 
 \subsection{Non-static property pointing to a static field} \label{sub:non-static-property}
 \textit{Properties} in C\# are special \texttt{get} and \texttt{set} methods for reading, computing or writing to values of object fields~\cite{microsoft-properties}. Properties can, just like other fields or methods be set to \texttt{static}, which means that they are assigned to the class rather than any instantiated object. If a method reads from or modifies a static property, that method would be considered to be non-deterministic or to have a side-effect, i.e. it would be impure, because static fields are accessible anywhere in a program.
@@ -829,8 +757,6 @@ At this point the working set $W$ is empty, and so there can be no more changes 
 \section{Implementation of the analysis tool} \label{sec:Implementation of the analysis tool}
 % \item For performance reasons, first check general stuff and then do more specific checks.
 
-% Because of the poor documentation of the \texttt{CodeAnalysis} library, a lot of time was spent on playing around with it and figuring out how it is intended to be used.
-
 Because there was a clear goal for the software and it's requirements, test driven development was used when implementing the analysis tool in C\#.
 
 Because .NET has many libraries in the form of pre-compiled assemblies, the source code of the functions used in these libraries is not always available. Because of this, the purity level "unknown" has to be added for when we cannot compute a function's purity level.
@@ -902,7 +828,7 @@ As seen in \autoref{fig:example-result} the analyzer correctly identifies the im
 
 However, the three other analyzed methods \texttt{Length()}, \texttt{Add()} and \texttt{Remove()}'s purity levels -- which are always initialized to \textit{pure} in the lookup table -- were unchanged by the analysis. As seen in \autoref{tab:lookup-table3}, \texttt{Length()}'s purity level should be unaffected and remain \textit{pure}. However, \texttt{Add()}'s and \texttt{Remove()}'s purity levels are not identified, since the implementation of the analysis tool only can detect methods with maximum impurity level \textit{impure} -- i.e. \autoref{itm:static-impure} in the checklist -- and not local or parametrical impurity.
 
-Therefore, what we can say for sure about the the linked list implementation based on the result in \autoref{fig:example-result} is that its purity level is \textit{at most} three pure methods out of a total of five methods, i.e. it is $\leq$ 3/5 = 60\% functionally pure. Since the true purity level of 20\% that we expect from \autoref{ssub:Example} is less than or equal to 60\%, the upper bound is correct.
+Therefore, what we can say for sure about the linked list implementation based on the result in \autoref{fig:example-result} is that its purity level is \textit{at most} three pure methods out of a total of five methods, i.e. it is $\leq$ 3/5 = 60\% functionally pure. Since the true purity level of 20\% that we expect from \autoref{ssub:Example} is less than or equal to 60\%, the upper bound is correct.
 
 TODO
 
