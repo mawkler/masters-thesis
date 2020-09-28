@@ -137,7 +137,7 @@ TODO
 \mainmatter
 
 \section{Introduction} \label{sec:Introduction}
-% https://dl-acm-org.ezproxy.its.uu.se/doi/pdf/10.1145/1455770.1455793?download=true has motivation for using pure functions in its abstract
+% https://dl-acm-org.ezproxy.its.uu.se/doi/pdf/10.1145/1455770.1455793?download=true (\cite{purity-in-java}) has motivation for using pure functions in its abstract
 
 Functional programming is on the rise and becoming more mainstream~\cite{intertech}. Object oriented (OO) programming has been the industry norm for quite some time now, and for a long time functional programming was considered by developers to only be applicable in academic domains. However it is now becoming popular in the IT industry as well. Many mainstream languages like Java, C\# and C++ have adopted first-class functions from the functional paradigm~\cite{intertech}. Moreover, functional programming can be used for building web applications and mobile apps~\cite{jonas-walter}.
 
@@ -240,7 +240,7 @@ C\# is a type safe object oriented programming language developed by Microsoft~\
 
 C\# applications run in the .NET ecosystem~\cite{intro-to-Csharp}. There are multiple implementations of .NET, including .NET Core and the .NET Framework~\cite{intro-to-Csharp}. .NET includes a virtual execution environment called the common language runtime (CLR) on which C\# programs run, as well as a common set of class libraries~\cite{albahari2003nutshell}. Before execution C\# source code is compiled to the so called intermediate language (IL) and stored on disk~\cite{intro-to-Csharp}. Upon execution the IL code is just-in-time-compiled to native machine instructions that can be executed by the operating system~\cite{intro-to-Csharp}.
 
-Similarly to many other programming languages, functions in C\# are generally referred to as \textit{methods}~\cite{albahari2003nutshell}. Each method belongs to a \textit{class}, which is an encapsulations of data and behaviours~\cite{albahari2003nutshell}. C\# also supports anomynous functions~\cite{albahari2003nutshell}.
+Similarly to many other programming languages, functions in C\# are generally referred to as \textit{methods}~\cite{albahari2003nutshell}. These two terms will be used interchangeably in this thesis. Each method belongs to a \textit{class}, which is an encapsulations of data and behaviours~\cite{albahari2003nutshell}. C\# also supports anomynous functions~\cite{albahari2003nutshell}.
 
 \subsection{What makes a C\# method pure?} \label{sub:What makes a Cs program functional?}
 \autoref{fig:impure-example} and \autoref{fig:pure-example} illustrate two very simple examples of pure and impure code, respectively. In \autoref{fig:impure-example} the function \texttt{addOne()} is impure because it is writing to the variable \texttt{number} which was defined outside \texttt{addOne()}'s scope, which is a side-effect. \autoref{fig:pure-example} illustrates how \texttt{addOne()} can be rewritten to a pure function while preserving the program's semantics.
@@ -574,6 +574,11 @@ In the example in \autoref{fig:non-static-property-example}, the method \texttt{
 
 % Perhaps ignore cases like this for simplicity?
 
+\subsection{Method overloading} \label{sub:Method-overloading}
+While method overloading is not unique to object oriented programming, it seems appropriate to mention here as well. Method overloading is when there multiple method implementations share the same method name but have different function signatures, i.e. return types, parameter types and/or number of parameters~\cite{albahari2003nutshell}. One could consider all overloads to be the same method \textit{m}, since they share the same name. However, this would make it difficult to calculate \textit{m}'s purity level, since one overload of \textit{m} could be pure, while another overload is impure. Which purity level should then be given to \textit{m}?
+
+Instead, when given an overloaded method named \textit{m} the analysis treats each overload of \textit{m} as a unique method, independent of other overloads. This way overloads with different purity levels can co-exist in the result of an analysis. Because overloads by definition share the same name, in order to differentiate them in this thesis the notation $m_1$, $m_2$, $m_3$, ... is used, where $m_1$ denotes the first implementation of the method \textit{m}, $m_2$ denotes the second, and so on.
+
 \section{The analysis method} \label{sec:the-analysis-method}
 There are five kinds of functional purity levels for: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}. The latter was added for the case where the purity level of a method cannot be determined.
 
@@ -849,9 +854,9 @@ The implemented analysis program works backwards through the analyzed program's 
   \item \autoref{itm:impure-built-in}: "Any method mentioned in the two lists of impure built-in C\# methods in \autoref{sub:Impure-built-in-methods} is marked \textit{impure}".
 \end{itemize}
 
-This was due to the sheer amount of time that the implementation took. After implementing the whole lookup table and all of its functionality, calculation of each method's dependency set, propagation of impurities from callee to caller, etc. there was only time left to implement one of the items in the checklist. Because of this, the program is unable to detect local and parametrical impurity, and can only detect full impurity caused by side-effects.
+The reason why three out of the total nine checks were implemented was due to the sheer amount of time that the implementation took. After implementing the whole lookup table and all of its functionality, calculation of each method's dependency set, propagation of impurities from callee to caller, etc. there was not time left to implement every item in the checklist in a reasonable amount of time, and so the three items above were chosen. Because of this, the program is unable to detect local and parametrical impurity, and can only detect full impurity caused by side-effects.
 
-Due to the choice of including determinism in the definition of functional purity, which is not included in some definitions, the analysis could be somewhat simplified. The main advantage of including determinism is that we don't have to explicitly check if objects read from or modified by a function \textit{f} are fresh or not in order to determine \textit{f}'s purity.
+Due to the choice of including determinism in the definition of functional purity, which is not included in some definitions, the analysis could be somewhat simplified. The main advantage of including determinism is that we don't have to explicitly check if potential global (i.e. static) objects are read from or modified by a function \textit{f} in order to determine \textit{f}'s purity. As a long as a static variable appears in \textit{f} we know that \textit{f} is non-deterministic since it depends on a global state. On the other hand, if determinism were ignored we would have to explicitly check whether the static object is modified by \textit{f} or not in order to determine \textit{f}'s purity.
 
 % One could however argue that objects are similar to closures, in which case a method reading the field of \texttt{this} would be considered pure, and not locally impure as it would be marked now.
 
