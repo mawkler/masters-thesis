@@ -346,6 +346,17 @@ The following methods that are built into C\# and have side-effects~\cite{dixin2
 
 The fact that previously mentioned methods are non-deterministic or have side-effects means that we know for sure that they are impure, which means that any function that uses them is also impure.
 
+\subsection{.NET Code Contracts} \label{sub:Code contracts} % kanske ta bort eller flytta till Backgrounds?
+.NET code contracts are used to define pre- and postconditions, as well invariants for pieces of code -- some which can be checked statically and some at runtime~\cite{microsoft-code-contracts}. One available code contract is the \texttt{[pure]} attribute, which indicates that the method is pure~\cite{microsoft-code-contracts}. However, current analysis tools do not enforce that methods marked with \texttt{[pure]} actually are functionally pure~\cite{microsoft-pure-attribute}, and so the attribute does not guarantee functional purity. Microsoft defines pure methods as methods that don't modify any pre-existing state, i.e. methods can only modify objects that were created \textit{after} the method was called~\cite{microsoft-code-contracts}. The following code elements are assumed by the code contract tools to be pure~\cite{microsoft-code-contracts}:
+
+\begin{itemize}
+  \item Methods or types marked with \texttt{[pure]} (for types marked with \texttt{[pure]} this should apply to to all the type's methods).
+  \item Property get accessors.
+  \item Operators.
+  \item Any method with a fully qualified name starting with \texttt{System.Diagnost\-ics.Contracts.Contract}, \texttt{System.String}, \texttt{System\-.IO.Path}, or \texttt{System.Type}.
+  \item Any called delegate with the \texttt{[pure]} attribute. Delegates are basically function pointers.
+\end{itemize}
+
 \section{Problems with determining purity in object oriented languages} \label{sec:Problems with determining purity in object oriented languages}
 
 Analyzing functional purity in object oriented programming languages yields a number of dilemmas. This section describes them, as well as how they were dealt with.
@@ -885,43 +896,36 @@ The analysis also keeps track of \textit{globally escaped nodes}, which are node
 
 To check if a method \textit{m} is pure, the analysis computes the set \textit{A} consisting of nodes reachable from parameter nodes along outside edges~\cite{salcianu}. In other words, \textit{A} represents all objects existing before executing \textit{m}~\cite{salcianu}. \textit{m} is pure if and only if no node in \textit{A} escapes globally (i.e. is accessed by unknown code) and no fields in any node in \textit{A} is modified~\cite{salcianu}. There is one exception to the purity constraint: constructors are allowed to mutate fields of the \texttt{this} object~\cite{salcianu}. Therefore all mutated abstract fields of \texttt{this} are ignored by the analysis~\cite{salcianu}.
 
-TODO
+Similarly to this thesis, S\u{a}lcianu and Rinard explicitly mark parts of a method that are potentially accessed by unknown code, and deal with them conservatively. Their analysis uses a points-to graph to compute the purity of each method, unlike the method in this thesis that uses a lookup-table and checklist.
 
-\subsection{Detecting function purity in JavaScript}
+% Since they do not include determinism in their definition of functional purity, static
+
+% \subsection{Detecting function purity in JavaScript}
 % This was a little too difficult to understand, maybe remove from related work?
-Nicolay et al. developed a method of detecting function purity in JavaScript using something called \textit{pushdown analysis}~\cite{purity-in-javascript}. Their definition of functional purity, however, includes only side-effects and does not require functions' output to depend purely on their input~\cite{purity-in-javascript}.
+% Nicolay et al. developed a method of detecting function purity in JavaScript using something called \textit{pushdown analysis}~\cite{purity-in-javascript}. Their definition of functional purity, however, includes only side-effects and does not require functions' output to depend purely on their input~\cite{purity-in-javascript}.
 
 % Because everything except for
 
-\subsection{Writing Pure Code in C\#} \label{sub:Writing Pure Code in Cs}
-In his article \textit{Writing Pure Code in C\#} Massad defines three levels of pure methods~\cite{yacoub-massad-pure-code}:
-\begin{enumerate}
-  \item Pure methods, i.e. methods that do not read or write to instance state variables, or call impure methods.
-  \item Methods that are pure, and that \textit{read} the state of their containing object, or the state of objects that are passed as parameters or created in the current method.
-  \item Methods that are pure, and that \textit{read} or \textit{write} to the state of their containing objects, or to the state of objects created in the current method.
-\end{enumerate}
+% \subsection{Writing Pure Code in C\#} \label{sub:Writing Pure Code in Cs}
+% In his article \textit{Writing Pure Code in C\#} Massad defines three levels of pure methods~\cite{yacoub-massad-pure-code}:
+% \begin{enumerate}
+%   \item Pure methods, i.e. methods that do not read or write to instance state variables, or call impure methods.
+%   \item Methods that are pure, and that \textit{read} the state of their containing object, or the state of objects that are passed as parameters or created in the current method.
+%   \item Methods that are pure, and that \textit{read} or \textit{write} to the state of their containing objects, or to the state of objects created in the current method.
+% \end{enumerate}
 
-\subsection{.NET Code Contracts} \label{sub:Code contracts} % kanske ta bort eller flytta till Backgrounds?
-.NET code contracts are used to define pre- and postconditions, as well invariants for pieces of code -- some which can be checked statically and some at runtime~\cite{microsoft-code-contracts}. One available code contract is the \texttt{[pure]} attribute, which indicates that the method is pure~\cite{microsoft-code-contracts}. However, current analysis tools do not enforce that methods marked with \texttt{[pure]} actually are pure, and so the attribute does not guarantee functional purity. Microsoft defines pure methods as methods that don't modify an pre-existing state, i.e. methods can only modify objects that were created \textit{after} the method was called. The following code elements are assumed by the code contract tools to be pure~\cite{microsoft-code-contracts}:
-
-\begin{itemize}
-  \item Methods or types marked with \texttt{[pure]} (for types marked with \texttt{[pure]} this should apply to to all the type's methods).
-  \item Property get accessors.
-  \item Operators.
-  \item Any method with a fully qualified name starting with \texttt{System.Diagnost\-ics.Contracts.Contract}, \texttt{System.String}, \texttt{System\-.IO.Path}, or \texttt{System.Type}.
-  \item Any called delegate with the \texttt{[pure]} attribute. Delegates are basically function pointers.
-\end{itemize}
-
-\subsection{Evolution of Degree of Purity in Programming Languages} \label{sub:Evolution of Degree of Purity in Programming Languages}
-Rajasekhara Babu et al.~\cite{rajasekharababu2012evolution}.
+% \subsection{Evolution of Degree of Purity in Programming Languages} \label{sub:Evolution of Degree of Purity in Programming Languages}
+% Rajasekhara Babu et al.~\cite{rajasekharababu2012evolution}.
 
 \subsection{Verifiable Functional Purity in Java} \label{sub:Verifiable-Functional-Purity-in-Java}
 In their definition of functional purity Finifter et al. require pure functions to be both side-effect free and \textit{deterministic}~\cite{purity-in-java}. A function is deterministic if any two evaluations of it have the same result~\cite{purity-in-java}. This means that a deterministic function is one that relies purely on its arguments~\cite{purity-in-java}. A function is side-effect free if it only modifies objects that were created during its execution~\cite{purity-in-java}.
 
-The language that their analyzer handles is a subset of Java, in which they can prove functional purity~\cite{purity-in-java}. They make the point that if all of method's parameters are immutable, including the implicit \texttt{this}, then the method is pure~\cite{purity-in-java}. % page 166
+The language that their analyzer handles is a subset of Java, in which they can prove functional purity~\cite{purity-in-java}. If a method is written in this subset of Java and its parameters are immutable, including the implicit \texttt{this}, then the method is pure~\cite{purity-in-java}. % page 166
 If its class is immutable it means that a method's global scope has a constant state, and so the only varying state is the one observable through its arguments~\cite{purity-in-java}.
 
-Their verifier has a white list of fields and methods from Java libraries that do not expose the ability to observe a global mutable state, or provide access to nondeterminism, and it will reject any reference to a field or method that is not on the list~\cite{purity-in-java}.
+Their verifier has a white list of fields and methods from Java libraries that do not expose the ability to observe a global mutable state, or provide access to nondeterminism, and it will reject any reference to a field or method that is not on the list~\cite{purity-in-java}. This is similar to the approach with a list of impure built-in C\# methods mentioned in \autoref{sub:Impure-built-in-methods}.
+
+Finifter et al. use the same definition of functional purity that is used in this thesis. The main disadvantage with Finifter et al.'s approach is that it requires the code to be written in a subset of Java code in order to be able to analyze the code.
 
 \subsection{Dynamic Purity Analysis For Java Programs} \label{sub:Dynamic Purity Analysis For Java Programs}
 \cite{xu2007dynamic} TODO
