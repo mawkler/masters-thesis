@@ -244,7 +244,7 @@ Similarly to many other programming languages, functions in C\# are generally re
         number += 1; // this is a side-effect
       }
 
-      public static void Main()  {
+      public static void Main() {
         addOne();
         Console.WriteLine(number); // outputs 43
       }
@@ -262,7 +262,7 @@ Similarly to many other programming languages, functions in C\# are generally re
         return number + 1; // this method is now pure
       }
 
-      public static void Main()  {
+      public static void Main() {
         int number = 42;
         number = addOne(number);
         Console.WriteLine(number); // outputs 43
@@ -543,6 +543,7 @@ The following is how to determine the purity level \textit{p} for the currently 
     %   foo.bar = null;
   \item If \textit{m} calls a locally impure method belonging to \textit{m}'s object (i.e. \texttt{this}) \textit{m} is marked \textit{locally impure}.
   \item If the method \textit{m} reads or modifies a static field of any class or object, \textit{m} is marked \textit{impure}. This is because reading a static field is a non-deterministic action, and modifying a static field is a side-effect since it mutates the field for all instantiations of that object's class. \label{itm:static-impure}
+  \item If the method \textit{m} calls a \textit{locally impure} method of an object assigned to a static field of any class or object, \textit{m} is marked \textit{impure}.
   \item If the currently analyzed method \textit{m} calls an input parameter's method $m_p$ and $m_p$ is overridden by any locally impure and/or parametrically impure method, $m_p$ is temporarily marked with the impurities of all the overriding methods in the context of the analysis of the current method \textit{m}. If $m_p$ is overridden by any impure method, \textit{m} is permanently marked as impure.
     % Moreover:
     % \begin{itemize} % Maybe these are covered by other cases?
@@ -783,7 +784,7 @@ Something that was realized while implementing the tool is that the C\# compiler
 TODO
 
 \section{Results and discussion} \label{sec:results-and-discussion}
-The implemented analysis program works backwards through the analyzed program's function dependencies and for each function visited its functional purity level is calculated. The purity levels \textit{impure} and \textit{unknown} also get propagated from callee to caller. Out of all nine items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, the following three were implemented:
+The implemented analysis program works backwards through the analyzed program's function dependencies and for each function visited its functional purity level is calculated. The purity levels \textit{impure} and \textit{unknown} also get propagated from callee to caller. Out of all ten items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, the following three were implemented:
 
 \begin{itemize}
   \item \autoref{itm:static-impure}: "If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked \textit{impure}".
@@ -791,7 +792,7 @@ The implemented analysis program works backwards through the analyzed program's 
   \item \autoref{itm:impure-built-in}: "Any method mentioned in the two lists of impure built-in C\# methods in \autoref{sub:Impure-built-in-methods} is marked \textit{impure}".
 \end{itemize}
 
-The reason why three out of the total nine checks were implemented was due to the sheer amount of time that the implementation took. After implementing the whole lookup table and all of its functionality, calculation of each method's dependency set, propagation of impurities from callee to caller, etc. there was not time left to implement every item in the checklist in a reasonable amount of time, and so the three items above were chosen. Because of this, the program is unable to detect local and parametrical impurity, and can only detect full impurity caused by side-effects.
+The reason why three out of the total ten checks were implemented was due to the sheer amount of time that the implementation took. After implementing the whole lookup table and all of its functionality, calculation of each method's dependency set, propagation of impurities from callee to caller, etc. there was not time left to implement every item in the checklist in a reasonable amount of time, and so the three items above were chosen. Because of this, the program is unable to detect local and parametrical impurity, and can only detect full impurity caused by side-effects.
 
 Due to the choice of including determinism in the definition of functional purity, which is not included in some definitions, the analysis could be somewhat simplified. The main advantage to including determinism is that we don't have to explicitly check whether potentially global (i.e. static) object fields are read from or modified by a function \textit{f}, in order to determine \textit{f}'s purity. As a long as a static variable appears in \textit{f} we know that \textit{f} is non-deterministic since it depends on a global state. On the other hand, if determinism were ignored we would have to check whether the static field is modified by \textit{f} or not -- or by some method called by \textit{f} -- in order to determine \textit{f}'s purity, which would be even trickier.
 
@@ -923,18 +924,22 @@ In their definition of functional purity Finifter et al. require pure functions 
 The language that their analyzer handles is a subset of Java, in which they can prove functional purity~\cite{purity-in-java}. If a method is written in this subset of Java and its parameters are immutable, including the implicit \texttt{this}, then the method is pure~\cite{purity-in-java}. % page 166
 If its class is immutable it means that a method's global scope has a constant state, and so the only varying state is the one observable through its arguments~\cite{purity-in-java}.
 
-Their verifier has a white list of fields and methods from Java libraries that do not expose the ability to observe a global mutable state, or provide access to nondeterminism, and it will reject any reference to a field or method that is not on the list~\cite{purity-in-java}. This is similar to the approach with a list of impure built-in C\# methods mentioned in \autoref{sub:Impure-built-in-methods}.
+Their verifier has a whitelist of fields and methods from Java libraries that do not expose the ability to observe a global mutable state, or provide access to nondeterminism, and it will reject any reference to a field or method that is not on the list~\cite{purity-in-java}. This is similar to the approach with a list of impure built-in C\# methods used in this thesis and mentioned in \autoref{sub:Impure-built-in-methods}.
 
 Finifter et al. use the same definition of functional purity that is used in this thesis. The main disadvantage with Finifter et al.'s approach is that it requires the code to be written in a subset of Java code in order to be able to analyze the code.
 
 \subsection{Dynamic Purity Analysis For Java Programs} \label{sub:Dynamic Purity Analysis For Java Programs}
-\cite{xu2007dynamic} TODO
+In their paper Xu et al. define four different definitions for functional purity, and they are as follows from the strongest to the weakest definition: \textit{strong}, \textit{moderate}, \textit{weak} and \textit{once-impure} purity~\cite{xu2007dynamic}, similarly to the purity levels presented in this thesis in \autoref{def:functional-purity}, \autoref{def:locally-impure} and \autoref{def:parametrically-impure}. Their strongest definition, \textit{strong purity}, includes both determinism and side-effect freeness~\cite{xu2007dynamic}. However, Xu et al. do not seem to consider object type parameters to be included in determinism, and so reading the state of an input object is not considered truly pure. \textit{Moderate purity} is like \textit{strong}, except that it also allows modification of newly allocated (i.e. fresh) objects~\cite{xu2007dynamic}. \textit{Weak purity} is like \textit{moderate}, but it also allows non-determinism i.e. reading from objects that exist outside of the method~\cite{xu2007dynamic}. \textit{Once-impure purity} is equivalent to \textit{weak purity} except that the first invocation of the method may be impure~\cite{xu2007dynamic}.
+
+It is interesting that Xu et al. do not consider modification of fresh objects or reading the state of object type input parameters as truly pure, which this paper and most other work does. Moreover, none of Xu et al.'s purity levels however allow modification of input parameters. Xu et al. consider methods that modify their own object \texttt{this} to be impure, but do allow other methods that call such methods and remain \textit{moderately pure}. This is similar to the approach used in this paper, which classifies the former type of method as \textit{locally impure} and the calling method as \textit{pure} if the called method belongs to a fresh object, as described in \autoref{sub:modifying-fresh-objects}.
+
+Xu et al.'s analysis is performed dynamically which requires looking at Java Virtual Machine code~\cite{xu2007dynamic}. The nature of the dynamic analysis may be the reason why some of their purity definitions differ from most other work, for instance that any modification of any object that was created after the start of executing a method, including fresh ones, is not considered pure by their method of analysis.
 
 \section{Conclusion and Future Work} \label{sec:Conclusion and future Work} % Maybe only "Conclusion"
 
 \subsection{Conclusion} \label{sub:Conclusion}
 
-\textit{Functional purity} is perhaps the most useful concept from functional programming that object oriented programmers can learn from. The definition of a pure program used in this paper is one that is side-effect free and deterministic. There are many benefits of using functionally pure methods in object oriented programming. Pure methods are generally easier to reason about due to their lack of side effects. Moreover, pure methods are easier to test, debug and maintain. The ability to automatically determine the level of purity in a given C\# program can help programmers to write less impure code, and thereby reap previously mentioned benefits.
+Functional purity is perhaps the most useful concept from functional programming that object oriented programmers can learn from. The definition of a pure program used in this paper is one that is side-effect free and deterministic. There are many benefits of using functionally pure methods in object oriented programming. Pure methods are generally easier to reason about due to their lack of side effects. Moreover, pure methods are easier to test, debug and maintain. The ability to automatically determine the level of purity in a given C\# program can help programmers to write less impure code, and thereby reap previously mentioned benefits.
 
 \subsection{Future work} \label{sub:Future work}
 
