@@ -861,7 +861,7 @@ TODO
 
 % \subsection{Results from running CsPurity on Roslyn's String class} \label{sub:results-from-scanning-roslyn's-string-class}
 
-\subsection{Results from running CsPurity on Microsoft's .NET Reference Source \texttt{String} class} \label{sub:results-string-class}
+\subsection{Results from running CsPurity on Microsoft's .NET Reference Source \texttt{String} and \texttt{Encoding} class} \label{sub:results-string-class}
 
 Reference Source is a publicly available repository by Microsoft that contains sources from the Microsoft .NET Reference Source~\cite{microsoft-referencesource}. Their \texttt{String} class contains 65 methods with the \texttt{[Pure]} attribute out of a total of 178 methods. By scanning methods that are marked with the \texttt{[Pure]} attribute we can determine the accuracy of CsPurity.
 
@@ -875,8 +875,8 @@ Out of all 65 methods that were marked as \texttt{[Pure]}:
   \item Pure: 2
   \item Impure: 42
   \begin{itemize}
-    \item Throws exception: 32
-    \item Reads static variable: 10
+    \item Throws exception: 33
+    \item Other impure action: 9
   \end{itemize}
   \item Unknown: 21
 \end{itemize}
@@ -889,11 +889,37 @@ Out of all 113 methods that were \textit{not} marked as \texttt{[Pure]}:
 
 \begin{itemize}
   \item Pure: 3
-  \item Impure: 58
-  \item Unknown: 52
+  \item Impure: 59
+  \item Unknown: 51
 \end{itemize}
 
 Three of the methods with no \texttt{[Pure]} attribute were classified as pure by CsPurity. By looking manually at them it could be confirmed that all three fulfill the properties of functional purity.
+
+\subsubsection{\texttt{encoding.cs}}
+
+\textbf{With \texttt{[Pure]} attributes}
+
+\begin{itemize}
+  \item Pure: 2
+  \item Impure: 13
+  \begin{itemize}
+    \item Throws exception: 13
+    \item Other impure action: 0
+  \end{itemize}
+  \item Unknown: 11
+\end{itemize}
+
+\textbf{Without \texttt{[Pure]} attributes}
+
+\begin{itemize}
+  \item Pure: 7
+  \item Impure: 35
+  \item Unknown: 22
+\end{itemize}
+
+Although the majority of methods are \textit{impure} all of those methods throw exceptions.
+
+All seven methods categorized as \textit{pure} by CsPurity but with no \texttt{[Pure]} attribute are in fact pure. Three of them write to \texttt{internal} fields, have the \texttt{unsafe} keyword and two simply return fresh objects.
 
 % TODO
 
