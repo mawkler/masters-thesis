@@ -346,8 +346,10 @@ The following methods that are built into C\# and have side-effects~\cite{dixin2
 
 The fact that previously mentioned methods are non-deterministic or have side-effects means that we know for sure that they are impure, which means that any function that uses them is also impure.
 
-\subsection{.NET Code Contracts} \label{sub:Code contracts} % kanske ta bort eller flytta till Backgrounds?
-.NET code contracts are used to define pre- and postconditions, as well invariants for pieces of code -- some which can be checked statically and some at runtime~\cite{microsoft-code-contracts}. One available code contract is the \texttt{[Pure]} attribute, which indicates that the method is pure~\cite{microsoft-code-contracts}. However, current analysis tools do not enforce that methods marked with \texttt{[Pure]} actually are functionally pure~\cite{microsoft-pure-attribute}, and so the attribute does not guarantee functional purity. Microsoft defines pure methods as methods that don't modify any pre-existing state, i.e. methods can only modify objects that were created \textit{after} the method was called~\cite{microsoft-code-contracts}. The following code elements are assumed by the code contract tools to be pure~\cite{microsoft-code-contracts}:
+\subsection{.NET Code Contracts} \label{sub:code-contracts}
+.NET code contracts are used to define pre- and postconditions, as well invariants for pieces of code -- some which can be checked statically and some at runtime~\cite{microsoft-code-contracts}. One available code contract is the \texttt{[Pure]} attribute, which indicates that the method is pure~\cite{microsoft-code-contracts}. However, current analysis tools do not enforce that methods marked with \texttt{[Pure]} actually are functionally pure~\cite{microsoft-pure-attribute}, and so the attribute does not guarantee functional purity. Microsoft defines pure methods as methods that don't modify any pre-existing state, i.e. methods can only modify objects that were created \textit{after} the method was called~\cite{microsoft-code-contracts}. Note that their definition of functional purity does not include determinism, which the definition used in this thesis does. Because of this, the \texttt{[Pure]} attribute does not consider throwing exceptions as functionally impure.
+
+The following code elements are assumed by the code contract tools to be pure~\cite{microsoft-code-contracts}: % Perhaps remove this list
 
 \begin{itemize}
   \item Methods or types marked with \texttt{[Pure]} (for types marked with \texttt{[Pure]} this should apply to to all the type's methods).
@@ -863,63 +865,49 @@ TODO
 
 \subsection{Results from running CsPurity on Microsoft's .NET Reference Source \texttt{String} and \texttt{Encoding} class} \label{sub:results-string-class}
 
-Reference Source is a publicly available repository by Microsoft that contains sources from the Microsoft .NET Reference Source~\cite{microsoft-referencesource}. Their \texttt{String} class contains 65 methods with the \texttt{[Pure]} attribute out of a total of 178 methods. By scanning methods that are marked with the \texttt{[Pure]} attribute we can determine the accuracy of CsPurity.
+Reference Source is a publicly available repository by Microsoft that contains sources from the Microsoft .NET Reference Source~\cite{microsoft-referencesource}. Their \texttt{String} and \texttt{Encoding} classes together contain 91 methods with the \texttt{[Pure]} attribute out of a total of 177 methods. By scanning methods that are marked with the \texttt{[Pure]} attribute we can determine the accuracy of CsPurity.
 
-However, Microsoft don't seem to count the use of static variables (non-determinism) or calls to methods that throw exceptions as impure. Therefore, the majority of methods with the \texttt{[Pure]} atttribute are in fact impure.
+However, Microsoft don't seem to count reading of static variables (non-determinism) or calls to methods that throw exceptions as impure. Therefore, the majority of methods with the \texttt{[Pure]} atttribute are in fact impure.
 
 The two classes in Reference Source with the most number of methods with a \texttt{[Pure]} attribute were chosen.
 
-Out of all 65 methods that were marked as \texttt{[Pure]}:
+Out of all 91 methods that were marked as \texttt{[Pure]}:
 
 \begin{itemize}
-  \item Pure: 2
-  \item Impure: 42
+  \item Pure: 4
+  \item Impure: 55, where
   \begin{itemize}
-    \item Throws exception: 33
+    \item Throw exception: 46
     \item Other impure action: 9
   \end{itemize}
-  \item Unknown: 21
+  \item Unknown: 32
 \end{itemize}
 
 % Here, "Throws exception" and "Reads static variable" includes methods that themselves depend on methods that do so.
 
 As seen above, nearly half of all methods with the \texttt{[Pure]} attribute throw exceptions.
 
-Out of all 113 methods that were \textit{not} marked as \texttt{[Pure]}:
+Out of all 177 methods that were \textit{not} marked as \texttt{[Pure]}:
 
 \begin{itemize}
-  \item Pure: 3
-  \item Impure: 59
-  \item Unknown: 51
+  \item Pure: 10
+  \item Impure: 94
+  \item Unknown: 73
 \end{itemize}
+
+Note that as mentioned in \autoref{sub:code-contracts} the \texttt{[Pure]} attribute only requires side-effect freeness, not determinism. This is the reason why the majority of \texttt{[Pure]} methods were marked as \textit{impure} by CsPurity.
+
+\textbf{string.cs}
+
+Nine methods in the \textit{String} class had a \texttt{Pure} attribute but were classified as \textit{impure} by CsPurity. All of them are non-deterministic since they read static variables.
 
 Three of the methods with no \texttt{[Pure]} attribute were classified as pure by CsPurity. By looking manually at them it could be confirmed that all three fulfill the properties of functional purity.
 
-\subsubsection{\texttt{encoding.cs}}
+\textbf{encoding.cs}
 
-\textbf{With \texttt{[Pure]} attributes}
+Although the majority of methods with \texttt{[Pure]} attribute were classified as \textit{impure} by CsPurity, all of them throw exceptions.
 
-\begin{itemize}
-  \item Pure: 2
-  \item Impure: 13
-  \begin{itemize}
-    \item Throws exception: 13
-    \item Other impure action: 0
-  \end{itemize}
-  \item Unknown: 11
-\end{itemize}
-
-\textbf{Without \texttt{[Pure]} attributes}
-
-\begin{itemize}
-  \item Pure: 7
-  \item Impure: 35
-  \item Unknown: 22
-\end{itemize}
-
-Although the majority of methods are \textit{impure} all of those methods throw exceptions.
-
-All seven methods categorized as \textit{pure} by CsPurity but with no \texttt{[Pure]} attribute are in fact pure. Three of them write to \texttt{internal} fields, have the \texttt{unsafe} keyword and two simply return fresh objects.
+Seven methods that were categorized as \textit{pure} by CsPurity but with no \texttt{[Pure]} attribute are upon inspection in fact pure. % Three of them write to \texttt{internal} fields, have the \texttt{unsafe} keyword and two simply return fresh objects.
 
 % TODO
 
