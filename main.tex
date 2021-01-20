@@ -146,9 +146,11 @@ For this reason it useful in software engineering to evaluate the level of funct
 
 C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language by developers? This paper will attempt to answer this by evaluating to what degree functional purity is used in C\# programs today.
 
+This theis develops and evaluates a static analysis method for determining the purity level of object oriented programs with a focus on C\#.
+
 % Yannis Smaragdakis and Brian McNamara showed that there are ways of converting the common OO design patterns Command, Observer, Adaptor, Visitor and Virtual Proxy in C++ to functional programs using FC++ -- a library that adds many functional features to C++~\cite{yannis-smaragdakis}. Would this kind of transformation be useful for programs written in C\#? If C\# is not currently being used primarily as a functional programming language, this tool could be useful to programmers that want to refactor an existing OO program to a functional one.
 
-% \subsection{Contricutions} \label{sub:Contricutions}
+% \subsection{Contributions} \label{sub:Contributions}
 
 \section{Definitions} \label{sub:definitions}
 Functional programming and object oriented programming are two different programming paradigms. There is no universal definition of either of them. Following is how they have been chosen to be defined in this thesis.
@@ -359,7 +361,7 @@ The following code elements are assumed by the code contract tools to be pure~\c
   \item Any called delegate with the \texttt{[Pure]} attribute. Delegates are basically function pointers.
 \end{itemize}
 
-\section{Problems with determining purity in object oriented languages} \label{sec:Problems with determining purity in object oriented languages}
+\section{Problems with determining purity in object oriented languages} \label{sec:problems-with-purity-in-oo}
 
 Analyzing functional purity in object oriented programming languages yields a number of dilemmas. This section describes them, as well as how they were dealt with.
 
@@ -521,9 +523,9 @@ While method overloading is not unique to object oriented programming, it seems 
 Instead, when given an overloaded method named \textit{m} the analysis treats each overload of \textit{m} as a unique method, independent of other overloads. This way overloads with different purity levels can co-exist in the result of an analysis. Because overloads by definition share the same name, in order to differentiate them in this thesis the notation $m_1$, $m_2$, $m_3$, ... is used, where $m_1$ denotes the first implementation of the method \textit{m}, $m_2$ denotes the second, and so on.
 
 \section{The analysis method} \label{sec:the-analysis-method}
-There are five kinds of functional purity levels for: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure}, and \textit{unknown}. The latter was added for the case where the purity level of a method cannot be determined.
+As established in \autoref{sec:problems-with-purity-in-oo} this thesis defines four functional purity levels: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, and \textit{impure}. Because in some cases the purity level of a method cannot be determined, for instance when the method's definition is missing, a fifth purity level \textit{unknown} is added as well. Following is a description of the static analysis method developed and used in this thesis in order to determine the purity level of a program:
 
-Traverse the Abstract Syntax Tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function. If during the traversal a call or reference to a compiled method or a field is found, mark the caller function's purity as \textit{unknown}.
+Traverse the program's Abstract Syntax Tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function. If during the traversal a call or reference to a compiled method or a field is found, mark the caller function's purity as \textit{unknown}.
 
 Since object constructors can perform impure actions just like methods, they are in this section included in the term "function".
 
@@ -909,6 +911,8 @@ Although the majority of methods with \texttt{[Pure]} attribute were classified 
 
 Seven methods that were categorized as \textit{pure} by CsPurity but with no \texttt{[Pure]} attribute are upon inspection in fact pure. % Three of them write to \texttt{internal} fields, have the \texttt{unsafe} keyword and two simply return fresh objects.
 
+Although there were some apparent false negatives where CsPurity categorized \texttt{[Pure]} methods as impure. However, they all seem to be due to Microsoft's looser definition of functional purity which doesn't include determinism or exceptions. The majority of false negatives were \texttt{[Pure]} methods that throw errors, and in some cases they read or even modify a static field, or depend on a method that does one of these things. Not one case was found where CsPurity's categorization was done incorrectly based on the definition used in this thesis.
+
 % TODO
 
 \section{Related work} \label{sec:Related work} % (If not part of introduction)
@@ -997,6 +1001,8 @@ Functional purity is perhaps the most useful concept from functional programming
 
 \begin{itemize}
   \item Tool can point out exact position of impurity and suggest improvements to increase the purity. Because purity is determined by passing the purity level of impure functions to their callers, this could be implemented by also passing the identifier of the impure function to the caller.
+  \item Performance improvement: the analysis method could be improved by checking methods against the checklist while calculating all dependency sets. If the method performed an imprue action like throwing an error the analysis could then stop the computation for that method and would not have to compute all dependencies since we already know that the funciton is impure, which would save computation time.
+  \autoref{sec:reference}
 \end{itemize}
 
 \bibliography{references}
