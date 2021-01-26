@@ -866,7 +866,7 @@ The results are divided into two different tables; \autoref{tab:results-pure-met
 
 \begin{table}[H]
   \small
-  \caption{CsPurity's classification of the methods with the \texttt{[Pure]} attribute after being run on 14 different open source repositories.}
+  \caption{CsPurity's classification of the methods with the \texttt{[Pure]} attribute after being run on 11 different open source repositories.}
   \label{tab:results-pure-methods}
   \centering
   \begin{tabular}{|l|lp{2.8cm}p{1.4cm}l|l|}
@@ -893,7 +893,7 @@ The results are divided into two different tables; \autoref{tab:results-pure-met
 
 \begin{table}[H]
   \small
-  \caption{CsPurity's classification of the methods with no \texttt{[Pure]} attribute after being run on 14 different open source repositories.}
+  \caption{CsPurity's classification of the methods with no \texttt{[Pure]} attribute after being run on 11 different open source repositories.}
   \label{tab:results-non-pure-methods}
   \centering
   \begin{tabular}{|l|lll|l|}
@@ -914,6 +914,35 @@ The results are divided into two different tables; \autoref{tab:results-pure-met
     \hline
     \rowcolor{lightgray} \textbf{Total number of methods} & 3967 & 30525  & 17275 & \cellcolor{white} 51767 \\
     \rowcolor{lightgray} \textbf{Total percentage}        & 8\%  & 59\%   & 33\%  & \cellcolor{white} 100\% \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \small
+  \caption{The ratio of CsPurity's classification of all analyzed methods, i.e. both methods with and without the pure \texttt{[Pure]} attribute.}
+  \label{tab:results-summary}
+  \centering
+  \begin{tabular}{|l|lll|l|}
+    \hline
+                        & \textbf{Total \# of Pures} & \textbf{Total \# of Impures} & \textbf{Total \# of Unknowns} & \textbf{Total} \\
+    \hline
+    \textbf{Amount}     & 4901 & 48684  & 43615   & 97200 \\
+    \textbf{Percentage} & 5\%  & 50\%   & 45\%    & 100\% \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Precision and recall of CsPurity's classification of pure and impure methods.}
+  \label{tab:results-precision-recall}
+  \begin{tabular}{|l|ll|}
+    \hline
+                                       & \textbf{Precision} & \textbf{Recall} \\
+    \hline
+    \textbf{Classification of Pures}   & 19\%               & 2\%             \\
+    \textbf{Classification of Impures} & 62\%               & 59\%            \\
     \hline
   \end{tabular}
 \end{table}
