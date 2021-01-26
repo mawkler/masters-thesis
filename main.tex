@@ -860,9 +860,9 @@ It is assumed that any method with the \texttt{[Pure]} attribute is functionalit
 The evaluation also assumes that methods without \texttt{[Pure]} are impure. There could be exceptions to this, i.e. pure methods that haven't been given the \texttt{[Pure]} attribute by the code's author, and this will be discussed further later in this section. % TODO
 However, this assumption still allows us to also say something about CsPurity ability to classify impure methods.
 
-To evaluate CsPurity's accuracy the 14 most popular GitHub repositories that use C\# and the \texttt{[Pure]} attribute use were chosen. Here "popular" is synonymous with the number of stars, which is GitHub's user rating system for repositories.
+To evaluate CsPurity's accuracy the 11 most popular GitHub repositories that use C\# and the \texttt{[Pure]} attribute in at least 1\% of methods were chosen. Here "popular" is synonymous with the number of stars, which is GitHub's user rating system for repositories.
 
-The results are divided into two different tables; \autoref{tab:results-pure-methods} which contains CsPurity's classification for methods with the \texttt{[Pure]} attribute, and \autoref{tab:results-non-pure-methods} with the result for methods without the attribute. Methods with the \texttt{[Pure]} attribute make up 37\% percent of the total number of methods analyzed, and so 63\% of methods do not have the attribute.
+The results are divided into two different tables; \autoref{tab:results-pure-methods} which contains CsPurity's classification for methods with the \texttt{[Pure]} attribute, and \autoref{tab:results-non-pure-methods} with the result for methods without the attribute. Methods with the \texttt{[Pure]} attribute make up 47\% percent of the total number of methods analyzed, and so 53\% of methods do not have the attribute.
 
 \begin{table}[H]
   \small
@@ -873,22 +873,19 @@ The results are divided into two different tables; \autoref{tab:results-pure-met
     \hline
     \textbf{Repository name} & \textbf{Pure} & \textbf{Impure:\newline throws exception} & \textbf{Impure: other} & \textbf{Unknown} & \textbf{Total} \\
     \hline
-    nodatime                         & 10  & 23   & 72    & 56    & 161   \\
-    WindowsCommunityToolkit          & 42  & 38   & 64    & 124   & 268   \\
-    .NETOpenAuth                     & 3   & 32   & 3     & 15    & 53    \\
-    CsConsoleFormat                  & 3   & 17   & 15    & 63    & 98    \\
-    Bridge                           & 0   & 1    & 1     & 22    & 24    \\
-    optentk                          & 452 & 17   & 53    & 156   & 678   \\
-    opencvsharp                      & 0   & 2    & 0     & 2621  & 2623  \\
-    nuke                             & 4   & 114  & 10    & 17290 & 17418 \\
-    linq2db                          & 3   & 114  & 11    & 31    & 159   \\
-    language-ext                     & 365 & 954  & 16599 & 5935  & 23853 \\
-    gitextensions                    & 1   & 5    & 14    & 27    & 47    \\
-    MetadataExtractor .NET           & 2   & 9    & 9     & 43    & 63    \\
-    Spreads                          & 0   & 31   & 3     & 1     & 35    \\
-    fluentassertions                 & 53  & 0    & 4     & 20    & 77    \\
+    nodatime                & 10  & 23   & 72    & 56    & 161   \\
+    WindowsCommunityToolkit & 42  & 38   & 64    & 124   & 268   \\
+    CsConsoleFormat         & 3   & 17   & 15    & 63    & 98    \\
+    optentk                 & 452 & 17   & 53    & 156   & 678   \\
+    opencvsharp             & 0   & 2    & 0     & 2621  & 2623  \\
+    nuke                    & 4   & 114  & 10    & 17290 & 17418 \\
+    linq2db                 & 3   & 114  & 11    & 31    & 159   \\
+    language-ext            & 365 & 954  & 16599 & 5935  & 23853 \\
+    MetadataExtractor .NET  & 2   & 9    & 9     & 43    & 63    \\
+    Spreads                 & 0   & 31   & 3     & 1     & 35    \\
+    fluentassertions        & 53  & 0    & 4     & 20    & 77    \\
     \hline
-    \rowcolor{lightgray} \textbf{Total number of methods} & 938 & 1357 & 16858 & 26404 & \cellcolor{white} 45557 \\
+    \rowcolor{lightgray} \textbf{Total number of methods} & 934 & 1319 & 16840 & 26340 & \cellcolor{white} 45433 \\
     \rowcolor{lightgray} \textbf{Total percentage}        & 2\% & 3\%  & 37\%  & 58\%  & \cellcolor{white} 100\% \\
     \hline
   \end{tabular}
@@ -903,23 +900,20 @@ The results are divided into two different tables; \autoref{tab:results-pure-met
     \hline
     \textbf{Repository name} & \textbf{Pure} & \textbf{Impure} & \textbf{Unknown} & \textbf{Total} \\
     \hline
-    nodatime                         & 88   & 2631  & 1038  & 3757  \\
-    WindowsCommunityToolkit          & 477  & 3480  & 3342  & 7299  \\
-    .NETOpenAuth                     & 1438 & 2099  & 2350  & 5887  \\
-    CsConsoleFormat                  & 35   & 272   & 576   & 883   \\
-    Bridge                           & 1654 & 3733  & 8007  & 13394 \\
-    optentk                          & 532  & 462   & 1394  & 2388  \\
-    opencvsharp                      & 198  & 2517  & 965   & 3680  \\
-    nuke                             & 554  & 2056  & 965   & 3575  \\
-    linq2db                          & 998  & 7613  & 4316  & 12927 \\
-    language-ext                     & 85   & 5362  & 2678  & 8125  \\
-    gitextensions                    & 320  & 2618  & 4405  & 7343  \\
-    MetadataExtractor .NET           & 36   & 1267  & 341   & 1644  \\
-    Spreads                          & 261  & 1094  & 546   & 1901  \\
-    fluentassertions                 & 703  & 3771  & 1114  & 5588  \\
+    nodatime                        & 88   & 2631   & 1038    & 3757  \\
+    WindowsCommunityToolkit         & 477  & 3480   & 3342    & 7299  \\
+    CsConsoleFormat                 & 35   & 272    & 576     & 883   \\
+    optentk                         & 532  & 462    & 1394    & 2388  \\
+    opencvsharp                     & 198  & 2517   & 965     & 3680  \\
+    nuke                            & 554  & 2056   & 965     & 3575  \\
+    linq2db                         & 998  & 7613   & 4316    & 12927 \\
+    language-ext                    & 85   & 5362   & 2678    & 8125  \\
+    MetadataExtractor .NET          & 36   & 1267   & 341     & 1644  \\
+    Spreads                         & 261  & 1094   & 546     & 1901  \\
+    fluentassertions                & 703  & 3771   & 1114    & 5588  \\
     \hline
-    \rowcolor{lightgray} \textbf{Total number of methods} & 7379 & 38975 & 32037 & \cellcolor{white} 78391 \\
-    \rowcolor{lightgray} \textbf{Total percentage}        & 9\%  & 50\%  & 41\%  & \cellcolor{white} 100\% \\
+    \rowcolor{lightgray} \textbf{Total number of methods} & 3967 & 30525  & 17275 & \cellcolor{white} 51767 \\
+    \rowcolor{lightgray} \textbf{Total percentage}        & 8\%  & 59\%   & 33\%  & \cellcolor{white} 100\% \\
     \hline
   \end{tabular}
 \end{table}
