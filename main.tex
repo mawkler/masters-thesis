@@ -14,6 +14,7 @@
 \usepackage{pdfpages}
 \usepackage{float}
 \usepackage{hyperref}
+\usepackage{colortbl}
 
 \hypersetup{
   colorlinks=true,
@@ -27,6 +28,7 @@
 % \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{lightgray}{rgb}{0.9,0.9,0.9}
 
 \lstset{%frame=tb,
   language=java,
@@ -348,8 +350,8 @@ The following methods that are built into C\# and have side-effects~\cite{dixin2
 
 The fact that previously mentioned methods are non-deterministic or have side-effects means that we know for sure that they are impure, which means that any function that uses them is also impure.
 
-\subsection{.NET Code Contracts} \label{sub:code-contracts}
-.NET code contracts are used to define pre- and postconditions, as well invariants for pieces of code -- some which can be checked statically and some at runtime~\cite{microsoft-code-contracts}. One available code contract is the \texttt{[Pure]} attribute, which indicates that the method is pure~\cite{microsoft-code-contracts}. However, current analysis tools do not enforce that methods marked with \texttt{[Pure]} actually are functionally pure~\cite{microsoft-pure-attribute}, and so the attribute does not guarantee functional purity. Microsoft defines pure methods as methods that don't modify any pre-existing state, i.e. methods can only modify objects that were created \textit{after} the method was called~\cite{microsoft-code-contracts}. Note that their definition of functional purity does not include determinism, which the definition used in this thesis does. Because of this, the \texttt{[Pure]} attribute does not consider throwing exceptions as functionally impure.
+\subsection{.NET code contracts and the \texttt{[Pure]} attribute} \label{sub:code-contracts}
+.NET code contracts are used to define pre- and postconditions, as well invariants for pieces of code -- some which can be checked statically and some at runtime~\cite{microsoft-code-contracts}. One available code contract is the \texttt{[Pure]} attribute, which is placed in front of a method signature to indicate that the method is pure~\cite{microsoft-code-contracts}. However, current analysis tools do not enforce that methods marked with \texttt{[Pure]} actually are functionally pure~\cite{microsoft-pure-attribute}, and so the attribute does not guarantee functional purity. Microsoft defines pure methods as methods that don't modify any pre-existing state, i.e. methods can only modify objects that were created \textit{after} the \texttt{[Pure]} method was called~\cite{microsoft-code-contracts}. Note that their definition of functional purity does not include determinism, which the definition used in this thesis does. Because of this, the \texttt{[Pure]} attribute does not consider throwing exceptions as functionally impure.
 
 The following code elements are assumed by the code contract tools to be pure~\cite{microsoft-code-contracts}: % Perhaps remove this list
 
@@ -820,7 +822,10 @@ Another approach to handling called methods with unknown purity -- as opposed to
 
 For the same reason, assuming that any unknown method is \textit{pure} will also not affect any lower bound of the program's total purity level. The upper bound for the program's total purity level will in this case be the same as the \textit{unknown} approach. However, this assumption will be misleading with a complete implementation since it will potentially give false positives that indicate that some methods are pure when they are not. Therefore, since it clearly indicates to the user where the purity level could not be determined, the purity level \textit{unknown} seems to be the best choice here.
 
-\subsection{Results from scanning implementation of linked list} \label{sub:results-from-scanning-the-example}
+\subsection{Evaluation method} \label{sub:evaluation-method}
+% TODO: describe how CsPurity will be evaluated (analysis framework)
+
+\subsection{Results from scanning simple implementation of linked list} \label{sub:results-from-scanning-the-example-list}
 Following is the result of running the implemented analyzer CsPurity on the linked list program in \autoref{fig:example-code}. By looking at the result from running CsPurity and comparing it to the expected result in \autoref{ssub:Example} we can evaluate its performance.
 
 \begin{figure}[htpb]
@@ -846,72 +851,124 @@ However, the three other analyzed methods \texttt{Length()}, \texttt{Add()} and 
 
 Therefore, what we can say for sure about the linked list implementation based on the result in \autoref{fig:example-result} is that its purity level is \textit{at most} three pure methods out of a total of five methods, i.e. it is $\leq$ 3/5 = 60\% functionally pure. Since the true purity level of 20\% that we expect from \autoref{ssub:Example} is less than or equal to 60\%, the upper bound is correct.
 
-TODO
-
-% \subsection{Code base} \label{sub:Code base}
-% \textbf{Mostly pure code}
-% \begin{itemize}
-%   \item \href{https://github.com/dotnet/roslyn/blob/master/src/Workspaces/SharedUtilitiesAndExtensions/Compiler/Core/Utilities/CompilerUtilities/ImmutableHashMap.cs}{\texttt{ImmutableHashMap.cs}} - has many methods marked with \texttt{[pure]}
-%   \item \href{https://github.com/nodatime/nodatime/blob/master/src/NodaTime}{NodaTime} has many pure methods. NodaTime's \href{https://github.com/nodatime/nodatime/blob/master/src/NodaTime/AnnualDate.cs}{\texttt{AnnualDate.cs}} for instance has many pure methods not marked with \texttt{[pure]}
-% \end{itemize}
-
-% \textbf{Mostly impure code}
-% \begin{itemize}
-%   \item \href{https://github.com/SixLabors/ImageSharp/blob/master/src/ImageSharp}{ImageSharp}
-%   \item \href{https://github.com/geaz/sharpDox}{sharpDox}
-% \end{itemize}
-
 % TODO
 
-% \subsection{Results from running CsPurity on Roslyn's String class} \label{sub:results-from-scanning-roslyn's-string-class}
+\subsection{Results from running CsPurity larger codebase} \label{sub:results-larger-codebase}
 
-\subsection{Results from running CsPurity on Microsoft's .NET Reference Source \texttt{String} and \texttt{Encoding} class} \label{sub:results-string-class}
+As mentioned in \autoref{sub:code-contracts} the \texttt{[Pure]} attribute can be placed in front of a method definition to signal that the method pure. That means that running CsPurity on a code base where a portion of the methods use the \texttt{[Pure]} attribute CsPurity's accuracy can be evaluated by comparing what the methods with and the methods without the \texttt{[Pure]} attribute were categorized as by CsPurity.
+It is assumed that any method with the \texttt{[Pure]} attribute is functionality pure. This does not neccessarily have to be true in general, and as will be discussed later, a large portion of \texttt{[Pure]} methods do in fact have side-effects. But the \texttt{[Pure]} attribute can still tell us something about how CsPurity performs.
+The evaluation also assumes that methods without \texttt{[Pure]} are impure. There could be exceptions to this, i.e. pure methods that haven't been given the \texttt{[Pure]} attribute by the code's author, and this will be discussed further later in this section. % TODO
+However, this assumption still allows us to also say something about CsPurity ability to classify impure methods.
 
-Reference Source is a publicly available repository by Microsoft that contains sources from the Microsoft .NET Reference Source~\cite{microsoft-referencesource}. Their \texttt{String} and \texttt{Encoding} classes together contain 91 methods with the \texttt{[Pure]} attribute out of a total of 177 methods. By scanning methods that are marked with the \texttt{[Pure]} attribute we can determine the accuracy of CsPurity.
+To evaluate CsPurity's accuracy the 14 most popular GitHub repositories that use C\# and the \texttt{[Pure]} attribute use were chosen. Here "popular" is synonymous with the number of stars, which is GitHub's user rating system for repositories.
 
-However, Microsoft don't seem to count reading of static variables (non-determinism) or calls to methods that throw exceptions as impure. Therefore, the majority of methods with the \texttt{[Pure]} atttribute are in fact impure.
+The results are divided into two different tables; \autoref{tab:results-pure-methods} which contains CsPurity's classification for methods with the \texttt{[Pure]} attribute, and \autoref{tab:results-non-pure-methods} with the result for methods without the attribute. Methods with the \texttt{[Pure]} attribute make up 37\% percent of the total number of methods analyzed, and so 63\% of methods do not have the attribute.
 
-The two classes in Reference Source with the most number of methods with a \texttt{[Pure]} attribute were chosen.
+\begin{table}[H]
+  \small
+  \caption{CsPurity's classification of the methods with the \texttt{[Pure]} attribute after being run on 14 different open source repositories.}
+  \label{tab:results-pure-methods}
+  \centering
+  \begin{tabular}{|l|lp{2.8cm}p{1.4cm}l|l|}
+    \hline
+    \textbf{Repository name} & \textbf{Pure} & \textbf{Impure:\newline throws exception} & \textbf{Impure: other} & \textbf{Unknown} & \textbf{Total} \\
+    \hline
+    nodatime                         & 10  & 23   & 72    & 56    & 161   \\
+    WindowsCommunityToolkit          & 42  & 38   & 64    & 124   & 268   \\
+    .NETOpenAuth                     & 3   & 32   & 3     & 15    & 53    \\
+    CsConsoleFormat                  & 3   & 17   & 15    & 63    & 98    \\
+    Bridge                           & 0   & 1    & 1     & 22    & 24    \\
+    optentk                          & 452 & 17   & 53    & 156   & 678   \\
+    opencvsharp                      & 0   & 2    & 0     & 2621  & 2623  \\
+    nuke                             & 4   & 114  & 10    & 17290 & 17418 \\
+    linq2db                          & 3   & 114  & 11    & 31    & 159   \\
+    language-ext                     & 365 & 954  & 16599 & 5935  & 23853 \\
+    gitextensions                    & 1   & 5    & 14    & 27    & 47    \\
+    MetadataExtractor .NET           & 2   & 9    & 9     & 43    & 63    \\
+    Spreads                          & 0   & 31   & 3     & 1     & 35    \\
+    fluentassertions                 & 53  & 0    & 4     & 20    & 77    \\
+    \hline
+    \rowcolor{lightgray} \textbf{Total number of methods} & 938 & 1357 & 16858 & 26404 & \cellcolor{white} 45557 \\
+    \rowcolor{lightgray} \textbf{Total percentage}        & 2\% & 3\%  & 37\%  & 58\%  & \cellcolor{white} 100\% \\
+    \hline
+  \end{tabular}
+\end{table}
 
-Out of all 91 methods that were marked as \texttt{[Pure]}:
+\begin{table}[H]
+  \small
+  \caption{CsPurity's classification of the methods with no \texttt{[Pure]} attribute after being run on 14 different open source repositories.}
+  \label{tab:results-non-pure-methods}
+  \centering
+  \begin{tabular}{|l|lll|l|}
+    \hline
+    \textbf{Repository name} & \textbf{Pure} & \textbf{Impure} & \textbf{Unknown} & \textbf{Total} \\
+    \hline
+    nodatime                         & 88   & 2631  & 1038  & 3757  \\
+    WindowsCommunityToolkit          & 477  & 3480  & 3342  & 7299  \\
+    .NETOpenAuth                     & 1438 & 2099  & 2350  & 5887  \\
+    CsConsoleFormat                  & 35   & 272   & 576   & 883   \\
+    Bridge                           & 1654 & 3733  & 8007  & 13394 \\
+    optentk                          & 532  & 462   & 1394  & 2388  \\
+    opencvsharp                      & 198  & 2517  & 965   & 3680  \\
+    nuke                             & 554  & 2056  & 965   & 3575  \\
+    linq2db                          & 998  & 7613  & 4316  & 12927 \\
+    language-ext                     & 85   & 5362  & 2678  & 8125  \\
+    gitextensions                    & 320  & 2618  & 4405  & 7343  \\
+    MetadataExtractor .NET           & 36   & 1267  & 341   & 1644  \\
+    Spreads                          & 261  & 1094  & 546   & 1901  \\
+    fluentassertions                 & 703  & 3771  & 1114  & 5588  \\
+    \hline
+    \rowcolor{lightgray} \textbf{Total number of methods} & 7379 & 38975 & 32037 & \cellcolor{white} 78391 \\
+    \rowcolor{lightgray} \textbf{Total percentage}        & 9\%  & 50\%  & 41\%  & \cellcolor{white} 100\% \\
+    \hline
+  \end{tabular}
+\end{table}
 
-\begin{itemize}
-  \item Pure: 4
-  \item Impure: 55, where
-  \begin{itemize}
-    \item Throw exception: 46
-    \item Other impure action: 9
-  \end{itemize}
-  \item Unknown: 32
-\end{itemize}
+% Reference Source is a publicly available repository by Microsoft that contains sources from the Microsoft .NET Reference Source~\cite{microsoft-referencesource}. Their \texttt{String} and \texttt{Encoding} classes together contain 91 methods with the \texttt{[Pure]} attribute out of a total of 177 methods. By scanning methods that are marked with the \texttt{[Pure]} attribute we can determine the accuracy of CsPurity.
 
-% Here, "Throws exception" and "Reads static variable" includes methods that themselves depend on methods that do so.
+% However, Microsoft don't seem to count reading of static variables (non-determinism) or calls to methods that throw exceptions as impure. Therefore, the majority of methods with the \texttt{[Pure]} atttribute are in fact impure.
 
-As seen above, nearly half of all methods with the \texttt{[Pure]} attribute throw exceptions.
+% The two classes in Reference Source with the most number of methods with a \texttt{[Pure]} attribute were chosen.
 
-Out of all 177 methods that were \textit{not} marked as \texttt{[Pure]}:
+% Out of all 91 methods that were marked as \texttt{[Pure]}:
 
-\begin{itemize}
-  \item Pure: 10
-  \item Impure: 94
-  \item Unknown: 73
-\end{itemize}
+% \begin{itemize}
+%   \item Pure: 4
+%   \item Impure: 55, where
+%   \begin{itemize}
+%     \item Throw exception: 46
+%     \item Other impure action: 9
+%   \end{itemize}
+%   \item Unknown: 32
+% \end{itemize}
 
-Note that as mentioned in \autoref{sub:code-contracts} the \texttt{[Pure]} attribute only requires side-effect freeness, not determinism. This is the reason why the majority of \texttt{[Pure]} methods were marked as \textit{impure} by CsPurity.
+% % Here, "Throws exception" and "Reads static variable" includes methods that themselves depend on methods that do so.
 
-\textbf{string.cs}
+% As seen above, nearly half of all methods with the \texttt{[Pure]} attribute throw exceptions.
 
-Nine methods in the \textit{String} class had a \texttt{Pure} attribute but were classified as \textit{impure} by CsPurity. All of them are non-deterministic since they read static variables.
+% Out of all 177 methods that were \textit{not} marked as \texttt{[Pure]}:
 
-Three of the methods with no \texttt{[Pure]} attribute were classified as pure by CsPurity. By looking manually at them it could be confirmed that all three fulfill the properties of functional purity.
+% \begin{itemize}
+%   \item Pure: 10
+%   \item Impure: 94
+%   \item Unknown: 73
+% \end{itemize}
 
-\textbf{encoding.cs}
+% Note that as mentioned in \autoref{sub:code-contracts} the \texttt{[Pure]} attribute only requires side-effect freeness, not determinism. This is the reason why the majority of \texttt{[Pure]} methods were marked as \textit{impure} by CsPurity.
 
-Although the majority of methods with \texttt{[Pure]} attribute were classified as \textit{impure} by CsPurity, all of them throw exceptions.
+% \textbf{string.cs}
 
-Seven methods that were categorized as \textit{pure} by CsPurity but with no \texttt{[Pure]} attribute are upon inspection in fact pure. % Three of them write to \texttt{internal} fields, have the \texttt{unsafe} keyword and two simply return fresh objects.
+% Nine methods in the \textit{String} class had a \texttt{Pure} attribute but were classified as \textit{impure} by CsPurity. All of them are non-deterministic since they read static variables.
 
-Although there were some apparent false negatives where CsPurity categorized \texttt{[Pure]} methods as impure. However, they all seem to be due to Microsoft's looser definition of functional purity which doesn't include determinism or exceptions. The majority of false negatives were \texttt{[Pure]} methods that throw errors, and in some cases they read or even modify a static field, or depend on a method that does one of these things. Not one case was found where CsPurity's categorization was done incorrectly based on the definition used in this thesis.
+% Three of the methods with no \texttt{[Pure]} attribute were classified as pure by CsPurity. By looking manually at them it could be confirmed that all three fulfill the properties of functional purity.
+
+% \textbf{encoding.cs}
+
+% Although the majority of methods with \texttt{[Pure]} attribute were classified as \textit{impure} by CsPurity, all of them throw exceptions.
+
+% Seven methods that were categorized as \textit{pure} by CsPurity but with no \texttt{[Pure]} attribute are upon inspection in fact pure. % Three of them write to \texttt{internal} fields, have the \texttt{unsafe} keyword and two simply return fresh objects.
+
+% Although there were some apparent false negatives where CsPurity categorized \texttt{[Pure]} methods as impure. However, they all seem to be due to Microsoft's looser definition of functional purity which doesn't include determinism or exceptions. The majority of false negatives were \texttt{[Pure]} methods that throw errors, and in some cases they read or even modify a static field, or depend on a method that does one of these things. Not one case was found where CsPurity's categorization was done incorrectly based on the definition used in this thesis.
 
 % TODO
 
@@ -1002,7 +1059,6 @@ Functional purity is perhaps the most useful concept from functional programming
 \begin{itemize}
   \item Tool can point out exact position of impurity and suggest improvements to increase the purity. Because purity is determined by passing the purity level of impure functions to their callers, this could be implemented by also passing the identifier of the impure function to the caller.
   \item Performance improvement: the analysis method could be improved by checking methods against the checklist while calculating all dependency sets. If the method performed an imprue action like throwing an error the analysis could then stop the computation for that method and would not have to compute all dependencies since we already know that the funciton is impure, which would save computation time.
-  \autoref{sec:reference}
 \end{itemize}
 
 \bibliography{references}
