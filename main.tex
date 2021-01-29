@@ -525,7 +525,7 @@ While method overloading is not unique to object oriented programming, it seems 
 Instead, when given an overloaded method named \textit{m} the analysis treats each overload of \textit{m} as a unique method, independent of other overloads. This way overloads with different purity levels can co-exist in the result of an analysis. Because overloads by definition share the same name, in order to differentiate them in this thesis the notation $m_1$, $m_2$, $m_3$, ... is used, where $m_1$ denotes the first implementation of the method \textit{m}, $m_2$ denotes the second, and so on.
 
 \section{The analysis method} \label{sec:the-analysis-method}
-As established in \autoref{sec:problems-with-purity-in-oo} this thesis defines four functional purity levels: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, and \textit{impure}. Because in some cases the purity level of a method cannot be determined, for instance when the method's definition is missing, a fifth purity level \textit{unknown} is added as well. Following is a description of the static analysis method developed and used in this thesis in order to determine the purity level of a program:
+As established in \autoref{sec:problems-with-purity-in-oo} this thesis defines four functional purity levels: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, and \textit{impure}. Because in some cases the purity level of a method cannot be determined, for instance when the method's definition is missing, a fifth purity level \textit{unknown} is added as well. This can for instance happen when a method calls a method from a compiled library like a \texttt{.dll} file. Following is a description of the static analysis method developed and used in this thesis in order to determine the purity level of a program:
 
 Traverse the program's Abstract Syntax Tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function. If during the traversal a call or reference to a compiled method or a field is found, mark the caller function's purity as \textit{unknown}.
 
@@ -853,16 +853,14 @@ Therefore, what we can say for sure about the linked list implementation based o
 
 % TODO
 
-\subsection{Results from running CsPurity larger codebase} \label{sub:results-larger-codebase}
+\subsection{Results from running CsPurity on a large codebase} \label{sub:results-larger-codebase}
 
-As mentioned in \autoref{sub:code-contracts} the \texttt{[Pure]} attribute can be placed in front of a method definition to signal that the method pure. That means that running CsPurity on a code base where a portion of the methods use the \texttt{[Pure]} attribute CsPurity's accuracy can be evaluated by comparing what the methods with and the methods without the \texttt{[Pure]} attribute were categorized as by CsPurity.
-It is assumed that any method with the \texttt{[Pure]} attribute is functionality pure. This does not neccessarily have to be true in general, and as will be discussed later, a large portion of \texttt{[Pure]} methods do in fact have side-effects. But the \texttt{[Pure]} attribute can still tell us something about how CsPurity performs.
-The evaluation also assumes that methods without \texttt{[Pure]} are impure. There could be exceptions to this, i.e. pure methods that haven't been given the \texttt{[Pure]} attribute by the code's author, and this will be discussed further later in this section. % TODO
-However, this assumption still allows us to also say something about CsPurity ability to classify impure methods.
+As mentioned in \autoref{sub:code-contracts} the \texttt{[Pure]} attribute can be placed in front of a method definition to signal that the method pure. That means that running CsPurity on a code base where a portion of the methods use the \texttt{[Pure]} attribute CsPurity's accuracy can be evaluated by comparing what the methods with and the methods without the \texttt{[Pure]} attribute were categorized as by CsPurity. It is assumed that any method with the \texttt{[Pure]} attribute is functionality pure. This does not neccessarily have to be true in general, and as will be discussed later, a large portion of \texttt{[Pure]} methods do in fact have side-effects. But the \texttt{[Pure]} attribute can still tell us something about how CsPurity performs. The evaluation also assumes that methods without \texttt{[Pure]} are impure. There could be exceptions to this, i.e. pure methods that haven't been given the \texttt{[Pure]} attribute by the code's author, and this will be discussed further later in this section. % TODO
+However, this assumption still lets us say something about CsPurity ability to classify also impure methods.
 
-To evaluate CsPurity's accuracy the 11 most popular GitHub repositories that use C\# and the \texttt{[Pure]} attribute in at least 1\% of methods were chosen. Here "popular" is synonymous with the number of stars, which is GitHub's user rating system for repositories.
+To evaluate CsPurity's accuracy the 11 most popular open source GitHub repositories that use C\# and the \texttt{[Pure]} attribute in at least 1\% of methods were chosen. Here "popular" is synonymous with the number of stars, which is GitHub's user rating system for repositories.
 
-The results are divided into two different tables; \autoref{tab:results-pure-methods} which contains CsPurity's classification for methods with the \texttt{[Pure]} attribute, and \autoref{tab:results-non-pure-methods} with the result for methods without the attribute. Methods with the \texttt{[Pure]} attribute make up 47\% percent of the total number of methods analyzed, and so 53\% of methods do not have the attribute.
+The results from running CsPurity on each of the 11 repositories are divided into two different tables; \autoref{tab:results-pure-methods} which contains CsPurity's classification for methods with the \texttt{[Pure]} attribute, and \autoref{tab:results-non-pure-methods} with the result for methods without the attribute. Methods with the \texttt{[Pure]} attribute make up 47\% percent of the total number of methods analyzed, and so 53\% of methods do not have the attribute. \autoref{tab:results-summary} contains the distribution of purity levels for all analyzed methods, and \autoref{tab:results-precision-recall} contains CsPurity's precision and recall based on the numbers in \autoref{tab:results-pure-methods} and \autoref{tab:results-non-pure-methods}.
 
 \begin{table}[H]
   \small
@@ -947,41 +945,9 @@ The results are divided into two different tables; \autoref{tab:results-pure-met
   \end{tabular}
 \end{table}
 
-% Reference Source is a publicly available repository by Microsoft that contains sources from the Microsoft .NET Reference Source~\cite{microsoft-referencesource}. Their \texttt{String} and \texttt{Encoding} classes together contain 91 methods with the \texttt{[Pure]} attribute out of a total of 177 methods. By scanning methods that are marked with the \texttt{[Pure]} attribute we can determine the accuracy of CsPurity.
+As discussed in \autoref{sub:code-contracts}, Microsoft's definition of functional purity used for the \texttt{[Pure]} attribute does not include determinism like the definition used in this thesis, \autoref{def:functional-purity}, does. That means that methods that read or modify static fields, or that throw exceptions do not violate the \texttt{[Pure]} attribte. This explains why a large part of methods in \autoref{tab:results-pure-methods} were classified by CsPurity as impure, despite having the \texttt{[Pure]} attribute. This was confirmed to be the case when manually looking at small samples of methods in each repository as no incorrectly classified method based on \autoref{def:functional-purity} was found.
 
-% However, Microsoft don't seem to count reading of static variables (non-determinism) or calls to methods that throw exceptions as impure. Therefore, the majority of methods with the \texttt{[Pure]} atttribute are in fact impure.
-
-% The two classes in Reference Source with the most number of methods with a \texttt{[Pure]} attribute were chosen.
-
-% Out of all 91 methods that were marked as \texttt{[Pure]}:
-
-% \begin{itemize}
-%   \item Pure: 4
-%   \item Impure: 55, where
-%   \begin{itemize}
-%     \item Throw exception: 46
-%     \item Other impure action: 9
-%   \end{itemize}
-%   \item Unknown: 32
-% \end{itemize}
-
-% % Here, "Throws exception" and "Reads static variable" includes methods that themselves depend on methods that do so.
-
-% As seen above, nearly half of all methods with the \texttt{[Pure]} attribute throw exceptions.
-
-% Out of all 177 methods that were \textit{not} marked as \texttt{[Pure]}:
-
-% \begin{itemize}
-%   \item Pure: 10
-%   \item Impure: 94
-%   \item Unknown: 73
-% \end{itemize}
-
-% Note that as mentioned in \autoref{sub:code-contracts} the \texttt{[Pure]} attribute only requires side-effect freeness, not determinism. This is the reason why the majority of \texttt{[Pure]} methods were marked as \textit{impure} by CsPurity.
-
-% \textbf{string.cs}
-
-% Nine methods in the \textit{String} class had a \texttt{Pure} attribute but were classified as \textit{impure} by CsPurity. All of them are non-deterministic since they read static variables.
+As seen in \autoref{tab:results-summary}, nearly half of all methods were classified as \textit{unknown}, meaning that their purity level could could not be determined. This would typically occur when methods depend on a methods from an imported library lacking source code, for instance a dynamic linked library (DLL) ... TODO
 
 % Three of the methods with no \texttt{[Pure]} attribute were classified as pure by CsPurity. By looking manually at them it could be confirmed that all three fulfill the properties of functional purity.
 
