@@ -233,6 +233,8 @@ C\# is a type safe object oriented programming language developed by Microsoft~\
 
 C\# applications run in the .NET ecosystem~\cite{intro-to-Csharp}. There are multiple implementations of .NET, including .NET Core and the .NET Framework~\cite{intro-to-Csharp}. .NET includes a virtual execution environment called the common language runtime (CLR) on which C\# programs run, as well as a common set of class libraries~\cite{albahari2003nutshell}. Before execution C\# source code is compiled to the so called intermediate language (IL) and stored on disk~\cite{intro-to-Csharp}. Upon execution the IL code is just-in-time-compiled to native machine instructions that can be executed by the operating system~\cite{intro-to-Csharp}.
 
+One fundamental part of the .NET ecosystem are so called assemblies~\cite{assemblies}. An assembly is a unit of types and resources that form a logical building block of functionality~\cite{assemblies}. Assemblies do not contain C\# source code, but IL code~\cite{assemblies-overview}.
+
 Similarly to many other programming languages, functions in C\# are generally referred to as \textit{methods}~\cite{albahari2003nutshell}. These two terms will be used interchangeably in this thesis. Each method belongs to a \textit{class}, which is an encapsulations of data and behaviours~\cite{albahari2003nutshell}. C\# also supports anonymous functions~\cite{albahari2003nutshell}.
 
 \subsection{What makes a C\# method pure?} \label{sub:What makes a Cs program functional?}
@@ -525,7 +527,7 @@ While method overloading is not unique to object oriented programming, it seems 
 Instead, when given an overloaded method named \textit{m} the analysis treats each overload of \textit{m} as a unique method, independent of other overloads. This way overloads with different purity levels can co-exist in the result of an analysis. Because overloads by definition share the same name, in order to differentiate them in this thesis the notation $m_1$, $m_2$, $m_3$, ... is used, where $m_1$ denotes the first implementation of the method \textit{m}, $m_2$ denotes the second, and so on.
 
 \section{The analysis method} \label{sec:the-analysis-method}
-As established in \autoref{sec:problems-with-purity-in-oo} this thesis defines four functional purity levels: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, and \textit{impure}. Because in some cases the purity level of a method cannot be determined, for instance when the method's definition is missing, a fifth purity level \textit{unknown} is added as well. This can for instance happen when a method calls a method from a compiled library like a \texttt{.dll} file. Following is a description of the static analysis method developed and used in this thesis in order to determine the purity level of a program:
+As established in \autoref{sec:problems-with-purity-in-oo} this thesis defines four functional purity levels: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, and \textit{impure}. Because in some cases the purity level of a method cannot be determined, for instance when the method's definition is missing, a fifth purity level \textit{unknown} is added as well. This can happen when one method calls another method from an assembly. Assemblies contain IL code, and not C\# source code and therefore CsPurity cannot analyze them. Following is a description of the static analysis method developed and used in this thesis in order to determine the purity level of a program:
 
 Traverse the program's Abstract Syntax Tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function. If during the traversal a call or reference to a compiled method or a field is found, mark the caller function's purity as \textit{unknown}.
 
@@ -860,7 +862,8 @@ However, this assumption still lets us say something about CsPurity ability to c
 
 To evaluate CsPurity's accuracy the 11 most popular open source GitHub repositories that use C\# and the \texttt{[Pure]} attribute in at least 1\% of methods were chosen. Here "popular" is synonymous with the number of stars, which is GitHub's user rating system for repositories.
 
-The results from running CsPurity on each of the 11 repositories are divided into two different tables; \autoref{tab:results-pure-methods} which contains CsPurity's classification for methods with the \texttt{[Pure]} attribute, and \autoref{tab:results-non-pure-methods} with the result for methods without the attribute. Methods with the \texttt{[Pure]} attribute make up 47\% percent of the total number of methods analyzed, and so 53\% of methods do not have the attribute. \autoref{tab:results-summary} contains the distribution of purity levels for all analyzed methods, and \autoref{tab:results-precision-recall} contains CsPurity's precision and recall based on the numbers in \autoref{tab:results-pure-methods} and \autoref{tab:results-non-pure-methods}.
+The results from running CsPurity on each of the 11 repositories are divided into two different tables; \autoref{tab:results-pure-methods} which contains CsPurity's classification for methods with the \texttt{[Pure]} attribute, and \autoref{tab:results-non-pure-methods} with the result for methods without the attribute. Methods with the \texttt{[Pure]} attribute make up 47\% percent of the total number of methods analyzed, and so 53\% of methods do not have the attribute. \autoref{tab:results-summary} contains the distribution of purity levels for all analyzed methods, and \autoref{tab:results-precision-recall} contains CsPurity's precision and recall based on the numbers in \autoref{tab:results-pure-methods} and \autoref{tab:results-non-pure-methods}. Precision is the number of true positives in relation to the number of selected items. Recall (or sensitivity) is the number of true positives in relation to all relevant items (the items that should be selected).
+% CsPurity's precision in terms of classifying pure methods is equal to the number of \textit{pure} methods with a \texttt{[Pure]} attribute divided by the total number of methods that are classified as \textit{pure}. CsPuritiy's recall in terms of pure methods is the number of \textit{pure} methods with a \texttt{[Pure]} attribute divided by
 
 \begin{table}[H]
   \small
@@ -937,25 +940,17 @@ The results from running CsPurity on each of the 11 repositories are divided int
   \label{tab:results-precision-recall}
   \begin{tabular}{|l|ll|}
     \hline
-                                       & \textbf{Precision} & \textbf{Recall} \\
+                                              & \textbf{Precision} & \textbf{Recall} \\
     \hline
-    \textbf{Classification of Pures}   & 19\%               & 2\%             \\
-    \textbf{Classification of Impures} & 62\%               & 59\%            \\
+    \textbf{Classification of pure methods}   & 19\%               & 2\%             \\
+    \textbf{Classification of impure methods} & 63\%               & 59\%            \\
     \hline
   \end{tabular}
 \end{table}
 
-As discussed in \autoref{sub:code-contracts}, Microsoft's definition of functional purity used for the \texttt{[Pure]} attribute does not include determinism like the definition used in this thesis, \autoref{def:functional-purity}, does. That means that methods that read or modify static fields, or that throw exceptions do not violate the \texttt{[Pure]} attribte. This explains why a large part of methods in \autoref{tab:results-pure-methods} were classified by CsPurity as impure, despite having the \texttt{[Pure]} attribute. This was confirmed to be the case when manually looking at small samples of methods in each repository as no incorrectly classified method based on \autoref{def:functional-purity} was found.
+As discussed in \autoref{sub:code-contracts}, Microsoft's definition of functional purity used for the \texttt{[Pure]} attribute does not include determinism like the definition used in this thesis, \autoref{def:functional-purity}, does. That means that methods that read or modify static fields, or that throw exceptions do not violate the \texttt{[Pure]} attribte. This explains why a large part of methods in \autoref{tab:results-pure-methods} were classified by CsPurity as impure, despite having the \texttt{[Pure]} attribute. This was confirmed to be the case when looking manually at small samples of methods in each repository as no incorrectly classified method based on \autoref{def:functional-purity} was found.
 
-As seen in \autoref{tab:results-summary}, nearly half of all methods were classified as \textit{unknown}, meaning that their purity level could could not be determined. This would typically occur when methods depend on a methods from an imported library lacking source code, for instance a dynamic linked library (DLL) ... TODO
-
-% Three of the methods with no \texttt{[Pure]} attribute were classified as pure by CsPurity. By looking manually at them it could be confirmed that all three fulfill the properties of functional purity.
-
-% \textbf{encoding.cs}
-
-% Although the majority of methods with \texttt{[Pure]} attribute were classified as \textit{impure} by CsPurity, all of them throw exceptions.
-
-% Seven methods that were categorized as \textit{pure} by CsPurity but with no \texttt{[Pure]} attribute are upon inspection in fact pure. % Three of them write to \texttt{internal} fields, have the \texttt{unsafe} keyword and two simply return fresh objects.
+As seen in \autoref{tab:results-summary}, nearly half of all methods were classified with the purity level \textit{unknown}, meaning that their purity levels could could not be determined by CsPurity. This will typically occur when a method depends on a method from an imported library that lacks C\# source code like an assembly. The high number of \textit{unknowns} could explain the low recall for CsPurity that is seen in \autoref{tab:results-precision-recall}, in particular when it comes to classifying pure methods.
 
 % Although there were some apparent false negatives where CsPurity categorized \texttt{[Pure]} methods as impure. However, they all seem to be due to Microsoft's looser definition of functional purity which doesn't include determinism or exceptions. The majority of false negatives were \texttt{[Pure]} methods that throw errors, and in some cases they read or even modify a static field, or depend on a method that does one of these things. Not one case was found where CsPurity's categorization was done incorrectly based on the definition used in this thesis.
 
