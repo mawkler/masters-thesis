@@ -960,6 +960,8 @@ Moreover, CsPurity's stricter definition of functional purity compared to the \t
 
 As mentioned earlier in this section it is assumed that any method without \texttt{[Pure]} is impure. While this is a necessary assumption in order to be able to say anything about CsPurity's ability to classify impure methods, this is not always the case, and this is reflected in \autoref{tab:results-non-pure-methods} in the 8\% of methods with no \texttt{[Pure]} attribute that were classified as \textit{pure} by CsPurity. While 8\% may not sound like much, in combination with the amount of \texttt{[Pure]} methods classified as \textit{pure} at only 2\% of all \texttt{[Pure]} methods, this significantly impacts the \textit{pure} classification precision which is 19\%, as seen in \autoref{tab:results-precision-recall}.
 
+If C\# had another attribute similar to \texttt{[Pure]} called for instance \texttt{[Impure]}, which explicitly indicated that its method performs a functionally impure action that would make it easier to evaluate CsPurity more fairly. Since if it were used on the analyzed code base it would likely change a number of the current false positives to true positives in regards to impure methods. % Unfortunately no such attribute could be found.
+
 While not nearly as much, the 8\% of methods with no \texttt{[Pure]} attribute also contribute in part to the 59\% impure classification recall. However, the most contributing factor reducing the impure classifiation recall is the 33\% of \texttt{[Pure]}s classified as \textit{unknown}.
 
 The data set is somewhat nonuniform, primarily in \autoref{tab:results-pure-methods}. The two by far most impactful repositories are \textit{language-ext} and \textit{nuke} which together make up over half of the code base (54\%) in terms of number of methods. The majority of \texttt{[Pure]} methods in \textit{language-ext} were classified as \textit{impure} by CsPurity, and those methods contribute to 97\% of all \texttt{[Pure]} methods classified as \textit{impure} by CsPurity. However, in \textit{nuke} the majority of \texttt{[Pure]} methods were classified as \textit{unknown}, and these methods make up 66\% of all \textit{unknown} \texttt{[Pure]}'s. % TODO
@@ -967,6 +969,8 @@ The data set is somewhat nonuniform, primarily in \autoref{tab:results-pure-meth
 % TODO
 
 \section{Related work} \label{sec:Related work} % (If not part of introduction)
+
+% Maybe put this after Future Work?
 
 \subsection{Purity in Erlang} \label{sub:Purity-in-Erlang}
 In their paper \textit{Purity in Erlang} Mihalis Pitidis and Konstantinos Sagonas develop a tool that automatically and statically analyses the purity of Erlang functions~\cite{pitidis2010purity}. It classifies functions into being functionally pure, or one of three levels of functional impurity~\cite{pitidis2010purity}.
@@ -1050,10 +1054,11 @@ Functional purity is perhaps the most useful concept from functional programming
 
 \subsection{Future work} \label{sub:Future work}
 
-\begin{itemize}
-  \item Tool can point out exact position of impurity and suggest improvements to increase the purity. Because purity is determined by passing the purity level of impure functions to their callers, this could be implemented by also passing the identifier of the impure function to the caller.
-  \item Performance improvement: the analysis method could be improved by checking methods against the checklist while calculating all dependency sets. If the method performed an imprue action like throwing an error the analysis could then stop the computation for that method and would not have to compute all dependencies since we already know that the funciton is impure, which would save computation time.
-\end{itemize}
+One extension to CsPurity would be for it to point out the exact position of impurity in the analyzed code. Because impurity is calculated by passing the purity level of impure functions to their callers, this feature could be implemented by also passing the exact position in the code where the impurity was encountered to the caller, as well as the function's identifier and other useful information.
+
+While perhaps more difficult to implement, another very useful feature would be if CsPurity after finding an impurity could suggest changes to the code that would make the function in question pure.
+
+% Performance improvement: the analysis method could be improved by checking methods against the checklist while calculating all dependency sets. If the method performed an impure action like throwing an error the analysis could then stop the computation for that method and would not have to compute all dependencies since we already know that the function is impure, which would save computation time.
 
 \bibliography{references}
 
