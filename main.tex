@@ -67,12 +67,10 @@
 \newcommand*{\definitionautorefname}{definition} % Allows autoref to definition
 
 \begin{document}
-% Set title, and subtitle if you have one
-% \title{To what extent is C\# being used as a functional programming language?}
-\title{To what extent is functional purity being used in C\# open source programs?}
+\title{Measuring functional purity in C\#}
 % Use this if you have a subtitle
-% \subtitle{An evaluation of functional purity in C\#}
-\subtitle{A methodology for measuring functional purity in C\#}
+% \subtitle{Developing, implementing and evaluating a methodology for measuring functional purity in C\# using the \texttt{[Pure]} attribute}
+\subtitle{Developing and implementing a methodology for measuring functional purity in C\#, and evaluating it using the \texttt{[Pure]} attribute}
 % Set author names, separated by "\\ " (don't forget the space)
 % List authors alphabetically by last name (unless someone did significantly more/less)
 \author{Melker Österberg}
@@ -119,7 +117,7 @@
 \frontmatter
 
 \begin{abstract}
-This thesis develops a method of statically determining the level of purity in a given C\# program. It investigates problems with determining purity in object oriented languages, with a focus on C\#. A function is defined to be pure if it side-effect free and deterministic.
+This thesis develops and evaluates a method of statically determining the level of functional purity in a given C\# program. It also investigates problems with determining purity in object oriented languages, with a focus on C\#. A function is defined to be functionally pure if it side-effect free and deterministic.
 
 TODO
 \end{abstract}
@@ -146,11 +144,10 @@ Functional programming is on the rise and becoming more mainstream~\cite{interte
 Functional programs have many benefits over purely object oriented ones. Perhaps one of the most useful features of functional programming that the object oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about impure ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are also easier to test since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
 For this reason it useful in software engineering to evaluate the level of functional purity in programs~\cite{purity-in-javascript}.
 
-C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language by developers? This paper will attempt to answer this by evaluating to what degree functional purity is used in C\# programs today.
-
-This theis develops and evaluates a static analysis method for determining the purity level of object oriented programs with a focus on C\#.
-
-% Yannis Smaragdakis and Brian McNamara showed that there are ways of converting the common OO design patterns Command, Observer, Adaptor, Visitor and Virtual Proxy in C++ to functional programs using FC++ -- a library that adds many functional features to C++~\cite{yannis-smaragdakis}. Would this kind of transformation be useful for programs written in C\#? If C\# is not currently being used primarily as a functional programming language, this tool could be useful to programmers that want to refactor an existing OO program to a functional one.
+C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language?
+In order to answer this we need a methodology for measuring a C\# program's functional purity level. We also need a way of evaluating that methodology in order to assess its level of accuracy.
+% In order to accomplish this a data set is needed for which each function's purity level is known.
+The purpose of this thesis is thus to develop an analysis methodology for measuring the functional purity level of a given program.
 
 % \subsection{Contributions} \label{sub:Contributions}
 
@@ -1054,11 +1051,22 @@ Functional purity is perhaps the most useful concept from functional programming
 
 \subsection{Future work} \label{sub:Future work}
 
-One extension to CsPurity would be for it to point out the exact position of impurity in the analyzed code. Because impurity is calculated by passing the purity level of impure functions to their callers, this feature could be implemented by also passing the exact position in the code where the impurity was encountered to the caller, as well as the function's identifier and other useful information.
+The implementation of CsPurity used in this thesis does not incorporate the full analysis method described in \autoref{sec:the-analysis-method}. Therefore the obvious next step is to implement the full methodology in CsPurity.
+
+One enhancement to CsPurity would be for it to point out the exact position of impurity in the analyzed code. Because impurity is calculated by passing the purity level of impure functions to their callers, this feature could be implemented by also passing the exact position in the code where the impurity was encountered to the caller, as well as the function's identifier and other useful information. This feature could be useful to developers that want to make , or
+
+Moreover, the methodology developed in this thesis could potentially be used to check the validity of a function that uses the \texttt{[Pure]} attribute. As mentioned in \autoref{sub:code-contracts} \texttt{[Pure]} is currently not enforced by any analysis tool, and so illegally assigned \texttt{[Pure]}s can currently not be detected.
+
+This could prevent mistakes where the author of a piece of code falsely assigns \texttt{[Pure]} to an impure method from propagating. This could cause bugs to appear if somebody else uses that function unknowingly thinking that it is side-effect free. Of course the methodology used in this thesis would have to be slightly tweaked to consort with \texttt{[Pure]}'s non-deterministic definition of functional purity.
 
 While perhaps more difficult to implement, another very useful feature would be if CsPurity after finding an impurity could suggest changes to the code that would make the function in question pure.
 
+The methodology developed in this thesis, as well as its implementation CsPurity, could potentially be used to answer to what extent functional purity is being used in C\# programs today. % TODO
+
 % Performance improvement: the analysis method could be improved by checking methods against the checklist while calculating all dependency sets. If the method performed an impure action like throwing an error the analysis could then stop the computation for that method and would not have to compute all dependencies since we already know that the function is impure, which would save computation time.
+
+% Could implement CsPurity with the exact same definition as \texttt{[Pure]}. % TODO
+% As discussed in \autoref{ssub:functional-purity-definition}, some definitions of functional purity do not include determinism and are hence synonymous with "side-effect free". Microsoft's \texttt{[Pure]} attribute uses that definition.
 
 \bibliography{references}
 
