@@ -113,7 +113,7 @@ public class LinkedList
         public Node next;
         public Object data;
 
-        public Node() { }
+        // public Node() { }
 
         public Node(Object data)
         {

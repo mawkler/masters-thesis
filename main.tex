@@ -137,6 +137,7 @@ TODO
 \mainmatter
 
 \section{Introduction} \label{sec:Introduction}
+
 % https://dl-acm-org.ezproxy.its.uu.se/doi/pdf/10.1145/1455770.1455793?download=true (\cite{purity-in-java}) has motivation for using pure functions in its abstract
 
 Functional programming is on the rise and becoming more mainstream~\cite{intertech}. Object oriented (OO) programming has been the industry norm for quite some time now, and for a long time functional programming was considered by developers to only be applicable in academic domains. However it is now becoming popular in the IT industry as well. Many mainstream languages like Java, C\# and C++ have adopted first-class functions from the functional paradigm~\cite{intertech}. Moreover, functional programming can be used for building web applications and mobile apps~\cite{jonas-walter}.
@@ -152,6 +153,7 @@ The purpose of this thesis is thus to develop an analysis methodology for measur
 % \subsection{Contributions} \label{sub:Contributions}
 
 \section{Definitions} \label{sub:definitions}
+
 Functional programming and object oriented programming are two different programming paradigms. There is no universal definition of either of them. Following is how they have been chosen to be defined in this thesis.
 
 \subsection{Object oriented programming} \label{ssub:object-oriented-programming} % Perhaps also mention imperative programming?
@@ -226,6 +228,7 @@ Moreover, requiring pure functions to be both side-effect free \textit{and} dete
 % \end{itemize}
 
 \section{The C\# language and .NET} \label{sub:the-csharp-language}
+
 C\# is a type safe object oriented programming language developed by Microsoft~\cite{albahari2003nutshell}. C\# is syntactically quite similar to C, C++ and Java, and includes features like nullable types, enumerations, higher-order functions, and direct memory access~\cite{intro-to-Csharp}. While C\# historically has primarily been used for writing code for Windows platforms only, C\# has recently spread to most other platforms, including mobile, due to its increased cross-platform support~\cite{albahari2003nutshell}.
 
 C\# applications run in the .NET ecosystem~\cite{intro-to-Csharp}. There are multiple implementations of .NET, including .NET Core and the .NET Framework~\cite{intro-to-Csharp}. .NET includes a virtual execution environment called the common language runtime (CLR) on which C\# programs run, as well as a common set of class libraries~\cite{albahari2003nutshell}. Before execution C\# source code is compiled to the so called intermediate language (IL) and stored on disk~\cite{intro-to-Csharp}. Upon execution the IL code is just-in-time-compiled to native machine instructions that can be executed by the operating system~\cite{intro-to-Csharp}.
@@ -524,6 +527,7 @@ While method overloading is not unique to object oriented programming, it seems 
 Instead, when given an overloaded method named \textit{m} the analysis treats each overload of \textit{m} as a unique method, independent of other overloads. This way overloads with different purity levels can co-exist in the result of an analysis. Because overloads by definition share the same name, in order to differentiate them in this thesis the notation $m_1$, $m_2$, $m_3$, ... is used, where $m_1$ denotes the first implementation of the method \textit{m}, $m_2$ denotes the second, and so on.
 
 \section{The analysis method} \label{sec:the-analysis-method}
+
 As established in \autoref{sec:problems-with-purity-in-oo} this thesis defines four functional purity levels: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, and \textit{impure}. Because in some cases the purity level of a method cannot be determined, for instance when the method's definition is missing, a fifth purity level \textit{unknown} is added as well. This can happen when one method calls another method from an assembly. Assemblies contain IL code, and not C\# source code and therefore CsPurity cannot analyze them. Following is a description of the static analysis method developed and used in this thesis in order to determine the purity level of a program:
 
 Traverse the program's Abstract Syntax Tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function. If during the traversal a call or reference to a compiled method or a field is found, mark the caller function's purity as \textit{unknown}.
@@ -688,8 +692,6 @@ The first overloading of the method \texttt{Concatenate()} modifies the static c
     public Node next;
     public Object data;
 
-    public Node() { }
-
     public Node(Object data)
     {
       this.data = data;
@@ -772,6 +774,7 @@ Looking at \texttt{Concatenate$_2()$}, none of the items in the checklist apply,
 At this point the working set $W$ is empty, and so there can be no more changes to the lookup table. Therefore the analysis stops here. The final result is thus what is shown in the lookup table in \autoref{tab:lookup-table3}. Looking at the table we can see that \texttt{Length()} is the only truly pure method out of the five. Thus we can conclude that \texttt{LinkedList}'s total purity level is 1/5 = 20\% functionally pure.
 
 \section{Implementation of the analysis tool CsPurity} \label{sec:Implementation of the analysis tool}
+
 % \item For performance reasons, first check general stuff and then do more specific checks.
 
 Because there was a clear goal for the software and it's requirements, test driven development was used when implementing the analysis tool in C\#.
@@ -789,7 +792,8 @@ Something that was realized while implementing the tool is that the C\# compiler
 TODO
 
 \section{Results and discussion} \label{sec:results-and-discussion}
-The implemented analysis program CsPurity works backwards through the analyzed program's function dependencies and for each function visited its functional purity level is calculated. The purity levels \textit{impure} and \textit{unknown} also get propagated from callee to caller. Out of all ten items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, the following three were implemented:
+
+The implemented analysis program CsPurity works backwards through the analyzed program's function dependencies and for each function visited that function's functional purity level is calculated. The purity levels \textit{impure} and \textit{unknown} also get propagated from callee to caller. Out of all ten items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, the following three were implemented:
 
 \begin{itemize}
   \item \autoref{itm:static-impure}: "If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked \textit{impure}".
@@ -799,32 +803,35 @@ The implemented analysis program CsPurity works backwards through the analyzed p
 
 The reason why three out of the total ten checks were implemented was due to the sheer amount of time that the implementation took. After implementing the whole lookup table and all of its functionality, calculation of each method's dependency set, propagation of impurities from callee to caller, etc. there was not time left to implement every item in the checklist in a reasonable amount of time, and so the three items above were chosen. Because of this, CsPurity is unable to detect local and parametrical impurity, and can only detect full impurity caused by side-effects.
 
-Due to the choice of including determinism in the definition of functional purity, which is not included in some definitions, the analysis could be somewhat simplified. The main advantage to including determinism is that we don't have to explicitly check whether potentially global (i.e. static) object fields are read from or modified by a function \textit{f}, in order to determine \textit{f}'s purity. As a long as a static variable appears in \textit{f} we know that \textit{f} is non-deterministic since it depends on a global state. On the other hand, if determinism were ignored we would have to check whether the static field is modified by \textit{f} or not -- or by some method called by \textit{f} -- in order to determine \textit{f}'s purity, which would be even trickier.
+Due to the choice of including determinism in the definition of functional purity, which is not included in some definitions, the analysis could be somewhat simplified. The main advantage to including determinism is that one doesn't have to explicitly check whether potentially global (i.e. static) object fields are read from or modified by a function \textit{f}, in order to determine \textit{f}'s purity. As a long as a static variable appears in \textit{f} we know that \textit{f} is non-deterministic since it depends on a global state. On the other hand, if determinism were ignored we would have to check whether the static field is modified by \textit{f} or not -- or by some method called by \textit{f} -- in order to determine \textit{f}'s purity, which would be even trickier.
 
 % One could however argue that objects are similar to closures, in which case a method reading the field of \texttt{this} would be considered pure, and not locally impure as it would be marked now.
 
-CsPurity does not handle recursion, which if a recursive program is analyzed could cause it finish before all functions' purities have been calculated, because no more functions will be added to the working set. Support for recursive functions can be added by searching for independent strongly connected components~\cite{pitidis2010purity}.
-
 % Static method purity is calculated as the percentage of all methods in the call graph that are pure~\cite{xu2007dynamic}.
 
-CsPurity uses a blacklist of built-in impure C\# functions in order to spot functions that handle impure actions such as randomness and I/O. There may be other impure built-in similar functions that are not in the blacklist.
+% CsPurity uses a blacklist of built-in impure C\# functions in order to spot functions that handle impure actions such as randomness and I/O. There may be other impure built-in similar functions that are not in the blacklist.
 
 An alternative way to compare programs' total purity levels, i.e. the ratio between number of pure methods and the total number of methods, could be to profile each program and weight the purity level of each method depending on how often that method is called. For example, let's say that only 10\% of program \textit{A}'s methods are pure compared to program \textit{B} where 20\% of its methods are pure. Now say that \textit{A}'s pure methods make up 90\% of the total function calls during execution and \textit{B}'s pure methods only are called 10\% of the times during execution. In this case, one could argue that \textit{A} is purer than \textit{B} since it makes more calls to pure methods than impure ones compared to \textit{B}, even though \textit{B} has a higher ratio of the number of pure methods.
 
-Because most methods use built-in C\# methods for which the source code is not necessarily public, a majority of the analyzed methods get the purity level \textit{unknown}. One way of tackling this was to search online for the source code of classes like \texttt{List}, run the analyzer on them and permanently store the calculated purity level for each method in a dictionary in the program, so that whenever a call to a built-in \texttt{List} method is made its purity level (if it is not \textit{unknown}) can be retrieved from the dictionary. However, this relies on the fact that the source code for a particular built in method is available online, and the process of searching for its code, running the analyser on it and adding any known result to the program's dictionary is cumbersome.
+Because most methods use built-in C\# methods for which the source code is not necessarily public, a majority of the analyzed methods get the purity level \textit{unknown}. One way of tackling this was to search online for the source code of classes like \texttt{List}, run the analyzer on them and permanently store the calculated purity level for each method in a dictionary in the program, so that whenever a call to a built-in \texttt{List} method is made its purity level (if it is not \textit{unknown}) can be retrieved from the dictionary. However, this relies on the fact that the source code for a particular built-in method is available, and the process of searching for its code, running the analyser on it and adding any known result to the program's dictionary is cumbersome. Therefore a lot of method will be marked as \textit{unknown} by CsPurity because they depend on a method who's source code is not available to, or has been priorly analyzed by CsPurity.
 
 Since CsPurity is unable to detect local and parametrical impurity it cannot for certain determine the purity of any program. CsPurity does however identify true impurity -- the impurest purity level -- and does therefore compute a lower bound to a program's impurity, which is equivalent to an upper bound to the program's purity level. CsPurity does not however give a definite lower bound to a program's purity level. This is due to the fact that all methods' purity levels are initialized to \textit{pure}, and the purity level only changes if CsPurity detects a non-pure trait based on the checklist in \autoref{sub:checklist-to-determine-the-purity-level}. Since not every item in the checklist is implemented, we cannot know if a method was marked \textit{pure} in the result of an analysis because it truly was pure, or because it had a non-pure trait that the implementation cannot detect.
 
-One could argue that if choosing between computing an upper or a lower bound to a program's purity level, a lower bound is more interesting to a programmer. However, due to the nature of the analysis method this requires fully implementing the method.
+One could argue that if choosing between computing an upper or a lower bound to a program's purity level, a lower bound is more interesting to a programmer. However, due to the nature of the analysis method this requires fully implementing the anslysis method.
 
-Another approach to handling called methods with unknown purity -- as opposed to marking their purity level \textit{unknown} -- would be to simply assume that any unknown method's purity level always is \textit{impure}, or to assume that it is always \textit{pure}. The more conservative approach of assuming that any unknown method is impure would mean that the upper bound for the program's total possible purity level would be moved down, which could potentially give a lower bound that is too low, since some of the unknown methods that were marked \textit{impure} could have been pure. Since the incomplete implementation does not give a lower bound, the assumption of impurity will have no effect on the lower bound.
+An alternative approach to handling called methods with unknown purity -- as opposed to marking their purity level \textit{unknown} -- would be to simply assume that any unknown method's purity level always is \textit{impure}, or to assume that it is always \textit{pure}. The more conservative approach of assuming that any unknown method is impure would mean that the upper bound for the program's total possible purity level would be moved down, which could potentially give a lower bound that is too low, since some of the unknown methods that were marked \textit{impure} could have been pure. Since the incomplete implementation does not give a lower bound, the assumption of impurity will have no effect on the lower bound.
 
 For the same reason, assuming that any unknown method is \textit{pure} will also not affect any lower bound of the program's total purity level. The upper bound for the program's total purity level will in this case be the same as the \textit{unknown} approach. However, this assumption will be misleading with a complete implementation since it will potentially give false positives that indicate that some methods are pure when they are not. Therefore, since it clearly indicates to the user where the purity level could not be determined, the purity level \textit{unknown} seems to be the best choice here.
 
 \subsection{Evaluation method} \label{sub:evaluation-method}
 % TODO: describe how CsPurity will be evaluated (analysis framework)
 
-% Maybe move first paragraphs in "Results from running CsPurity on a large codebase" here?
+To evaluate CsPurity's accuracy it is run on the small example code in \autoref{fig:example-code} and CsPurity's result is compared to the one in \autoref{tab:lookup-table3}, which was yielded by manually applying the analysis method on the example code. CsPurity is also run on a larger code base in order to evaluate its performance in real life, non-trivial, cases. The code base consists of the 11 most popular open source GitHub repositories that use C\# and the \texttt{[Pure]} attribute in at least 1\% of methods were chosen. The popularity was measured based on the number of stars, which is GitHub's user rating system for repositories.
+
+As mentioned in \autoref{sub:code-contracts} the \texttt{[Pure]} attribute can be placed in front of a method definition to signal that the method pure. That means that running CsPurity on a code base where a portion of the methods use the \texttt{[Pure]} attribute CsPurity's accuracy can be evaluated by comparing what the methods with and the methods without the \texttt{[Pure]} attribute were categorized as by CsPurity. It is assumed that any method with the \texttt{[Pure]} attribute is functionality pure. This does not neccessarily have to be true in general, and as will be discussed later, a large portion of \texttt{[Pure]} methods do in fact have side-effects. But the \texttt{[Pure]} attribute can still tell us something about how CsPurity performs.
+
+CsPurity also assumes that methods without \texttt{[Pure]} are impure. There could be exceptions to this, i.e. pure methods that haven't been given the \texttt{[Pure]} attribute by the code's author, and this will be discussed later in this section. % TODO
+However, this assumption still lets us say something about CsPurity's ability to classify impure methods. Also, since all 11 repositories were selected specifically because they contain \texttt{[Pure]}'s it is therefore reasonable to assume that most methods without the attribute are impure.
 
 \subsection{Results from scanning simple implementation of linked list} \label{sub:results-from-scanning-the-example-list}
 Following is the result of running the implemented analyzer CsPurity on the linked list program in \autoref{fig:example-code}. By looking at the result from running CsPurity and comparing it to the expected result in \autoref{ssub:Example} we can evaluate its performance.
@@ -855,13 +862,6 @@ Therefore, what we can say for sure about the linked list implementation based o
 % TODO
 
 \subsection{Results from running CsPurity on a large codebase} \label{sub:results-larger-codebase}
-
-To evaluate CsPurity's accuracy the 11 most popular open source GitHub repositories that use C\# and the \texttt{[Pure]} attribute in at least 1\% of methods were chosen. The popularity was measured based on the number of stars, which is GitHub's user rating system for repositories.
-
-As mentioned in \autoref{sub:code-contracts} the \texttt{[Pure]} attribute can be placed in front of a method definition to signal that the method pure. That means that running CsPurity on a code base where a portion of the methods use the \texttt{[Pure]} attribute CsPurity's accuracy can be evaluated by comparing what the methods with and the methods without the \texttt{[Pure]} attribute were categorized as by CsPurity. It is assumed that any method with the \texttt{[Pure]} attribute is functionality pure. This does not neccessarily have to be true in general, and as will be discussed later, a large portion of \texttt{[Pure]} methods do in fact have side-effects. But the \texttt{[Pure]} attribute can still tell us something about how CsPurity performs.
-
-CsPurity also assumes that methods without \texttt{[Pure]} are impure. There could be exceptions to this, i.e. pure methods that haven't been given the \texttt{[Pure]} attribute by the code's author, and this will be discussed later in this section. % TODO
-However, this assumption still lets us say something about CsPurity's ability to classify impure methods. Also, since all 11 repositories were selected specifically because they contain \texttt{[Pure]}'s it is therefore reasonable to assume that most methods without the attribute are impure.
 
 The results from running CsPurity on each of the 11 repositories are divided into two different tables; \autoref{tab:results-pure-methods} which contains CsPurity's classification for methods with the \texttt{[Pure]} attribute, and \autoref{tab:results-non-pure-methods} with the result for methods without the attribute. Methods with the \texttt{[Pure]} attribute make up 47\% percent of the total number of methods analyzed, and so 53\% of methods do not have the attribute. \autoref{tab:results-summary} contains the distribution of purity levels for all analyzed methods, and \autoref{tab:results-precision-recall} contains CsPurity's precision and recall based on the numbers in \autoref{tab:results-pure-methods} and \autoref{tab:results-non-pure-methods}. Precision is the number of true positives in relation to the number of selected items. Recall (or sensitivity) is the number of true positives in relation to all relevant items (the items that should be selected).
 % CsPurity's precision in terms of classifying pure methods is equal to the number of \textit{pure} methods with a \texttt{[Pure]} attribute divided by the total number of methods that are classified as \textit{pure}. CsPuritiy's recall in terms of pure methods is the number of \textit{pure} methods with a \texttt{[Pure]} attribute divided by
@@ -968,7 +968,7 @@ Since the repositories have different code and different authors that may be var
 
 \begin{table}[H]
   \centering
-  \caption{Precision and recall of CsPurity's classification of pure and impure methods after normalizing.}
+  \caption{Precision and recall of CsPurity's classification of pure and impure methods after normalizing each repository's purity level distribution.}
   \label{tab:results-precision-recall-normalized}
   \begin{tabular}{|l|ll|}
     \hline
@@ -996,7 +996,7 @@ Their definition of purity uses \textit{referential transparency}, as it implies
 
 They store all analysis information in a \textit{lookup table} where the keys are the function identifiers \textit{f} and the values are the purity level \textit{$p_f$} of each \textit{f} as well as \textit{f}'s \textit{dependency set} $D_f$~\cite{pitidis2010purity}. The dependency set is the set of functions being called by \textit{f} and is constructed by parsing the program's Abstract Syntax Tree~\cite{pitidis2010purity}.
 
-Their analysis starts with Erlang's so called built in-functions (BIFs), which are functions native to the Erlang's virtual machine and are written in C~\cite{pitidis2010purity}. Impure actions in Erlang can only be done through BIFs, including performing I/O actions or writing to global variables~\cite{kostis-email}. Because BIFs are written in C they cannot be analysed by their analysis tool, and their purity is assumed to be already known in beforehand by the analysis tool~\cite{pitidis2010purity}. The analysis propagates the impurity of BIFs to each function which directly or indirectly depends on them.
+Their analysis starts with Erlang's so called built-in-functions (BIFs), which are functions native to the Erlang's virtual machine and are written in C~\cite{pitidis2010purity}. Impure actions in Erlang can only be done through BIFs, including performing I/O actions or writing to global variables~\cite{kostis-email}. Because BIFs are written in C they cannot be analysed by their analysis tool, and their purity is assumed to be already known in beforehand by the analysis tool~\cite{pitidis2010purity}. The analysis propagates the impurity of BIFs to each function which directly or indirectly depends on them.
 
 In short terms, their analysis algorithm works like this: Initialize the purity of all functions in the lookup table to be analyzed to "pure"~\cite{pitidis2010purity}. Define the \textit{working set} to always equal the set of functions whose purity level is fully determined, i.e. the functions with empty dependency sets~\cite{pitidis2010purity}. For each function \textit{f} in the working set, propagate its purity level to functions depending on it and "contaminate" them with \textit{f}'s purity level~\cite{pitidis2010purity}. Then remove \textit{f} from the  dependency set of each function depending on it~\cite{pitidis2010purity}. If \textit{f} has the highest impurity level, remove the entire dependency set of each function depending on \textit{f}~\cite{pitidis2010purity}. If the working set gets empty, find a set of functions that are dependent on each other and no other functions, and set their purity level to the purity of the impurest function~\cite{pitidis2010purity}. Simplify their dependency sets by removing their dependency on each other from their dependency set~\cite{pitidis2010purity}. Repeat this process until there are no more changes to the lookup table~\cite{pitidis2010purity}.
 
@@ -1071,6 +1071,8 @@ Functional purity is perhaps the most useful concept from functional programming
 \subsection{Future work} \label{sub:Future work}
 
 The implementation of CsPurity used in this thesis does not incorporate the full analysis method described in \autoref{sec:the-analysis-method}. Therefore the obvious next step is to implement the full methodology in CsPurity.
+
+CsPurity does not handle recursion, which if a recursive program is analyzed could cause it finish before all functions' purities have been calculated, because no more functions will be added to the working set. Support for recursive functions can be added by searching for independent strongly connected components~\cite{pitidis2010purity}.
 
 One enhancement to CsPurity would be for it to point out the exact position of impurity in the analyzed code. Because impurity is calculated by passing the purity level of impure functions to their callers, this feature could be implemented by also passing the exact position in the code where the impurity was encountered to the caller, as well as the function's identifier and other useful information. This feature could be useful to developers that want to make , or
 
