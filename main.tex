@@ -128,9 +128,9 @@ This thesis develops and evaluates a method of statically determining the level 
 TODO
 \end{abstract}
 
-\begin{sammanfattning}
-  TODO
-\end{sammanfattning}
+% \begin{sammanfattning}
+%   TODO
+% \end{sammanfattning}
 
 % Innehållsförteckningen här.
 \tableofcontents
@@ -148,19 +148,19 @@ TODO
 
 The object oriented (OO) programming paradigm has been the industry norm for quite some time~\cite{tiobe}. However, functional programming is on the rise and becoming more popular~\cite{intertech}. Many mainstream languages like Java, C\# and C++ have adopted first-class functions from the functional paradigm~\cite{intertech}. While perhaps some associate functional programming with the more theoretical and mathematical fields, functional programming can be used for more practical applications like building modern web applications and mobile apps~\cite{jonas-walter}.
 
-Functional programs have many benefits. Perhaps one of the most useful features of functional programming that the object oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about impure ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are also easier to test since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
+Functional programs have many benefits. Perhaps one of the most useful features of functional programming that the object oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about than impure ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are also easier to test since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
 For this reason it useful in software engineering to be able to measure the level of functional purity in programs~\cite{purity-in-javascript}.
 
 C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language?
 In order to answer this we need a method for measuring a C\# program's functional purity level. We also need a way of evaluating that method in order to assess its level of accuracy.
 % In order to accomplish this a data set is needed for which each function's purity level is known.
-The purpose of this thesis is thus to develop an analysis method for measuring the functional purity level of a given program.
+The purpose of this thesis is thus to develop an analysis method for measuring the functional purity level of a given C\# program.
 
 % \subsection{Contributions} \label{sub:Contributions}
 
 \section{Definitions} \label{sub:definitions}
 
-Functional programming and object oriented programming are two different programming paradigms. There is no universal definition of either of them. Following is how they have been chosen to be defined in this thesis.
+Functional programming and object oriented programming are two different programming paradigms. There is no universal definition of either of them, but in order to reason about them we need some definition. Following is therefore how they are defined in this thesis.
 
 \subsection{Object oriented programming} \label{ssub:object-oriented-programming} % Perhaps also mention imperative programming?
 
@@ -174,15 +174,12 @@ Functional programming and object oriented programming are two different program
 \subsection{Functional programming} \label{sub:functional-programming}
 
 \begin{enumerate}
-  \item All functions are \emph{functionally pure}. Functional purity is defined below in \autoref{ssub:functional-purity-definition}.
+  \item All functions are \emph{functionally pure}~\cite{alvin-alexander}. Functional purity is defined below in \autoref{def:functional-purity}.
+  \item Variables are immutable, meaning that their value does not change after being initiated~\cite{alvin-alexander}. % page 3
   \item Functions are first-class and can be higher-order, meaning that functions can be passed to functions as parameters, and can be returned by functions~\cite{jonas-walter}. % page 3
-  \item Variables are immutable, meaning that their value does not change after being initiated~\cite{jonas-walter}. % page 3
 \end{enumerate}
 
-% As mentioned in \autoref{sub:functional-programming}, the definition of functional programming consists of three parts. \textit{Purity}, functions being \textit{first-class} and \textit{higher-order}, and variables being \textit{immutable}.
-To delimit the scope of this thesis it will only focus on functional purity, mainly because it seems like the most useful one out of the three for object oriented programming.% , and as it is the one that is the most emphasized as a benefit of using a more functional style in object oriented programming~\cite{alvin-alexander}. % page 19
-
-\subsection{Definition of functional purity} \label{ssub:functional-purity-definition}
+\subsection{Functional purity} \label{ssub:functional-purity-definition}
 % Maybe move this before subsection to lead up to this?
 
 Following is the definition of functional purity that will be used in this thesis:
@@ -201,9 +198,9 @@ Following is the definition of functional purity that will be used in this thesi
   A function is deterministic if its output depends purely on its input parameters, i.e. the method must return the same value for the same input regardless of the state of the program~\cite{purity-in-java}.
 \end{definition}
 
-As seen in \autoref{sec:Related work} some related work define functional purity only as being synonymous with "side-effect free". This definition omits determinism and allows functions to read from variables defined outside of their scope, which is less functional. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
+As seen in \autoref{sec:Related work} some related work define functional purity only as being synonymous with "side-effect free". This definition omits determinism and allows pure functions to read from variables defined outside of their scope, which is less functional. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
 % the first two whose work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively.
-Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic does in a way also simplify the analysis because it means that any symbol used in a function \textit{F} but defined outside \textit{F} would make \textit{F} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{F} to see if it is being written to or if it is only being read before concluding if \textit{F} is pure.
+Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic does in a way also simplify the analysis because it means that any symbol used in a function \textit{f} but defined outside \textit{f} would make \textit{f} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{f} to see if it is being written to or if it is only being read before concluding if \textit{f} is pure.
 
 % The notion of purity only being synonymous with side-effect free seems to be more common in computer science, while also requiring determinism seems to be the more mathematical definition.
 
@@ -235,7 +232,7 @@ Moreover, requiring pure functions to be both side-effect free \textit{and} dete
 
 \section{The C\# language and .NET} \label{sub:the-csharp-language}
 
-C\# is a type safe object oriented programming language developed by Microsoft~\cite{albahari2003nutshell}. C\# is syntactically quite similar to C, C++ and Java, and includes features like nullable types, enumerations, higher-order functions, and direct memory access~\cite{intro-to-Csharp}. While C\# historically has primarily been used for writing code for Windows platforms only, C\# has recently spread to most other platforms, including mobile, due to its increased cross-platform support~\cite{albahari2003nutshell}.
+C\# is a type safe object oriented programming language developed by Microsoft~\cite{albahari2003nutshell}. C\# is syntactically quite similar to C, C++ and Java, and includes features like nullable types, enumerations, higher-order functions, and direct memory access~\cite{intro-to-Csharp}. While C\# historically has been used primarily for writing code for Windows platforms only, C\# has recently spread to most other platforms, including mobile, due to its increased cross-platform support~\cite{albahari2003nutshell}.
 
 C\# applications run in the .NET ecosystem~\cite{intro-to-Csharp}. There are multiple implementations of .NET, including .NET Core and the .NET Framework~\cite{intro-to-Csharp}. .NET includes a virtual execution environment called the common language runtime (CLR) on which C\# programs run, as well as a common set of class libraries~\cite{albahari2003nutshell}. Before execution C\# source code is compiled to the so called intermediate language (IL) and stored on disk~\cite{intro-to-Csharp}. Upon execution the IL code is just-in-time-compiled to native machine instructions that can be executed by the operating system~\cite{intro-to-Csharp}.
 
@@ -245,19 +242,20 @@ Similarly to many other programming languages, functions in C\# are generally re
 
 \subsection{What makes a C\# method pure?} \label{sub:What makes a Cs program functional?}
 
-\autoref{fig:impure-example} and \autoref{fig:pure-example} illustrate two very simple examples of pure and impure code, respectively. In \autoref{fig:impure-example} the function \texttt{addOne()} is impure because it is writing to the variable \texttt{number} which was defined outside \texttt{addOne()}'s scope, which is a side-effect. \autoref{fig:pure-example} illustrates how \texttt{addOne()} can be rewritten to a pure function while preserving the program's semantics.
+\autoref{fig:impure-example} and \autoref{fig:pure-example} illustrate two very simple examples of pure and impure code, respectively. The function \texttt{addOne()} in \autoref{fig:impure-example} is impure because it is writing to the variable \texttt{number} which was defined outside \texttt{addOne()}'s scope, which is a side-effect. \autoref{fig:pure-example} illustrates how \texttt{addOne()} can be rewritten to a pure function while preserving the program's semantics.
 
 \begin{figure}[H]
   \centering
   \begin{lstlisting}
     public class Program {
-      static int number = 42;
+      static int number;
 
       public static void addOne() {
         number += 1; // this is a side-effect
       }
 
       public static void Main() {
+        number = 42;
         addOne();
         Console.WriteLine(number); // outputs 43
       }
@@ -328,9 +326,9 @@ Since the \texttt{in} keyword does not entirely prevent methods modifying their 
 \subsection{The .NET Abstract Syntax Tree and the CodeAnalysis library} \label{The .NET Abstract Syntax Tree and the CodeAnalysis library}
 
 % Abstract syntax trees in general
-Abstract syntax trees (ASTs) are the primary data structure used when analysing source code~\cite{microsoft-work-with-syntax}. It encapsulates every piece of information held in the source code~\cite{microsoft-work-with-syntax}. A syntax tree generated by a parser can be be re-built into the exact same text that was originally parsed~\cite{microsoft-work-with-syntax}.
+Abstract syntax trees (AST) are the primary data structure used when analysing source code~\cite{microsoft-work-with-syntax}. It encapsulates every piece of information held in the source code~\cite{microsoft-work-with-syntax}. A syntax tree generated by a parser can be be re-built into the exact same text that was originally parsed~\cite{microsoft-work-with-syntax}.
 
-The abstract syntax tree (AST) generated from a given piece of C\# code by Microsoft's code analysis library \texttt{Microsoft.CodeAnalysis} represents the lexical and syntactic structure of the C\# program~\cite{microsoft-work-with-syntax}. The tree consists primarily of \textit{syntax nodes} which represent syntactic constructs including declarations, statements, clauses and expressions~\cite{microsoft-work-with-syntax}. Each node is derived from the \texttt{Syntax}-\texttt{Node} class~\cite{microsoft-work-with-syntax}. Every node is non-terminal, meaning that they always have children - either other nodes or \textit{tokens}~\cite{microsoft-work-with-syntax}. Tokens are the smallest syntactic pieces of the program, consisting of keywords, identifiers, literals and punctuation~\cite{microsoft-work-with-syntax}.
+The AST generated from a given piece of C\# code by Microsoft's code analysis library \texttt{Microsoft.CodeAnalysis} represents the lexical and syntactic structure of the C\# program~\cite{microsoft-work-with-syntax}. The tree consists primarily of \textit{syntax nodes} which represent syntactic constructs including declarations, statements, clauses and expressions~\cite{microsoft-work-with-syntax}. Each node is derived from the \texttt{Syntax}-\texttt{Node} class~\cite{microsoft-work-with-syntax}. Every node is non-terminal, meaning that they always have children - either other nodes or \textit{tokens}~\cite{microsoft-work-with-syntax}. Tokens are the smallest syntactic pieces of the program, consisting of keywords, identifiers, literals and punctuation~\cite{microsoft-work-with-syntax}.
 
 % An \textit{expression} consists of zero or more operators with one or more operands, which can be evaluated to a single value, method, object or namespace.
 % https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/statements-expressions-operators/expressions
@@ -338,28 +336,6 @@ The abstract syntax tree (AST) generated from a given piece of C\# code by Micro
 \subsection{C\# Events} \label{sub:Events}
 
 Events are a way for classes or object to notify other classes or objects when something happens~\cite{microsoft-events}. The class raising the event is called the \textit{publisher} and the class handling the event is called the \textit{subscriber} (there can be more than one subscriber)~\cite{microsoft-events}. When an event is raised the subscriber's handler method is executed. Since events clearly are side-effects, a method that raises events or handles events is not considered pure
-
-\subsection{Impure built-in C\# methods} \label{sub:Impure-built-in-methods}
-
-The following methods that are built into C\# and are non-deterministic~\cite{dixin2015}:
-
-\begin{itemize}
-  \item \texttt{Console.Read}, \texttt{Console.ReadLine}, \texttt{Console.ReadKey}, \texttt{DateTime\allowbreak.Now} and \texttt{DateTimeOffset.Now} depend on the outside world.
-\item \texttt{Random.Next}, \texttt{Guid.NewGuid} and \texttt{System.IO.Path.GetRandom}-\\\texttt{\allowbreak FileName} give random output.
-\end{itemize}
-
-The following methods that are built into C\# and have side-effects~\cite{dixin2015}:
-
-\begin{itemize}
-  \item \texttt{System.Threading.Thread.Start} and \texttt{Thread.Abort} mutate states.
-  % \item \texttt{int.TryParse} and \texttt{Interlocked.Increase}
-  \item \texttt{Console.Read}, \texttt{Console.ReadLine}, \texttt{Console-ReadKey}, \texttt{Console.\allowbreak Write} and \texttt{Console.WriteLine} produce console I/O.
-  \item \texttt{System.IO.Directory.Create}, \texttt{Directory.Move}, \texttt{Directory.}\\\texttt{Delete}, \texttt{File.Create}, \texttt{File.Move}, \texttt{File.Delete}, \texttt{File.ReadAll\allowbreak }- \texttt{Bytes} and \texttt{File.WriteAllBytes} produce file system I/O.
-\item \texttt{System.Net.Http.HttpClient.GetAsync}, \texttt{HttpClient.Post}- \\\texttt{Async}, \texttt{HttpClinet.PutAsync} and \texttt{HttpClient.DeleteAsync} produce network I/O.
-  \item \texttt{IDisposable.Dispose} interacts with the program's environment.
-\end{itemize}
-
-The fact that previously mentioned methods are non-deterministic or have side-effects means that we know for sure that they are impure, which means that any function that uses them is also impure.
 
 \subsection{.NET code contracts and the \texttt{[Pure]} attribute} \label{sub:code-contracts}
 
@@ -374,6 +350,30 @@ The following code elements are assumed by the code contract tools to be pure~\c
   \item Any method with a fully qualified name starting with \texttt{System.Diagnost\-ics.Contracts.Contract}, \texttt{System.String}, \texttt{System\-.IO.Path}, or \texttt{System.Type}.
   \item Any called delegate with the \texttt{[Pure]} attribute. Delegates are basically function pointers.
 \end{itemize}
+
+\subsection{Impure built-in C\# methods} \label{sub:Impure-built-in-methods}
+
+The following methods that are built into C\# and are non-deterministic~\cite{dixin2015}:
+
+\begin{itemize}
+  \item \texttt{Console.Read}, \texttt{Console.ReadLine}, \texttt{Console.ReadKey}, \texttt{DateTime\allowbreak.Now} and \texttt{DateTimeOffset.Now} depend on the outside world.
+\item \texttt{Random.Next}, \texttt{Guid.NewGuid} and \texttt{System.IO.Path.GetRandom}-\\\texttt{\allowbreak FileName} give random output.
+\end{itemize}
+
+The following methods that are built into C\# and have side-effects~\cite{dixin2015}:
+
+Because a significant amount of functions used come from the .NET class library, which will be discussed later in this thesis,
+
+\begin{itemize}
+  \item \texttt{System.Threading.Thread.Start} and \texttt{Thread.Abort} mutate states.
+  % \item \texttt{int.TryParse} and \texttt{Interlocked.Increase}
+  \item \texttt{Console.Read}, \texttt{Console.ReadLine}, \texttt{Console-ReadKey}, \texttt{Console.\allowbreak Write} and \texttt{Console.WriteLine} produce console I/O.
+  \item \texttt{System.IO.Directory.Create}, \texttt{Directory.Move}, \texttt{Directory.}\\\texttt{Delete}, \texttt{File.Create}, \texttt{File.Move}, \texttt{File.Delete}, \texttt{File.ReadAll\allowbreak }- \texttt{Bytes} and \texttt{File.WriteAllBytes} produce file system I/O.
+\item \texttt{System.Net.Http.HttpClient.GetAsync}, \texttt{HttpClient.Post}- \\\texttt{Async}, \texttt{HttpClinet.PutAsync} and \texttt{HttpClient.DeleteAsync} produce network I/O.
+  \item \texttt{IDisposable.Dispose} interacts with the program's environment.
+\end{itemize}
+
+The fact that previously mentioned methods are non-deterministic or have side-effects means that we know for sure that they are impure, which means that any function that uses them is also impure.
 
 \section{Problems with determining purity in object oriented languages} \label{sec:problems-with-purity-in-oo}
 
@@ -542,7 +542,7 @@ Instead, when given an overloaded method named \textit{m} the analysis treats ea
 
 As established in \autoref{sec:problems-with-purity-in-oo} this thesis defines four functional purity levels: \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, and \textit{impure}. Because in some cases the purity level of a method cannot be determined, for instance when the method's definition is missing, a fifth purity level \textit{unknown} is added as well. This can happen when one method calls another method from an assembly. Assemblies contain IL code, and not C\# source code and therefore CsPurity cannot analyze them. Following is a description of the static analysis method developed and used in this thesis in order to determine the purity level of a program:
 
-Traverse the program's Abstract Syntax Tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function. If during the traversal a call or reference to a compiled method or a field is found, mark the caller function's purity as \textit{unknown}.
+Traverse the program's abstract syntax tree (AST) and build the \textit{dependency set} for each function, i.e. the set of calls inside a function. If during the traversal a call or reference to a compiled method or a field is found, mark the caller function's purity as \textit{unknown}.
 
 Since object constructors can perform impure actions just like methods, they are in this section included in the term "function".
 
