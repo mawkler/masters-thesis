@@ -123,9 +123,18 @@
 \frontmatter
 
 \begin{abstract}
-This thesis develops and evaluates a method of statically determining the level of functional purity in a given C\# program. It also investigates problems with determining purity in object oriented languages, with a focus on C\#. A function is defined to be functionally pure if it side-effect free and deterministic.
+  Functional purity is a fundamental part of the functional programming paradigm. A function is functionally pure if it is side-effect free and deterministic. Pure functions provide many benefits compared to impure ones, including guaranteed thread-safety as well as easier testing, debugging and maintenance. But how can functional purity be measured? This thesis develops a method for statically approximating the level of functional purity in a given C\# program. It also investigates problems with determining purity in object-oriented languages, with a focus on C\#.
+  A prototype of the method is implemented in order to evaluate the method using a benchmark consisting of 11 open source repositories that use the \texttt{[Pure]} attribute.
+  The \texttt{[Pure]} attribute can be placed in front of a method to indicate that it is side-effect free. Due to a number of limitations to the implementation as well as to \texttt{[Pure]}'s definition of functional purity, which excludes determinism, the results of the evaluation are relatively mediocre. After normalizing the implementation's classification distribution for each repository its classification of pure functions has a precision of 64\% and recall 15\%, and its classification of impure functions has 59\% precision and 56\% recall.
+  Nevertheless, the prototype still shows the potential of the full analysis method.
+  A complete implementation of the analysis method could therefore yield a fully working system for approximating any C\# program's level of functional purity.
 
-TODO
+  % 1. [X] What's the problem
+  % 2. [X] How did you solve it
+  % 3. [X] What are the results
+  % 4. [X] Conclusion (what it means for the future)
+
+  % TODO
 \end{abstract}
 
 % \begin{sammanfattning}
@@ -144,11 +153,9 @@ TODO
 
 \section{Introduction} \label{sec:Introduction}
 
-% https://dl-acm-org.ezproxy.its.uu.se/doi/pdf/10.1145/1455770.1455793?download=true (\cite{purity-in-java}) has motivation for using pure functions in its abstract
+The object-oriented programming paradigm has been the industry norm for quite some time~\cite{tiobe}. However, functional programming is on the rise and becoming more popular~\cite{intertech}. Many mainstream languages like Java, C\# and C++ have adopted first-class functions from the functional paradigm~\cite{intertech}. While perhaps some associate functional programming with the more theoretical and mathematical fields, functional programming can be used for more practical applications like building modern web applications and mobile apps~\cite{jonas-walter}.
 
-The object oriented (OO) programming paradigm has been the industry norm for quite some time~\cite{tiobe}. However, functional programming is on the rise and becoming more popular~\cite{intertech}. Many mainstream languages like Java, C\# and C++ have adopted first-class functions from the functional paradigm~\cite{intertech}. While perhaps some associate functional programming with the more theoretical and mathematical fields, functional programming can be used for more practical applications like building modern web applications and mobile apps~\cite{jonas-walter}.
-
-Functional programs have many benefits. Perhaps one of the most useful features of functional programming that the object oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about than impure ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are also easier to test since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
+Functional programs have many benefits. Perhaps one of the most useful features of functional programming that the object-oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about than impure ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are always thread-safe, meaning that they are perfect for parallel programming~\cite{purity-in-java}. Pure functions are also easier to test compared to impure ones since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
 For this reason it useful in software engineering to be able to measure the level of functional purity in programs~\cite{purity-in-javascript}.
 
 C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language?
@@ -160,9 +167,9 @@ The purpose of this thesis is thus to develop an analysis method for measuring t
 
 \section{Definitions} \label{sub:definitions}
 
-Functional programming and object oriented programming are two different programming paradigms. There is no universal definition of either of them, but in order to reason about them we need some definition. Following is therefore how they are defined in this thesis.
+Functional programming and object-oriented programming are two different programming paradigms. There is no universal definition of either of them, but in order to reason about them we need some definition. Following is therefore how they are defined in this thesis.
 
-\subsection{Object oriented programming} \label{ssub:object-oriented-programming} % Perhaps also mention imperative programming?
+\subsection{Object-oriented programming} \label{ssub:object-oriented-programming} % Perhaps also mention imperative programming?
 
 \begin{enumerate}
 \item Computations are done via \textit{methods} belonging to \textit{objects}, whose structure suits the goal of whatever computation we're doing~\cite{john-m-chambers}.
@@ -232,7 +239,7 @@ Moreover, requiring pure functions to be both side-effect free \textit{and} dete
 
 \section{The C\# language and .NET} \label{sub:the-csharp-language}
 
-C\# is a type safe object oriented programming language developed by Microsoft~\cite{albahari2003nutshell}. C\# is syntactically quite similar to C, C++ and Java, and includes features like nullable types, enumerations, higher-order functions, and direct memory access~\cite{intro-to-Csharp}. While C\# historically has been used primarily for writing code for Windows platforms only, C\# has recently spread to most other platforms, including mobile, due to its increased cross-platform support~\cite{albahari2003nutshell}.
+C\# is a type safe object-oriented programming language developed by Microsoft~\cite{albahari2003nutshell}. C\# is syntactically quite similar to C, C++ and Java, and includes features like nullable types, enumerations, higher-order functions, and direct memory access~\cite{intro-to-Csharp}. While C\# historically has been used primarily for writing code for Windows platforms only, C\# has recently spread to most other platforms, including mobile, due to its increased cross-platform support~\cite{albahari2003nutshell}.
 
 C\# applications run in the .NET ecosystem~\cite{intro-to-Csharp}. There are multiple implementations of .NET, including .NET Core and the .NET Framework~\cite{intro-to-Csharp}. .NET includes a virtual execution environment called the common language runtime (CLR) on which C\# programs run, as well as a common set of class libraries~\cite{albahari2003nutshell}. Before execution C\# source code is compiled to the so called intermediate language (IL) and stored on disk~\cite{intro-to-Csharp}. Upon execution the IL code is just-in-time-compiled to native machine instructions that can be executed by the operating system~\cite{intro-to-Csharp}.
 
@@ -375,9 +382,9 @@ Because a significant amount of functions used come from the .NET class library,
 
 The fact that previously mentioned methods are non-deterministic or have side-effects means that we know for sure that they are impure, which means that any function that uses them is also impure.
 
-\section{Problems with determining purity in object oriented languages} \label{sec:problems-with-purity-in-oo}
+\section{Problems with determining purity in object-oriented languages} \label{sec:problems-with-purity-in-oo}
 
-Analyzing functional purity in object oriented programming languages yields a number of dilemmas. This section describes them, as well as how they were dealt with.
+Analyzing functional purity in object-oriented programming languages yields a number of dilemmas. This section describes them, as well as how they were dealt with.
 
 \subsection{Inheritance and method overriding} \label{sub:inheritance}
 
@@ -534,7 +541,7 @@ In the example in \autoref{fig:non-static-property-example}, the method \texttt{
 
 \subsection{Method overloading} \label{sub:Method-overloading}
 
-While method overloading is not unique to object oriented programming, it seems appropriate to mention here as well. Method overloading is when there multiple method implementations share the same method name but have different function signatures, i.e. return types, parameter types and/or number of parameters~\cite{albahari2003nutshell}. One could consider all overloads to be the same method \textit{m}, since they share the same name. However, this would make it difficult to calculate \textit{m}'s purity level, since one overload of \textit{m} could be pure, while another overload is impure. Which purity level should then be given to \textit{m}?
+While method overloading is not unique to object-oriented programming, it seems appropriate to mention here as well. Method overloading is when there multiple method implementations share the same method name but have different function signatures, i.e. return types, parameter types and/or number of parameters~\cite{albahari2003nutshell}. One could consider all overloads to be the same method \textit{m}, since they share the same name. However, this would make it difficult to calculate \textit{m}'s purity level, since one overload of \textit{m} could be pure, while another overload is impure. Which purity level should then be given to \textit{m}?
 
 Instead, when given an overloaded method named \textit{m} the analysis treats each overload of \textit{m} as a unique method, independent of other overloads. This way overloads with different purity levels can co-exist in the result of an analysis. Because overloads by definition share the same name, in order to differentiate them in this thesis the notation $m_1$, $m_2$, $m_3$, ... is used, where $m_1$ denotes the first implementation of the method \textit{m}, $m_2$ denotes the second, and so on.
 
@@ -1080,7 +1087,7 @@ Xu et al.'s analysis is performed dynamically which requires looking at Java Vir
 
 % Answer the purpose - metod har utvecklats, den har utvärderas på de här sätten och vi har kommit fram till att det är såhär
 
-Functional purity is perhaps one of the most useful concepts from functional programming that object oriented programmers can learn from. A function is functionally pure if it is side-effect free and deterministic. There are many benefits of using functionally pure methods in object oriented programming. Pure methods are generally easier to reason about due to their lack of side effects. Moreover, pure methods are easier to test, debug and maintain. The ability to automatically determine the level of purity in a given C\# program can help programmers to write less impure code, and thereby reap previously mentioned benefits.
+Functional purity is perhaps one of the most useful concepts from functional programming that object-oriented programmers can learn from. A function is functionally pure if it is side-effect free and deterministic. There are many benefits of using functionally pure methods in object-oriented programming. Pure methods are generally easier to reason about due to their lack of side effects. Moreover, pure methods are easier to test, debug and maintain. The ability to automatically determine the level of purity in a given C\# program can help programmers to write less impure code, and thereby reap previously mentioned benefits.
 
 In this thesis an analysis method for statically approximating functional purity in C\# source code has been developed. The method categorizes C\# functions into one of the five functional purity levels \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure} or \textit{unknown}. The last purity level, \textit{unknown}, is for methods whose purity level cannot be computed, which can happen if they call a method from an assembly. The analysis method was also implemented in a program called CsPurity as a working prototype of the analysis method. Because CsPurity is a prototype it only implements a subset of the full analysis method. As a result, it can only detect the impurest purity level \textit{impure}, as well as \textit{unknown}. Therefore, CsPurity approximates a lower bound for the number of impure methods in a given C\# program.
 
