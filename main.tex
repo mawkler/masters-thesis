@@ -123,23 +123,8 @@
 \frontmatter
 
 \begin{abstract}
-  Functional purity is a fundamental part of the functional programming paradigm. A function is functionally pure if it is side-effect free and deterministic. Pure functions provide many benefits compared to impure ones, including guaranteed thread-safety as well as easier testing, debugging and maintenance. But how can functional purity be measured? This thesis develops a method for statically approximating the level of functional purity in a given C\# program. It also investigates problems with determining purity in object-oriented languages, with a focus on C\#.
-  A prototype of the method is implemented in order to evaluate the method using a benchmark consisting of 11 open source repositories that use the \texttt{[Pure]} attribute.
-  The \texttt{[Pure]} attribute can be placed in front of a method to indicate that it is side-effect free. Due to a number of limitations to the implementation as well as to \texttt{[Pure]}'s definition of functional purity, which excludes determinism, the results of the evaluation are relatively mediocre. After normalizing the implementation's classification distribution for each repository its classification of pure functions has a precision of 64\% and recall 15\%, and its classification of impure functions has 59\% precision and 56\% recall.
-  Nevertheless, the prototype still shows the potential of the full analysis method.
-  A complete implementation of the analysis method could therefore yield a fully working system for approximating any C\# program's level of functional purity.
-
-  % 1. [X] What's the problem
-  % 2. [X] How did you solve it
-  % 3. [X] What are the results
-  % 4. [X] Conclusion (what it means for the future)
-
-  % TODO
+  Functional purity is a fundamental part of the functional programming paradigm. A function is functionally pure if it is side-effect free and deterministic. Pure functions provide many benefits compared to impure ones, including guaranteed thread-safety as well as easier testing, debugging and maintenance. But how can functional purity be measured? This thesis develops a method for statically approximating the level of functional purity in a given C\# program. It also investigates problems with determining purity in object-oriented languages, with a focus on C\#. A prototype of the method is implemented in order to evaluate the method using a benchmark consisting of 11 open source repositories that use C\#'s \texttt{[Pure]} attribute. The \texttt{[Pure]} attribute can be placed in front of a method declaration to indicate that it is side-effect free. Due to a number of limitations to the implementation as well as to \texttt{[Pure]}'s definition of functional purity, which excludes determinism, the results of the evaluation appear relatively poor. After normalizing the implementation's classification distribution for each repository its classification of pure functions has a precision of 64\% and recall 15\%, and its classification of impure functions has 59\% precision and 56\% recall. Nevertheless, the prototype still shows the potential of the full analysis method. A complete implementation of the analysis method could therefore yield a fully working system for approximating any C\# program's level of functional purity.
 \end{abstract}
-
-% \begin{sammanfattning}
-%   TODO
-% \end{sammanfattning}
 
 % Innehållsförteckningen här.
 \tableofcontents
@@ -156,7 +141,7 @@
 The object-oriented programming paradigm has been the industry norm for quite some time~\cite{tiobe}. However, functional programming is on the rise and becoming more popular~\cite{intertech}. Many mainstream languages like Java, C\# and C++ have adopted first-class functions from the functional paradigm~\cite{intertech}. While perhaps some associate functional programming with the more theoretical and mathematical fields, functional programming can be used for more practical applications like building modern web applications and mobile apps~\cite{jonas-walter}.
 
 Functional programs have many benefits. Perhaps one of the most useful features of functional programming that the object-oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about than impure ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are always thread-safe, meaning that they are perfect for parallel programming~\cite{purity-in-java}. Pure functions are also easier to test compared to impure ones since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
-For this reason it useful in software engineering to be able to measure the level of functional purity in programs~\cite{purity-in-javascript}.
+For this reason it is useful in software engineering to be able to measure the level of functional purity in programs~\cite{purity-in-javascript}.
 
 C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language?
 In order to answer this we need a method for measuring a C\# program's functional purity level. We also need a way of evaluating that method in order to assess its level of accuracy.
@@ -205,7 +190,7 @@ Following is the definition of functional purity that will be used in this thesi
   A function is deterministic if its output depends purely on its input parameters, i.e. the method must return the same value for the same input regardless of the state of the program~\cite{purity-in-java}.
 \end{definition}
 
-As seen in \autoref{sec:Related work} some related work define functional purity only as being synonymous with "side-effect free". This definition omits determinism and allows pure functions to read from variables defined outside of their scope, which is less functional. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
+As seen in \autoref{sec:Related work} some related work defines functional purity only as being synonymous with "side-effect free". This definition omits determinism and allows pure functions to read from variables defined outside of their scope, which is less functional. Since determinism guarantees that concurrently running functions or programs cannot affect the execution of a deterministic function, excluding it means excluding guaranteed thread-safety~\cite{purity-in-java}. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
 % the first two whose work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively.
 Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic does in a way also simplify the analysis because it means that any symbol used in a function \textit{f} but defined outside \textit{f} would make \textit{f} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{f} to see if it is being written to or if it is only being read before concluding if \textit{f} is pure.
 
@@ -346,41 +331,31 @@ Events are a way for classes or object to notify other classes or objects when s
 
 \subsection{.NET code contracts and the \texttt{[Pure]} attribute} \label{sub:code-contracts}
 
-.NET code contracts are used to define pre- and postconditions, as well invariants for pieces of code -- some which can be checked statically and some at runtime~\cite{microsoft-code-contracts}. One available code contract is the \texttt{[Pure]} attribute, which is placed in front of a method signature to indicate that the method is pure~\cite{microsoft-code-contracts}. However, current analysis tools do not enforce that methods marked with \texttt{[Pure]} actually are functionally pure~\cite{microsoft-pure-attribute}, and so the attribute does not guarantee functional purity. Microsoft defines pure methods as methods that don't modify any pre-existing state, i.e. methods can only modify objects that were created \textit{after} the \texttt{[Pure]} method was called~\cite{microsoft-code-contracts}. Note that their definition of functional purity does not include determinism, which the definition used in this thesis does. Because of this, the \texttt{[Pure]} attribute does not consider throwing exceptions as functionally impure.
-
-The following code elements are assumed by the code contract tools to be pure~\cite{microsoft-code-contracts}: % Perhaps remove this list
-
-\begin{itemize}
-  \item Methods or types marked with \texttt{[Pure]} (for types marked with \texttt{[Pure]} this should apply to to all the type's methods).
-  \item Property get accessors.
-  \item Operators.
-  \item Any method with a fully qualified name starting with \texttt{System.Diagnost\-ics.Contracts.Contract}, \texttt{System.String}, \texttt{System\-.IO.Path}, or \texttt{System.Type}.
-  \item Any called delegate with the \texttt{[Pure]} attribute. Delegates are basically function pointers.
-\end{itemize}
+.NET code contracts are used to define pre- and postconditions, as well invariants for pieces of code -- some which can be checked statically and some at runtime~\cite{microsoft-code-contracts}. One available code contract is the \texttt{[Pure]} attribute, which is placed in front of a method signature to indicate that the method is pure~\cite{microsoft-code-contracts}. However, current analysis tools do not enforce that methods marked with \texttt{[Pure]} actually are functionally pure~\cite{microsoft-pure-attribute}, and so the attribute does not guarantee functional purity. Microsoft defines pure methods as methods that don't modify any pre-existing state, i.e. methods can only modify objects that were created after the \texttt{[Pure]} method was called~\cite{microsoft-code-contracts}. Note that their definition of functional purity does not include determinism, which the definition used in this thesis does. Therefore, the attribute does not consider reading values outside the function's scope or throwing exceptions as functionally impure. Nor does it guarantee thread-safety, which a definition including both side-effect freeness \textit{and} determinism does~\cite{purity-in-java}.
 
 \subsection{Impure built-in C\# methods} \label{sub:Impure-built-in-methods}
 
-The following methods that are built into C\# and are non-deterministic~\cite{dixin2015}:
+The .NET Framework class library provides access to system functionality as well as a foundation on which .NET applications are built~\cite{microsoft-dotnet-class-library}. However, when function calls are made to the library they are accessed in the form of an assembly, which mean that the called functions have no source code that can be analyzed. As will be revealed in \autoref{sub:results-larger-codebase}, a substantial portion of the functions analyzed depend on these kinds of functions.
+
+However, since I/O (input/output) operations are always impure we can however assume that methods from the .NET Framework class library that handle I/O and the like are impure. This gives us a handful of methods that we know are impure beforehand, either because they have side-effects, or because they are non-deterministic. This means that any function analyzed that depends on any of those methods can be assumed to also be impure.
+
+Following are methods that are built into C\# and that are non-deterministic~\cite{dixin2015}:
 
 \begin{itemize}
   \item \texttt{Console.Read}, \texttt{Console.ReadLine}, \texttt{Console.ReadKey}, \texttt{DateTime\allowbreak.Now} and \texttt{DateTimeOffset.Now} depend on the outside world.
-\item \texttt{Random.Next}, \texttt{Guid.NewGuid} and \texttt{System.IO.Path.GetRandom}-\\\texttt{\allowbreak FileName} give random output.
+  \item \texttt{Random.Next}, \texttt{Guid.NewGuid} and \texttt{System.IO.Path.GetRandom}-\\\texttt{\allowbreak FileName} give random output.
 \end{itemize}
 
-The following methods that are built into C\# and have side-effects~\cite{dixin2015}:
-
-Because a significant amount of functions used come from the .NET class library, which will be discussed later in this thesis,
+The following methods that are built into C\# and that have side-effects~\cite{dixin2015}:
 
 \begin{itemize}
   \item \texttt{System.Threading.Thread.Start} and \texttt{Thread.Abort} mutate states.
   % \item \texttt{int.TryParse} and \texttt{Interlocked.Increase}
   \item \texttt{Console.Read}, \texttt{Console.ReadLine}, \texttt{Console-ReadKey}, \texttt{Console.\allowbreak Write} and \texttt{Console.WriteLine} produce console I/O.
   \item \texttt{System.IO.Directory.Create}, \texttt{Directory.Move}, \texttt{Directory.}\\\texttt{Delete}, \texttt{File.Create}, \texttt{File.Move}, \texttt{File.Delete}, \texttt{File.ReadAll\allowbreak }- \texttt{Bytes} and \texttt{File.WriteAllBytes} produce file system I/O.
-\item \texttt{System.Net.Http.HttpClient.GetAsync}, \texttt{HttpClient.Post}- \\\texttt{Async}, \texttt{HttpClinet.PutAsync} and \texttt{HttpClient.DeleteAsync} produce network I/O.
+  \item \texttt{System.Net.Http.HttpClient.GetAsync}, \texttt{HttpClient.Post}- \\\texttt{Async}, \texttt{HttpClinet.PutAsync} and \texttt{HttpClient.DeleteAsync} produce network I/O.
   \item \texttt{IDisposable.Dispose} interacts with the program's environment.
 \end{itemize}
-
-The fact that previously mentioned methods are non-deterministic or have side-effects means that we know for sure that they are impure, which means that any function that uses them is also impure.
 
 \section{Problems with determining purity in object-oriented languages} \label{sec:problems-with-purity-in-oo}
 
@@ -557,7 +532,7 @@ Because of the problem with inheritance and method overriding discussed in \auto
 
 Let the \textit{working set} \textit{W} be the set of all functions with empty dependency sets. Whenever a function's dependency set becomes empty, that function is added to \textit{W}. Calculate the purity level for each function in \textit{W} as described in the checklist in \autoref{sub:checklist-to-determine-the-purity-level} below. Then, for each function \textit{f} in \textit{W}, propagate the impurity of those with purity level \textit{impure} or \textit{unknown} to the functions dependant on \textit{f}, "contaminating" them. Remove \textit{f} from the dependency sets of all functions that depend on \textit{f}, as well as from the working set \textit{W}. Add functions that now have empty dependency sets to \textit{W}. Repeat this process until there are no more changes to the lookup table, in which case the analysis is complete. Each function in the lookup table will now have been marked with its corresponding purity level. Because the purity level of each function was initialized to \textit{pure}, any function whose purity level was unaffected by the analysis will be marked \textit{pure} at the end of the analysis.
 
-Ignoring the purity level \textit{unknown}, the other four purity levels can be ordered in terms of impurity, from least impure to most impure, like so: \textit{pure} $<$ \textit{locally impure} $<$ \textit{parametrically impure} $<$ \textit{impure}. A method \textit{m}'s purity level should during the analysis only be updated if the new purity level is less impure than \textit{m}'s current one. For instance, if in an arbitrary instance during the analysis, \textit{m} has the purity level \textit{parametrically impure}, and a check determines its purity level to be \textit{impure}, it's purity level should be updated since \textit{impure} is more impure than \textit{locally impure}. However, if for instance another check says that \textit{m} is \textit{locally impure}, its purity level should not be updated since \textit{locally impure} is less impure than \textit{impure}.
+Ignoring the purity level \textit{unknown}, the other four purity levels can be ordered in terms of impurity, from least impure to most impure, like so: \textit{pure} $<$ \textit{locally impure} $<$ \textit{parametrically impure} $<$ \textit{impure}. A method \textit{m}'s purity level should during the analysis only be updated if the new purity level is less impure than \textit{m}'s current one. For instance, if in an arbitrary instance during the analysis, \textit{m} has the purity level \textit{parametrically impure}, and a check determines its purity level to be \textit{impure}, its purity level should be updated since \textit{impure} is more impure than \textit{locally impure}. However, if for instance another check says that \textit{m} is \textit{locally impure}, its purity level should not be updated since \textit{locally impure} is less impure than \textit{impure}.
 
 \subsection{Checklist to determine the purity level} \label{sub:checklist-to-determine-the-purity-level}
 
@@ -795,19 +770,13 @@ At this point the working set $W$ is empty, and so there can be no more changes 
 
 \section{Implementation of the analysis tool CsPurity} \label{sec:Implementation of the analysis tool}
 
-% \item For performance reasons, first check general stuff and then do more specific checks.
-
-Because there was a clear goal for the software and it's requirements, test driven development was used when implementing the analysis tool in C\#.
-
-Because .NET has many libraries in the form of pre-compiled assemblies, the source code of the functions used in these libraries is not always available. Because of this, the purity level "unknown" has to be added for when we cannot compute a function's purity level.
-
 The implementation of the code analysis tool is called \textit{CsPurity} and is built using .NET Core and C\#. It can be compiled, run and tested from the command line using the command \href{https://docs.microsoft.com/en-us/dotnet/core/tools/}{\texttt{dotnet}}, followed by \texttt{run}, \texttt{build} or \texttt{test}, respectively. Upon calling the program it can be provided either with a single file to be analyzed, or a directory. In the second case, all C\#-files in the directory and all sub-directories are analyzed as one program.
 
-To find the declaration/definition of symbols (in the form of \texttt{IdentifierNameSyn\allowbreak tax}) the method \texttt{SemanticModel.GetSym\allowbreak bolInfo()} is used, which uses the semantic model of the program.
+Since there was a clear goal for the software and its requirements, test driven development was used when implementing CsPurity. To find the declaration of symbols the method \texttt{SemanticModel.GetSym\allowbreak bolInfo()} from the code analysis library \texttt{Microsoft.CodeAnalysis} is used, which uses the semantic model of the program. Because .NET has many libraries in the form of pre-compiled assemblies, the source code of the functions used in these libraries is not always available, as discussed in \autoref{sub:Impure-built-in-methods}. Because of this, the purity level \textit{unknown} has to be added for when we cannot compute a function's purity level.
 
-The tool is not able to determine the purity of methods that invoke delegate functions. Delegate functions are higher-order functions that invoke methods passed to them as arguments. Invoking delegate functions is done relatively sparsely in C\# and handling them would require a disproportional amount of extra work. The delegate functions themselves however are analyzed just like regular methods.
+CsPurity is not able to determine the purity of methods that invoke delegate functions. Delegate functions are higher-order functions that invoke methods passed to them as arguments. Invoking delegate functions is done relatively sparsely in C\# and handling them would require a disproportional amount of extra work. The delegate functions themselves however are analyzed just like regular methods.
 
-Something that was realized while implementing the tool is that the C\# compiler does not perform tail call recursion. Recursion is a very common technique when it comes to functional programming. The initial implementation of CsPurity built the lookup table by calculating each function's dependency set recursively. When analyzing larger code bases the program crashed due to an immense memory usage. Therefore, its recursive implementation had to be changed to an iterative one which worked C\# better.
+Something that was realized while implementing CsPurity is that the C\# compiler does not perform tail call recursion. Recursion is a very common technique when it comes to computations on trees, as well as functional programming. The initial implementation of CsPurity built the lookup table by calculating each function's dependency set recursively. When analyzing larger code bases the program crashed due to an immense memory usage. Therefore, its recursive implementation had to be changed to an iterative one which worked much better performance wise.
 
 TODO
 
@@ -1007,7 +976,7 @@ An alternative approach to handling called methods with unknown purity -- as opp
 In their paper \textit{Purity in Erlang} Mihalis Pitidis and Konstantinos Sagonas develop a tool that automatically and statically analyses the purity of Erlang functions~\cite{pitidis2010purity}. It classifies functions into being functionally pure, or one of three levels of functional impurity~\cite{pitidis2010purity}.
 The three levels of functional impurity they defined are: containing side-effects; containing no side-effects but being dependent on the environment; and containing no side-effects, having no dependencies on the environment but raising exceptions~\cite{pitidis2010purity}.
 
-Their definition of purity uses \textit{referential transparency}, as it implies purity~\cite{pitidis2010purity}. Referential transparency means that an expression always produces the same value when evaluated~\cite{pitidis2010purity}. This means that a referentially transparent function could always be replaced with it's output without altering the program's behaviour in any way~\cite{pitidis2010purity}.
+Their definition of purity uses \textit{referential transparency}, as it implies purity~\cite{pitidis2010purity}. Referential transparency means that an expression always produces the same value when evaluated~\cite{pitidis2010purity}. This means that a referentially transparent function could always be replaced with its output without altering the program's behaviour in any way~\cite{pitidis2010purity}.
 
 They store all analysis information in a \textit{lookup table} where the keys are the function identifiers \textit{f} and the values are the purity level \textit{$p_f$} of each \textit{f} as well as \textit{f}'s \textit{dependency set} $D_f$~\cite{pitidis2010purity}. The dependency set is the set of functions being called by \textit{f} and is constructed by parsing the program's Abstract Syntax Tree~\cite{pitidis2010purity}.
 
