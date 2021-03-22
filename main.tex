@@ -123,7 +123,7 @@
 \frontmatter
 
 \begin{abstract}
-  Functional purity is a fundamental part of the functional programming paradigm. A function is functionally pure if it is side-effect free and deterministic. Pure functions provide many benefits compared to impure ones, including guaranteed thread-safety as well as easier testing, debugging and maintenance. But how can functional purity be measured? This thesis develops a method for statically approximating the level of functional purity in any given C\# program. It also investigates problems with determining purity in object-oriented languages, with a focus on C\#. Moreover, a prototype of the method is implemented in order to evaluate the method using a benchmark consisting of 11 open source repositories that use C\#'s \texttt{[Pure]} attribute. The \texttt{[Pure]} attribute can be placed in front of a method declaration to indicate that it is side-effect free. Due to a number of limitations to the implementation as well as to \texttt{[Pure]}'s definition of functional purity, which excludes determinism, the results of the evaluation appear relatively poor. After normalizing the implementation's classification distribution for each repository its classification of pure functions has a precision of 64\% and recall 15\%, and its classification of impure functions has 59\% precision and 56\% recall. Nevertheless, the prototype still shows the potential of the full analysis method. A complete implementation of the analysis method could potentially yield a fully working system for approximating any C\# program's level of functional purity.
+  Functional purity is a fundamental part of the functional programming paradigm. A function is functionally pure if it is side effect free and deterministic. Pure functions provide many benefits compared to impure ones, including guaranteed thread-safety as well as easier testing, debugging and maintenance. But how can functional purity be measured? This thesis develops a method for statically approximating the level of functional purity in any given C\# program. It also investigates problems with determining purity in object-oriented languages, with a focus on C\#. Moreover, a prototype of the method is implemented in order to evaluate the method using a benchmark consisting of 11 open source repositories that use C\#'s \texttt{[Pure]} attribute. The \texttt{[Pure]} attribute can be placed in front of a method declaration to indicate that it is side effect free. Due to a number of limitations to the implementation as well as to \texttt{[Pure]}'s definition of functional purity, which excludes determinism, the results of the evaluation appear relatively poor. After normalizing the implementation's classification distribution for each repository its classification of pure functions has a precision of 64\% and recall 15\%, and its classification of impure functions has 59\% precision and 56\% recall. Nevertheless, the prototype still shows the potential of the full analysis method. A complete implementation of the analysis method could potentially yield a fully working system for approximating any C\# program's level of functional purity.
 \end{abstract}
 
 % Innehållsförteckningen här.
@@ -140,7 +140,7 @@
 
 The object-oriented programming paradigm has been the industry norm for quite some time~\cite{tiobe}. However, functional programming is on the rise and becoming more popular~\cite{intertech}. Many mainstream languages like Java, C\# and C++ have adopted first-class functions from the functional paradigm~\cite{intertech}. While perhaps some associate functional programming with the more theoretical and mathematical fields, functional programming can be used for more practical applications like building modern web applications and mobile apps~\cite{jonas-walter}.
 
-Functional programs have many benefits. Perhaps one of the most useful features of functional programming that the object-oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about than impure ones because they have no \textit{side-effects}~\cite{alvin-alexander}. A side-effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are always thread-safe, meaning that they are perfect for parallel programming~\cite{purity-in-java}. Pure functions are also easier to test compared to impure ones since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
+Functional programs have many benefits. Perhaps one of the most useful features of functional programming that the object-oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about than impure ones because they have no \textit{side effects}~\cite{alvin-alexander}. A side effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are always thread-safe, meaning that they are perfect for parallel programming~\cite{purity-in-java}. Pure functions are also easier to test compared to impure ones since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
 For this reason it is useful in software engineering to be able to measure the level of functional purity in programs~\cite{purity-in-javascript}.
 
 C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language?
@@ -177,30 +177,30 @@ Functional programming and object-oriented programming are two different program
 Following is the definition of functional purity that will be used in this thesis:
 
 \begin{definition}[Functional purity] \label{def:functional-purity}
-  A function is functionally pure if it is \textit{side-effect} free and \textit{deterministic}.
+  A function is functionally pure if it is \textit{side effect} free and \textit{deterministic}.
 \end{definition}
 
-\textit{Side-effect} and \textit{determinism} are defined as follows:
+\textit{Side effect} and \textit{determinism} are defined as follows:
 
-\begin{definition}[Side-effect] \label{def:side-effect}
-  A side-effect is any action performed by a function that is visible from the function's caller's point of view~\cite{purity-in-javascript}.
+\begin{definition}[Side effect] \label{def:side-effect}
+  A side effect is any action performed by a function that is visible from the function's caller's point of view~\cite{purity-in-javascript}.
 \end{definition}
 
 \begin{definition}[Determinism] \label{def:determinism}
   A function is deterministic if its output depends purely on its input parameters, i.e. the method must return the same value for the same input regardless of the state of the program~\cite{purity-in-java}.
 \end{definition}
 
-As seen in \autoref{sec:Related work} some related work defines functional purity only as being synonymous with "side-effect free". This definition omits determinism and thereby allows pure functions to read from variables defined outside of their scope, which is less functional. Since determinism guarantees that concurrently running functions or programs cannot affect the execution of a deterministic function, excluding it means excluding guaranteed thread-safety~\cite{purity-in-java}. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
+As seen in \autoref{sec:Related work} some related work defines functional purity only as being synonymous with "side effect free". This definition omits determinism and thereby allows pure functions to read from variables defined outside of their scope, which is less functional. Since determinism guarantees that concurrently running functions or programs cannot affect the execution of a deterministic function, excluding it means excluding guaranteed thread-safety~\cite{purity-in-java}. The definition of purity used in this thesis will therefore require pure functions to not only be side effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
 % the first two whose work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively.
-Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic also simplifies the analysis because it means that any symbol used in a function \textit{f} but defined outside \textit{f} would make \textit{f} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{f} to see if it is being written to or if it is only being read before concluding if \textit{f} is pure.
+Moreover, requiring pure functions to be both side effect free \textit{and} deterministic also simplifies the analysis because it means that any symbol used in a function \textit{f} but defined outside \textit{f} would make \textit{f} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{f} to see if it is being written to or if it is only being read before concluding if \textit{f} is pure.
 
-% The notion of purity only being synonymous with side-effect free seems to be more common in computer science, while also requiring determinism seems to be the more mathematical definition.
+% The notion of purity only being synonymous with side effect free seems to be more common in computer science, while also requiring determinism seems to be the more mathematical definition.
 
 % \noindent\makebox[\linewidth]{\rule{\textwidth}{0.4pt}} % -------- Line break --------
 
 % \textbf{*Add a description of the following*}
 % \begin{itemize}
-%   \item Side-effects and referential transparency, which implies purity~\cite{purity-in-javascript}
+%   \item Side effects and referential transparency, which implies purity~\cite{purity-in-javascript}
 %   \item Objects: fields and properties % https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/members
 %   \item \href{https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/exceptions/}{Exceptions}.
 % \end{itemize}
@@ -234,7 +234,7 @@ Similarly to many other programming languages, functions in C\# are generally re
 
 \subsection{What makes a C\# method pure?} \label{sub:What makes a Cs program functional?}
 
-\autoref{fig:impure-example} and \autoref{fig:pure-example} illustrate two very simple examples of pure and impure code, respectively. The function \texttt{addOne()} in \autoref{fig:impure-example} is impure since it is writing to the variable \texttt{number} which was defined outside \texttt{addOne()}'s scope, which is a side-effect. \autoref{fig:pure-example} illustrates how \texttt{addOne()} can be rewritten to a pure function while preserving the program's semantics.
+\autoref{fig:impure-example} and \autoref{fig:pure-example} illustrate two very simple examples of pure and impure code, respectively. The function \texttt{addOne()} in \autoref{fig:impure-example} is impure since it is writing to the variable \texttt{number} which was defined outside \texttt{addOne()}'s scope, which is a side effect. \autoref{fig:pure-example} illustrates how \texttt{addOne()} can be rewritten to a pure function while preserving the program's semantics.
 
 \begin{figure}[H]
   \centering
@@ -243,7 +243,7 @@ Similarly to many other programming languages, functions in C\# are generally re
       static int number;
 
       public static void addOne() {
-        number += 1; // this is a side-effect
+        number += 1; // this is a side effect
       }
 
       public static void Main() {
@@ -253,7 +253,7 @@ Similarly to many other programming languages, functions in C\# are generally re
       }
     }
   \end{lstlisting}
-  \caption{A simple example of \textit{impure} code due to a side-effect.}
+  \caption{A simple example of \textit{impure} code due to a side effect.}
   \label{fig:impure-example}
 \end{figure}
 
@@ -327,17 +327,17 @@ The AST generated from a given piece of C\# code by Microsoft's code analysis li
 
 \subsection{C\# events} \label{sub:Events}
 
-Events are a way for classes or object to notify other classes or objects when something happens~\cite{microsoft-events}. The class raising the event is called the \textit{publisher} and the class handling the event is called the \textit{subscriber} (there can be more than one subscriber)~\cite{microsoft-events}. When an event is raised the subscriber's handler method is executed~\cite{microsoft-events}. Since events clearly are side-effects, a method that raises events or handles events is not considered pure.
+Events are a way for classes or object to notify other classes or objects when something happens~\cite{microsoft-events}. The class raising the event is called the \textit{publisher} and the class handling the event is called the \textit{subscriber} (there can be more than one subscriber)~\cite{microsoft-events}. When an event is raised the subscriber's handler method is executed~\cite{microsoft-events}. Since events clearly are side effects, a method that raises events or handles events is not considered pure.
 
 \subsection{.NET code contracts and the \texttt{[Pure]} attribute} \label{sub:code-contracts}
 
-.NET code contracts are used to define pre- and postconditions, as well invariants for pieces of code -- some which can be checked statically and some dynamically~\cite{microsoft-code-contracts}. One available code contract is the \texttt{[Pure]} attribute, which is placed in front of a method signature to indicate that the method is pure~\cite{microsoft-code-contracts}. However, current analysis tools do not enforce that methods marked with \texttt{[Pure]} actually are functionally pure~\cite{microsoft-pure-attribute}, and so the attribute does not guarantee functional purity. Microsoft defines pure methods as methods that don't modify any pre-existing state, i.e. methods can only modify objects that were created after the \texttt{[Pure]} method was called~\cite{microsoft-code-contracts}. Note that their definition of functional purity does not include determinism, which the definition used in this thesis, \autoref{def:functional-purity}, does. Therefore, the attribute does not consider reading values outside the function's scope or throwing exceptions as functionally impure. Nor does it guarantee thread-safety, which a definition including both side-effect freeness \textit{and} determinism does~\cite{purity-in-java}.
+.NET code contracts are used to define pre- and postconditions, as well invariants for pieces of code -- some which can be checked statically and some dynamically~\cite{microsoft-code-contracts}. One available code contract is the \texttt{[Pure]} attribute, which is placed in front of a method signature to indicate that the method is pure~\cite{microsoft-code-contracts}. However, current analysis tools do not enforce that methods marked with \texttt{[Pure]} actually are functionally pure~\cite{microsoft-pure-attribute}, and so the attribute does not guarantee functional purity. Microsoft defines pure methods as methods that don't modify any pre-existing state, i.e. methods can only modify objects that were created after the \texttt{[Pure]} method was called~\cite{microsoft-code-contracts}. Note that their definition of functional purity does not include determinism, which the definition used in this thesis, \autoref{def:functional-purity}, does. Therefore, the attribute does not consider reading values outside the function's scope or throwing exceptions as functionally impure. Nor does it guarantee thread-safety, which a definition including both side effect freeness \textit{and} determinism does~\cite{purity-in-java}.
 
 \subsection{Impure built-in C\# methods} \label{sub:Impure-built-in-methods}
 
 The .NET Framework class library provides access to system functionality as well as a foundation on which .NET applications are built~\cite{microsoft-dotnet-class-library}. However, when function calls are made to the library they are accessed in the form of an assembly, which mean that the called functions have no source code that can be analyzed. As will be revealed in \autoref{sub:results-larger-codebase}, a substantial portion of the functions analyzed depend on these kinds of functions.
 
-However, since I/O (input/output) operations are always impure we can assume that methods from the .NET Framework class library that handle I/O and the like are impure. This gives us a handful of methods that we know are impure beforehand, either because they have side-effects, or because they are non-deterministic. This means that any function analyzed that depends on any of those methods can be assumed to also be impure.
+However, since I/O (input/output) operations are always impure we can assume that methods from the .NET Framework class library that handle I/O and the like are impure. This gives us a handful of methods that we know are impure beforehand, either because they have side effects, or because they are non-deterministic. This means that any function analyzed that depends on any of those methods can be assumed to also be impure.
 
 Following are methods that are built into C\# and that are non-deterministic~\cite{dixin2015}:
 
@@ -346,7 +346,7 @@ Following are methods that are built into C\# and that are non-deterministic~\ci
   \item \texttt{Random.Next}, \texttt{Guid.NewGuid} and \texttt{System.IO.Path.GetRandom}-\\\texttt{\allowbreak FileName} give random output.
 \end{itemize}
 
-The following methods that are built into C\# and that have side-effects~\cite{dixin2015}:
+The following methods that are built into C\# and that have side effects~\cite{dixin2015}:
 
 \begin{itemize}
   \item \texttt{System.Threading.Thread.Start} and \texttt{Thread.Abort} mutate states.
@@ -384,7 +384,7 @@ This means that in the example in \autoref{fig:inheritance-example}, the functio
 
 \subsection{Modifying a fresh object} \label{sub:modifying-fresh-objects}
 
-If an object \textit{o} is allocated inside the analysed method \textit{m}, the object \textit{o} is said to be \textit{fresh}~\cite{pearce2011jpure}. To modify \textit{o}'s state we might call a method that looks impure (since that method would have the side-effect of modifying \textit{o}). However, this method should not make \textit{m} impure since \textit{o} is fresh, which means that the modification of \textit{o} is not a side-effect of \textit{m}.
+If an object \textit{o} is allocated inside the analysed method \textit{m}, the object \textit{o} is said to be \textit{fresh}~\cite{pearce2011jpure}. To modify \textit{o}'s state we might call a method that looks impure (since that method would have the side effect of modifying \textit{o}). However, this method should not make \textit{m} impure since \textit{o} is fresh, which means that the modification of \textit{o} is not a side effect of \textit{m}.
 
 Consider the following example:
 
@@ -397,17 +397,17 @@ Consider the following example:
       return list;
     }
   \end{lstlisting}
-  \caption{\texttt{List.Add()} has a side-effect because it modifies the list \texttt{list}. However, since \texttt{list} is fresh \texttt{Foo()}'s purity is not affected.}
+  \caption{\texttt{List.Add()} has a side effect because it modifies the list \texttt{list}. However, since \texttt{list} is fresh \texttt{Foo()}'s purity is not affected.}
   \label{fig:fresh-object-example}
 \end{figure}
 
-Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side-effect of \texttt{Add()}, \texttt{Add()} cannot be a pure method. Does that mean that the function \texttt{Foo()} calling \texttt{list.Add()} is also impure, because it calls a non-pure method? In general functions that invoke impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{def:functional-purity}:
+Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side effect of \texttt{Add()}, \texttt{Add()} cannot be a pure method. Does that mean that the function \texttt{Foo()} calling \texttt{list.Add()} is also impure, because it calls a non-pure method? In general functions that invoke impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{def:functional-purity}:
 
 \begin{quote}
-  \textit{A function is functionally pure if it is side-effect free and deterministic}.
+  \textit{A function is functionally pure if it is side effect free and deterministic}.
 \end{quote}
 
-Because the function \texttt{Foo()} only modifies an object exclusively visible inside the function, \texttt{Foo()} does not have any side-effect. The function is also deterministic since it does not read any value outside of the function besides its own parameters, which it in this case doesn't have. This means that \texttt{Foo()} is pure. To solve this we introduce the purity level \textit{locally impure}:
+Because the function \texttt{Foo()} only modifies an object exclusively visible inside the function, \texttt{Foo()} does not have any side effect. The function is also deterministic since it does not read any value outside of the function besides its own parameters, which it in this case doesn't have. This means that \texttt{Foo()} is pure. To solve this we introduce the purity level \textit{locally impure}:
 
 \begin{definition}[Local Impurity] \label{def:locally-impure}
   Any method that is functionally pure except for modifying any of its own object's fields is locally impure.
@@ -436,7 +436,7 @@ Consider the following example:
   \label{fig:locally-impure-example}
 \end{figure}
 
-The method \texttt{Increment()} in \autoref{fig:locally-impure-example} is locally impure because it modifies its object's field \texttt{value} but doesn't have any other side-effects. A function that calls a fresh object's locally impure method \textit{m} is not contaminated by \textit{m}'s local impurity.
+The method \texttt{Increment()} in \autoref{fig:locally-impure-example} is locally impure because it modifies its object's field \texttt{value} but doesn't have any other side effects. A function that calls a fresh object's locally impure method \textit{m} is not contaminated by \textit{m}'s local impurity.
 
 There is however one more way to modify a fresh object: to pass it as an argument to a method that alters its state. Consider the following example:
 
@@ -475,11 +475,11 @@ In Python, which also is an object-oriented programming language, the instance o
 
 Moreover, the implicit passing of \texttt{this} to every method also implies that any method that is locally impure is also parametrically impure. As \autoref{def:locally-impure} states, a method \textit{m} that is locally impure modifies its object \texttt{this}'s fields. Since \texttt{this} is always the first parameter of any method, this means that modifying a field in \texttt{this} always means modifying a parameter, which implies parametrical impurity.
 
-Although local impurity implies parametrical impurity, the opposite does always necessarily hold since a method could be parametrically impure without modifying a field in \texttt{this}. Therefore, distinguishing between local and parametrical impurity could be of value, for instance when implementing other methods in the same class; since locally impure methods modify the state of their object, and those object-local side-effects are visible for methods inside the same object.
+Although local impurity implies parametrical impurity, the opposite does always necessarily hold since a method could be parametrically impure without modifying a field in \texttt{this}. Therefore, distinguishing between local and parametrical impurity could be of value, for instance when implementing other methods in the same class; since locally impure methods modify the state of their object, and those object-local side effects are visible for methods inside the same object.
 
 \subsection{Non-static property pointing to a static field} \label{sub:non-static-property}
 
-\textit{Properties} in C\# are special \texttt{get} and \texttt{set} methods for reading, computing or writing to values of object fields~\cite{microsoft-properties}. Properties can, just like other fields or methods be set to \texttt{static}, which means that they are assigned to the class rather than any instantiated object. If a method reads from or modifies a static property, that method would be considered to be non-deterministic or to have a side-effect, i.e. it would be impure, because static fields are accessible anywhere in a program.
+\textit{Properties} in C\# are special \texttt{get} and \texttt{set} methods for reading, computing or writing to values of object fields~\cite{microsoft-properties}. Properties can, just like other fields or methods be set to \texttt{static}, which means that they are assigned to the class rather than any instantiated object. If a method reads from or modifies a static property, that method would be considered to be non-deterministic or to have a side effect, i.e. it would be impure, because static fields are accessible anywhere in a program.
 
 However, properties can also be non-static but still read or modify static fields. Consider the following:
 
@@ -506,11 +506,11 @@ However, properties can also be non-static but still read or modify static field
     }
   }
   \end{lstlisting}
-  \caption{What looks like a non-static assignment to an object property does in fact mutate a static field, which is a clear side-effect of \texttt{Bar()}.}
+  \caption{What looks like a non-static assignment to an object property does in fact mutate a static field, which is a clear side effect of \texttt{Bar()}.}
   \label{fig:non-static-property-example}
 \end{figure}
 
-In the example in \autoref{fig:non-static-property-example}, the method \texttt{Bar()} assigns to the field \texttt{Nationality} of the fresh object \texttt{stina}. Because the property \texttt{Nationality} is non-static it, it might look like a pure action at a first glance. But since the property writes method \texttt{get} itself modifies a static field, the \texttt{Bar()}'s assignment to \texttt{Nationality} is in fact a side-effect, which alters all \texttt{Swede} objects' \texttt{Nationality}. Therefore, it is not enough to check if a property is static in order to determine whether a read or write is pure, but the property's \texttt{get} and \texttt{set} have to be checked as well.
+In the example in \autoref{fig:non-static-property-example}, the method \texttt{Bar()} assigns to the field \texttt{Nationality} of the fresh object \texttt{stina}. Because the property \texttt{Nationality} is non-static it, it might look like a pure action at a first glance. But since the property writes method \texttt{get} itself modifies a static field, the \texttt{Bar()}'s assignment to \texttt{Nationality} is in fact a side effect, which alters all \texttt{Swede} objects' \texttt{Nationality}. Therefore, it is not enough to check if a property is static in order to determine whether a read or write is pure, but the property's \texttt{get} and \texttt{set} have to be checked as well.
 
 % Perhaps ignore cases like this for simplicity?
 
@@ -545,7 +545,7 @@ The following is how to determine the purity level \textit{p} for the currently 
     %   var foo = field;
     %   foo.bar = null;
   \item If \textit{m} calls a locally impure method belonging to \textit{m}'s object (i.e. \texttt{this}) \textit{m} is marked \textit{locally impure}.
-  \item If the method \textit{m} reads or modifies a static field of any class or object, \textit{m} is marked \textit{impure}. This is because reading a static field is a non-deterministic action, and modifying a static field is a side-effect since it mutates the field for all instantiations of that object's class. \label{itm:static-impure}
+  \item If the method \textit{m} reads or modifies a static field of any class or object, \textit{m} is marked \textit{impure}. This is because reading a static field is a non-deterministic action, and modifying a static field is a side effect since it mutates the field for all instantiations of that object's class. \label{itm:static-impure}
   \item If the method \textit{m} calls a \textit{locally impure} method of an object assigned to a static field of any class or object, \textit{m} is marked \textit{impure}.
   \item If the currently analyzed method \textit{m} calls an input parameter's method $m_p$ and $m_p$ is overridden by any locally impure and/or parametrically impure method, $m_p$ is temporarily marked with the impurities of all the overriding methods in the context of the analysis of the current method \textit{m}. If $m_p$ is overridden by any impure method, \textit{m} is permanently marked as impure.
     % Moreover:
@@ -577,13 +577,13 @@ We do not have to explicitly handle the case mentioned in \autoref{sub:modifying
 
 \autoref{fig:example-code} contains a simple implementation of a linked list in C\#. In order to illustrate all types of impurities, the implementation contains some odd design choices.
 
-The method \texttt{Length()} takes a \texttt{LinkedList} as input and returns its length. This method is deterministic since it only depends on its input argument, and it is side-effect free since it does not mutate any value that exists outside its scope, including its parameter object. Therefore, \texttt{Length()} is pure.
+The method \texttt{Length()} takes a \texttt{LinkedList} as input and returns its length. This method is deterministic since it only depends on its input argument, and it is side effect free since it does not mutate any value that exists outside its scope, including its parameter object. Therefore, \texttt{Length()} is pure.
 
 \texttt{Add()} appends an \texttt{Object} to the end the list. It is not deterministic since it reads from and mutates the state of \texttt{this} in multiple locations. For instance, the first location where it modifies \texttt{this} is where it assigns a \texttt{new Node} to \texttt{head}, which is a field that is visible outside the method. Therefore, \texttt{Add()} is locally impure -- it depends on and/or mutates the state of its object.
 
 \texttt{Remove()} deletes an item at a given index from a \texttt{LinkedList} which is passed as an argument to the method. To simplify the method and reduce its size, its input list is assumed to be non-empty and the index value is assumed to be a valid position inside the list. \texttt{Remove()} only operates based on its input and is therefore deterministic. However, it does modify fields of the parameter \texttt{list} and is therefore parametrically impure.
 
-The first overloading of the method \texttt{Concatenate()} modifies the static class field \texttt{numberOfConcatenates} and therefore has a side-effect, making it impure. The second overloading of \texttt{Concatenate()} depends on the former method, and is therefore also impure. The static field \texttt{numberOfConcatenates} was added to illustrate the propagation of impurity.
+The first overloading of the method \texttt{Concatenate()} modifies the static class field \texttt{numberOfConcatenates} and therefore has a side effect, making it impure. The second overloading of \texttt{Concatenate()} depends on the former method, and is therefore also impure. The static field \texttt{numberOfConcatenates} was added to illustrate the propagation of impurity.
 
 \begin{figure}[H]
   \centering
@@ -669,7 +669,7 @@ The first overloading of the method \texttt{Concatenate()} modifies the static c
       list.head = this.head;
 
       // This gives the method a
-      // side-effect
+      // side effect
       numberOfConcatenates++;
     }
   }
@@ -780,7 +780,7 @@ CsPurity works backwards through the analyzed program's function dependencies an
   \item \Autoref{itm:impure-built-in}: "Any method mentioned in the two lists of impure built-in C\# methods in \autoref{sub:Impure-built-in-methods} is marked \textit{impure}".
 \end{itemize}
 
-The reason why three out of the total ten checks were implemented was due to the sheer amount of time that the implementation took. After implementing the whole lookup table and all of its functionality, calculation of each method's dependency set, propagation of impurities from callee to caller, etc. there was not time left to implement every item in the checklist in a reasonable amount of time, and so the three items above were chosen. Because of this, CsPurity is unable to detect local and parametrical impurity, and can only detect full impurity caused by side-effects.
+The reason why three out of the total ten checks were implemented was due to the sheer amount of time that the implementation took. After implementing the whole lookup table and all of its functionality, calculation of each method's dependency set, propagation of impurities from callee to caller, etc. there was not time left to implement every item in the checklist in a reasonable amount of time, and so the three items above were chosen. Because of this, CsPurity is unable to detect local and parametrical impurity, and can only detect full impurity caused by side effects.
 
 \Autoref{itm:static-impure}, \ref{itm:raises-exception} and \ref{itm:impure-built-in} were prioritied because they detect the impurest purity level \textit{impure}, and since it is the most severe impurity level it is therefore arguably the most important one to be able to detecet. Moreover, checks for full impurity were estimated to be the least time consuming ones to implement.
 
@@ -794,7 +794,7 @@ Something that was realized while implementing CsPurity is that the C\# compiler
 
 To evaluate CsPurity's accuracy it is run on the example code in \autoref{fig:example-code} and the result is compared to the one in \autoref{tab:lookup-table3}, which was yielded by manually applying the analysis method to the example code. The result of running CsPurity on the example code is in \autoref{sub:results-from-scanning-the-example-list}. CsPurity is also run on a larger code base consisting of 97 200 methods in total in order to evaluate its performance in real life, non-trivial, cases. The code base consists of the 11 most popular open source GitHub repositories that use C\# and the \texttt{[Pure]} attribute in at least 1\% of methods were chosen. The popularity was measured based on the number of stars, which is GitHub's user rating system for repositories. Those result are in \autoref{sub:results-larger-codebase}
 
-As mentioned in \autoref{sub:code-contracts} the \texttt{[Pure]} attribute can be placed in front of a method definition to signal that the method pure. That means that running CsPurity on a code base where a portion of the methods use the \texttt{[Pure]} attribute CsPurity's accuracy can be evaluated by comparing what the methods with and the methods without the \texttt{[Pure]} attribute were categorized as by CsPurity. It is assumed that any method with the \texttt{[Pure]} attribute is functionality pure. This does not necessarily have to be true in general, and as will be discussed later, a large portion of \texttt{[Pure]} methods do in fact have side-effects. But the \texttt{[Pure]} attribute can still tell us something about how CsPurity performs.
+As mentioned in \autoref{sub:code-contracts} the \texttt{[Pure]} attribute can be placed in front of a method definition to signal that the method pure. That means that running CsPurity on a code base where a portion of the methods use the \texttt{[Pure]} attribute CsPurity's accuracy can be evaluated by comparing what the methods with and the methods without the \texttt{[Pure]} attribute were categorized as by CsPurity. It is assumed that any method with the \texttt{[Pure]} attribute is functionality pure. This does not necessarily have to be true in general, and as will be discussed later, a large portion of \texttt{[Pure]} methods do in fact have side effects. But the \texttt{[Pure]} attribute can still tell us something about how CsPurity performs.
 
 CsPurity also assumes that mehods without \texttt{[Pure]} are impure. There could be exceptions to this, i.e. pure methods that haven't been given the \texttt{[Pure]} attribute by the code's author, and this will also be discussed further in \autoref{sub:discussion}. However, this assumption still lets us say something about CsPurity's ability to classify impure methods. Also, since all 11 repositories were selected specifically because they contain \texttt{[Pure]}'s it is therefore reasonable to assume that most methods without the attribute are impure.
 
@@ -819,7 +819,7 @@ Following is the result of running CsPurity on the linked list program in \autor
   \label{fig:example-result}
 \end{figure}
 
-As seen in \autoref{fig:example-result} CsPurity correctly identifies the impurity of both overloads of \texttt{Concatenate()}, whose implementations can be seen in \autoref{fig:example-code}. CsPurity has thereby successfully spotted the first overload's side-effect and propagated its impurity to the second overload, which depends on the first.
+As seen in \autoref{fig:example-result} CsPurity correctly identifies the impurity of both overloads of \texttt{Concatenate()}, whose implementations can be seen in \autoref{fig:example-code}. CsPurity has thereby successfully spotted the first overload's side effect and propagated its impurity to the second overload, which depends on the first.
 
 However, the three other analyzed methods \texttt{Length()}, \texttt{Add()} and \texttt{Remove()}'s purity levels -- which are always initialized to \textit{pure} in the lookup table -- were unchanged by the analysis. As seen in \autoref{tab:lookup-table3}, \texttt{Length()}'s purity level should be unaffected and remain \textit{pure}. However, \texttt{Add()}'s and \texttt{Remove()}'s purity levels are not identified, since CsPurity only can detect methods with maximum impurity level \textit{impure} -- i.e. \autoref{itm:static-impure} in the checklist -- and not local or parametrical impurity.
 
@@ -970,7 +970,7 @@ An alternative approach to handling called methods with unknown purity -- as opp
 \subsection{Purity in Erlang} \label{sub:Purity-in-Erlang}
 
 In their paper \textit{Purity in Erlang} Mihalis Pitidis and Konstantinos Sagonas develop a tool that automatically and statically analyses the purity of Erlang functions~\cite{pitidis2010purity}. It classifies functions into being functionally pure, or one of three levels of functional impurity~\cite{pitidis2010purity}.
-The three levels of functional impurity they defined are: containing side-effects; containing no side-effects but being dependent on the environment; and containing no side-effects, having no dependencies on the environment but raising exceptions~\cite{pitidis2010purity}.
+The three levels of functional impurity they defined are: containing side effects; containing no side effects but being dependent on the environment; and containing no side effects, having no dependencies on the environment but raising exceptions~\cite{pitidis2010purity}.
 
 Their definition of purity uses \textit{referential transparency}, as it implies purity~\cite{pitidis2010purity}. Referential transparency means that an expression always produces the same value when evaluated~\cite{pitidis2010purity}. This means that a referentially transparent function could always be replaced with its output without altering the program's behaviour in any way~\cite{pitidis2010purity}.
 
@@ -996,7 +996,7 @@ Pearce's definition of functional purity does not include determinism, unlike th
 
 \subsection{Purity and Side Effect Analysis for Java Programs} \label{sub:Purity and Side Effect Analysis for Java Programs}
 
-Similarly to Pearce, Alexandru S\u{a}lcianu and Martin Rinard presented a method for analysing purity in Java programs, but their definition of purity also only includes side-effects and does not look at the input or output, i.e. does not include determinism~\cite{salcianu}. Their pointer analysis is based on tracking object creation and updates, as well as updates to local variables, and defines methods that mutate memory locations that existed before a method call as impure~\cite{salcianu}. Moreover, their analysis can recognize purity-related properties for impure methods, including \textit{read-only} and \textit{safe} parameters~\cite{salcianu}.
+Similarly to Pearce, Alexandru S\u{a}lcianu and Martin Rinard presented a method for analysing purity in Java programs, but their definition of purity also only includes side effects and does not look at the input or output, i.e. does not include determinism~\cite{salcianu}. Their pointer analysis is based on tracking object creation and updates, as well as updates to local variables, and defines methods that mutate memory locations that existed before a method call as impure~\cite{salcianu}. Moreover, their analysis can recognize purity-related properties for impure methods, including \textit{read-only} and \textit{safe} parameters~\cite{salcianu}.
 
 The analysis method presented looks at each program point in each method \textit{m}, and computes a points-to graph modelling the parts of the heap that method \textit{m} points to, represented by nodes in the graph~\cite{salcianu}. There are three kinds of nodes: \textit{Inside nodes} which model objects created by \textit{m}, \textit{parameter nodes} which model objects passed to \textit{m} as arguments, and \textit{load nodes} modelling objects read from outside \textit{m}~\cite{salcianu}. Edges in the points-to graph model heap references~\cite{salcianu}. There are two types of edges: \textit{inside edges} which model heap references created by \textit{m}, and \textit{outside edges} modelling heap references read by \textit{m} from outside of it (this includes \textit{m}'s parameters)~\cite{salcianu}.
 
@@ -1012,7 +1012,7 @@ Similarly to this thesis, S\u{a}lcianu and Rinard explicitly mark parts of a met
 
 % \subsection{Detecting function purity in JavaScript}
 % This was a little too difficult to understand, maybe remove from related work?
-% Nicolay et al. developed a method of detecting function purity in JavaScript using something called \textit{pushdown analysis}~\cite{purity-in-javascript}. Their definition of functional purity, however, includes only side-effects and does not require functions' output to depend purely on their input~\cite{purity-in-javascript}.
+% Nicolay et al. developed a method of detecting function purity in JavaScript using something called \textit{pushdown analysis}~\cite{purity-in-javascript}. Their definition of functional purity, however, includes only side effects and does not require functions' output to depend purely on their input~\cite{purity-in-javascript}.
 
 % Because everything except for
 
@@ -1029,7 +1029,7 @@ Similarly to this thesis, S\u{a}lcianu and Rinard explicitly mark parts of a met
 
 \subsection{Verifiable Functional Purity in Java} \label{sub:Verifiable-Functional-Purity-in-Java}
 
-In their definition of functional purity Finifter et al. require pure functions to be both side-effect free and \textit{deterministic}~\cite{purity-in-java}. A function is deterministic if any two evaluations of it have the same result~\cite{purity-in-java}. This means that a deterministic function is one that relies purely on its arguments~\cite{purity-in-java}. A function is side-effect free if it only modifies objects that were created during its execution~\cite{purity-in-java}.
+In their definition of functional purity Finifter et al. require pure functions to be both side effect free and \textit{deterministic}~\cite{purity-in-java}. A function is deterministic if any two evaluations of it have the same result~\cite{purity-in-java}. This means that a deterministic function is one that relies purely on its arguments~\cite{purity-in-java}. A function is side effect free if it only modifies objects that were created during its execution~\cite{purity-in-java}.
 
 The language that their analyzer handles is a subset of Java, in which they can prove functional purity~\cite{purity-in-java}. If a method is written in this subset of Java and its parameters are immutable, including the implicit \texttt{this}, then the method is pure~\cite{purity-in-java}. % page 166
 If its class is immutable it means that a method's global scope has a constant state, and so the only varying state is the one observable through its arguments~\cite{purity-in-java}.
@@ -1040,7 +1040,7 @@ Finifter et al. use the same definition of functional purity that is used in thi
 
 \subsection{Dynamic Purity Analysis For Java Programs} \label{sub:Dynamic Purity Analysis For Java Programs}
 
-In their paper Xu et al. define four different definitions for functional purity, and they are as follows from the strongest to the weakest definition: \textit{strong}, \textit{moderate}, \textit{weak} and \textit{once-impure} purity~\cite{xu2007dynamic}, similarly to the purity levels presented in this thesis in \autoref{def:functional-purity}, \autoref{def:locally-impure} and \autoref{def:parametrically-impure}. Their strongest definition, \textit{strong purity}, includes both determinism and side-effect freeness~\cite{xu2007dynamic}. However, Xu et al. do not seem to consider object type parameters to be included in determinism, and so reading the state of an input object is not considered truly pure. \textit{Moderate purity} is like \textit{strong}, except that it also allows modification of newly allocated (i.e. fresh) objects~\cite{xu2007dynamic}. \textit{Weak purity} is like \textit{moderate}, but it also allows non-determinism i.e. reading from objects that exist outside of the method~\cite{xu2007dynamic}. \textit{Once-impure purity} is equivalent to \textit{weak purity} except that the first invocation of the method may be impure~\cite{xu2007dynamic}.
+In their paper Xu et al. define four different definitions for functional purity, and they are as follows from the strongest to the weakest definition: \textit{strong}, \textit{moderate}, \textit{weak} and \textit{once-impure} purity~\cite{xu2007dynamic}, similarly to the purity levels presented in this thesis in \autoref{def:functional-purity}, \autoref{def:locally-impure} and \autoref{def:parametrically-impure}. Their strongest definition, \textit{strong purity}, includes both determinism and side effect freeness~\cite{xu2007dynamic}. However, Xu et al. do not seem to consider object type parameters to be included in determinism, and so reading the state of an input object is not considered truly pure. \textit{Moderate purity} is like \textit{strong}, except that it also allows modification of newly allocated (i.e. fresh) objects~\cite{xu2007dynamic}. \textit{Weak purity} is like \textit{moderate}, but it also allows non-determinism i.e. reading from objects that exist outside of the method~\cite{xu2007dynamic}. \textit{Once-impure purity} is equivalent to \textit{weak purity} except that the first invocation of the method may be impure~\cite{xu2007dynamic}.
 
 It is interesting that Xu et al. do not consider modification of fresh objects or reading the state of object type input parameters as truly pure, which this paper and most other work does. Moreover, none of Xu et al.'s purity levels however allow modification of input parameters. Xu et al. consider methods that modify their own object \texttt{this} to be impure, but do allow other methods that call such methods and remain \textit{moderately pure}. This is similar to the approach used in this paper, which classifies the former type of method as \textit{locally impure} and the calling method as \textit{pure} if the called method belongs to a fresh object, as described in \autoref{sub:modifying-fresh-objects}.
 
@@ -1050,11 +1050,11 @@ Xu et al.'s analysis is performed dynamically which requires looking at Java Vir
 
 % Answer the purpose - metod har utvecklats, den har utvärderas på de här sätten och vi har kommit fram till att det är såhär
 
-Functional purity is perhaps one of the most useful concepts from functional programming that object-oriented programmers can learn from. A function is functionally pure if it is side-effect free and deterministic. In this thesis an analysis method for statically approximating functional purity in C\# source code has been developed. The method categorizes C\# functions into one of the five functional purity levels \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure} or \textit{unknown}. The last purity level, \textit{unknown}, is for methods whose purity level cannot be computed, which can happen if they call a method from an assembly. The analysis method was also implemented in a program called CsPurity as a working prototype of the analysis method. Because CsPurity is a prototype it only implements a subset of the full analysis method. As a result, it can only detect the impurest purity level \textit{impure}, as well as \textit{unknown}. Therefore, CsPurity approximates a lower bound for the number of impure methods in a given C\# program.
+Functional purity is perhaps one of the most useful concepts from functional programming that object-oriented programmers can learn from. A function is functionally pure if it is side effect free and deterministic. In this thesis an analysis method for statically approximating functional purity in C\# source code has been developed. The method categorizes C\# functions into one of the five functional purity levels \textit{pure}, \textit{locally impure}, \textit{parametrically impure}, \textit{impure} or \textit{unknown}. The last purity level, \textit{unknown}, is for methods whose purity level cannot be computed, which can happen if they call a method from an assembly. The analysis method was also implemented in a program called CsPurity as a working prototype of the analysis method. Because CsPurity is a prototype it only implements a subset of the full analysis method. As a result, it can only detect the impurest purity level \textit{impure}, as well as \textit{unknown}. Therefore, CsPurity approximates a lower bound for the number of impure methods in a given C\# program.
 
-The analysis method was evaluated by running CsPurity on a code base of 11 open source C\# repositories that use the \texttt{[Pure]} attribute, with a total of 97 200 methods. The \texttt{[Pure]} attribute can be placed in front of a function by a programmer in order to indicate that the function is side-effect free. It currently has no effect on the .NET compiler or the program's execution. The \texttt{[Pure]} attribute was used as reference in order to benchmark CsPurity. After normalizing CsPurity's classification distribution for each repository analyzed its classification of pure functions has a precision of 64\% and recall 15\%, and its classification of impure functions has 59\% precision and 56\% recall.
+The analysis method was evaluated by running CsPurity on a code base of 11 open source C\# repositories that use the \texttt{[Pure]} attribute, with a total of 97 200 methods. The \texttt{[Pure]} attribute can be placed in front of a function by a programmer in order to indicate that the function is side effect free. It currently has no effect on the .NET compiler or the program's execution. The \texttt{[Pure]} attribute was used as reference in order to benchmark CsPurity. After normalizing CsPurity's classification distribution for each repository analyzed its classification of pure functions has a precision of 64\% and recall 15\%, and its classification of impure functions has 59\% precision and 56\% recall.
 
-There are a number of factors that bring down CsPurity's accuracy. The main one is of course the fact that CsPurity only implements a fraction of the full analysis method. Beyond that, almost half of all analyzed methods receive the purity level \textit{unknown}, i.e. depend on a method whose implementation is not available. Moreover, it turns out that some methods that have been given the \texttt{[Pure]} attribute still do have side-effects. Also, since the \texttt{[Pure]} attribute only indicates side-effect freeness it does not include the second requirement for functional purity used in this thesis -- determinism. This difference in definition of functional purity between \texttt{[Pure]} and CsPurity also reduces its perceived accuracy when evaluating it using \texttt{[Pure]} as a benchmark.
+There are a number of factors that bring down CsPurity's accuracy. The main one is of course the fact that CsPurity only implements a fraction of the full analysis method. Beyond that, almost half of all analyzed methods receive the purity level \textit{unknown}, i.e. depend on a method whose implementation is not available. Moreover, it turns out that some methods that have been given the \texttt{[Pure]} attribute still do have side effects. Also, since the \texttt{[Pure]} attribute only indicates side effect freeness it does not include the second requirement for functional purity used in this thesis -- determinism. This difference in definition of functional purity between \texttt{[Pure]} and CsPurity also reduces its perceived accuracy when evaluating it using \texttt{[Pure]} as a benchmark.
 
 Despite the limited precision and recall of the prototype, the evaluation still shows the potential of the full analysis method. By also implementing the remaining parts of the full analysis method in CsPurity one could therefore potentially have a fully working system for statically approximating a C\# program's level of functional purity that could be used on any program.
 
@@ -1068,14 +1068,14 @@ One enhancement to CsPurity would be for it to point out the exact position of i
 
 Moreover, the analysis method developed in this thesis could potentially be used to check the validity of a function that uses the \texttt{[Pure]} attribute. As mentioned in \autoref{sub:code-contracts} \texttt{[Pure]} is currently not enforced by any analysis tool, and so illegally assigned \texttt{[Pure]}s can currently not be detected.
 
-This could prevent mistakes where the author of a piece of code falsely assigns \texttt{[Pure]} to an impure method from propagating. This could cause bugs to appear if somebody else uses that function unknowingly thinking that it is side-effect free. Of course the analysis method used in this thesis would have to be slightly tweaked to consort with \texttt{[Pure]}'s non-deterministic definition of functional purity.
+This could prevent mistakes where the author of a piece of code falsely assigns \texttt{[Pure]} to an impure method from propagating. This could cause bugs to appear if somebody else uses that function unknowingly thinking that it is side effect free. Of course the analysis method used in this thesis would have to be slightly tweaked to consort with \texttt{[Pure]}'s non-deterministic definition of functional purity.
 
 While perhaps more difficult to implement, another very useful feature would be if CsPurity after finding an impurity could suggest changes to the code that would make the function in question pure.
 
 % Performance improvement: the analysis method could be improved by checking methods against the checklist while calculating all dependency sets. If the method performed an impure action like throwing an error the analysis could then stop the computation for that method and would not have to compute all dependencies since we already know that the function is impure, which would save computation time.
 
 % Could implement CsPurity with the exact same definition as \texttt{[Pure]}. % TODO
-% As discussed in \autoref{ssub:functional-purity-definition}, some definitions of functional purity do not include determinism and are hence synonymous with "side-effect free". Microsoft's \texttt{[Pure]} attribute uses that definition.
+% As discussed in \autoref{ssub:functional-purity-definition}, some definitions of functional purity do not include determinism and are hence synonymous with "side effect free". Microsoft's \texttt{[Pure]} attribute uses that definition.
 
 \bibliography{references}
 
