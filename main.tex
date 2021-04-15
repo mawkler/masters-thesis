@@ -449,12 +449,12 @@ There is however one more way to modify a fresh object: to pass it as an argumen
       return a;
     }
 
+    public static void Increment(A a) { // parametrically impure
+      a.value++;
+    }
+
     public class A {
       public int value = 0;
-
-      public static void Increment(A a) { // parametrically impure
-        a.value++;
-      }
     }
   \end{lstlisting}
   \caption{Since \texttt{Foo()} modifies a fresh object with a parametrically impure method \texttt{Foo()} is still pure.}
@@ -695,7 +695,7 @@ The first overloading of the method \texttt{Concatenate()} modifies the static c
 }
     \end{lstlisting}
   \end{minipage}
-  \caption{Simple implementation of a linked list. For the sake of this example, it contains some odd design choices.}
+  \caption{Simple implementation of a linked list. For the sake of this example, it contains some odd design choices and inconsistencies.}
   \label{fig:example-code}
 \end{figure}
 
@@ -844,7 +844,7 @@ The results from running CsPurity on each of the 11 repositories are divided int
     nodatime                & 10  & 23   & 72    & 56    & 161   \\
     WindowsCommunityToolkit & 42  & 38   & 64    & 124   & 268   \\
     CsConsoleFormat         & 3   & 17   & 15    & 63    & 98    \\
-    optentk                 & 452 & 17   & 53    & 156   & 678   \\
+    opentk                  & 452 & 17   & 53    & 156   & 678   \\
     opencvsharp             & 0   & 2    & 0     & 2621  & 2623  \\
     nuke                    & 4   & 114  & 10    & 17290 & 17418 \\
     linq2db                 & 3   & 114  & 11    & 31    & 159   \\
@@ -871,7 +871,7 @@ The results from running CsPurity on each of the 11 repositories are divided int
     nodatime                        & 88   & 2631   & 1038    & 3757  \\
     WindowsCommunityToolkit         & 477  & 3480   & 3342    & 7299  \\
     CsConsoleFormat                 & 35   & 272    & 576     & 883   \\
-    optentk                         & 532  & 462    & 1394    & 2388  \\
+    opentk                          & 532  & 462    & 1394    & 2388  \\
     opencvsharp                     & 198  & 2517   & 965     & 3680  \\
     nuke                            & 554  & 2056   & 965     & 3575  \\
     linq2db                         & 998  & 7613   & 4316    & 12927 \\
