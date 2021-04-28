@@ -140,7 +140,7 @@
 
 The object-oriented programming paradigm has been the industry norm for quite some time~\cite{tiobe}. However, functional programming is on the rise and becoming more popular~\cite{intertech}. Many mainstream languages like Java, C\# and C++ have adopted first-class functions from the functional paradigm~\cite{intertech}. While perhaps some associate functional programming with the more theoretical and mathematical fields, functional programming can be used for more practical applications like building modern web applications and mobile apps~\cite{jonas-walter}.
 
-Functional programs have many benefits. Perhaps one of the most useful features of functional programming that the object-oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about than impure ones because they have no \textit{side effects}~\cite{alvin-alexander}. A side effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are always thread-safe, meaning that they are perfect for parallel programming~\cite{purity-in-java}. Pure functions are also easier to test compared to impure ones since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
+Functional programs have many benefits. Perhaps one of the most useful features of functional programming that the object-oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about than impure ones because they have no \textit{side effects}~\cite{alvin-alexander}. A side effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are always thread-safe, meaning that they are very suitable for parallel programming~\cite{purity-in-java}. Pure functions are also easier to test compared to impure ones since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
 For this reason it is useful in software engineering to be able to measure the level of functional purity in programs~\cite{purity-in-javascript}.
 
 C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language?
@@ -152,7 +152,7 @@ The purpose of this thesis is thus to develop an analysis method for measuring t
 
 \section{Definitions} \label{sub:definitions}
 
-Functional programming and object-oriented programming are two different programming paradigms. There is no universal definition for either of them, but in order to reason about them, we need to choose one. Following is therefore how they are going to be defined in this thesis.
+Functional programming and object-oriented programming are two different programming paradigms. There is no universal definition for either of them, but in order to reason about them, we need to choose one.
 
 \subsection{Object-oriented programming} \label{ssub:object-oriented-programming} % Perhaps also mention imperative programming?
 
@@ -187,12 +187,12 @@ Following is the definition of functional purity that will be used in this thesi
 \end{definition}
 
 \begin{definition}[Determinism] \label{def:determinism}
-  A function is deterministic if its output depends purely on its input parameters, i.e. the method must return the same value for the same input regardless of the state of the program~\cite{purity-in-java}.
+  A function is deterministic if its output depends only on its input parameters, i.e. the method must return the same value for the same input regardless of the state of the program~\cite{purity-in-java}.
 \end{definition}
 
-As seen in \autoref{sec:Related work} some related work defines functional purity only as being synonymous with "side-effect free". This definition omits determinism and thereby allows pure functions to read from variables defined outside their scope, which is less functional. Since determinism guarantees that concurrently running functions or programs cannot affect the execution of a deterministic function, excluding it means excluding guaranteed thread-safety~\cite{purity-in-java}. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis et al.~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
+As seen in \autoref{sec:Related work} some related work defines functional purity only as being synonymous with "side-effect free". This definition omits determinism and thereby allows pure functions to read from variables defined outside their scope, which is less functional. Since determinism guarantees that concurrently running functions or programs cannot affect the execution of a deterministic function, excluding it means excluding guaranteed thread-safety~\cite{purity-in-java}. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis and Sagonas~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
 % the first two whose work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively.
-Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic also simplifies the analysis because it means that any symbol used in a function \textit{f} but defined outside \textit{f} would make \textit{f} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{f} to see if it is being written to or if it is only being read before concluding if \textit{f} is pure.
+Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic also simplifies the analysis because it means that any symbol used in a function \textit{f} but defined outside \textit{f} makes \textit{f} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{f} to see if it is being written to or if it is only being read before concluding if \textit{f} is pure.
 
 % The notion of purity only being synonymous with side-effect free seems to be more common in computer science, while also requiring determinism seems to be the more mathematical definition.
 
@@ -224,7 +224,7 @@ Moreover, requiring pure functions to be both side-effect free \textit{and} dete
 
 \section{The C\# language and .NET} \label{sub:the-csharp-language}
 
-C\# is a type safe object-oriented programming language developed by Microsoft~\cite{albahari2003nutshell}. C\# is syntactically quite similar to C, C++ and Java, and includes features like nullable types, enumerations, higher-order functions, and direct memory access~\cite{intro-to-Csharp}. While C\# historically has been used primarily for writing code for Windows platforms, C\# has recently spread to most other platforms, including mobile, due to its increased cross-platform support~\cite{albahari2003nutshell}.
+C\# is a type-safe object-oriented programming language developed by Microsoft~\cite{albahari2003nutshell}. C\# is syntactically quite similar to C, C++ and Java, and includes features like nullable types, enumerations, higher-order functions, and direct memory access~\cite{intro-to-Csharp}. While C\# historically has been used primarily for writing code for Windows platforms, C\# has recently spread to most other platforms, including mobile, due to its increased cross-platform support~\cite{albahari2003nutshell}.
 
 C\# applications run in the .NET ecosystem~\cite{intro-to-Csharp}. There are multiple implementations of .NET, including .NET Core and the .NET Framework~\cite{intro-to-Csharp}. .NET includes a virtual execution environment called the common language runtime (CLR) on which C\# programs run, as well as a common set of class libraries~\cite{albahari2003nutshell}. Before execution C\# source code is compiled to the so-called intermediate language (IL) and stored on disk~\cite{intro-to-Csharp}. Upon execution the IL code is just-in-time-compiled to native machine instructions that can be executed by the operating system~\cite{intro-to-Csharp}.
 
@@ -276,25 +276,25 @@ Similarly to many other programming languages, functions in C\# are generally re
   \label{fig:pure-example}
 \end{figure}
 
-Function parameters preceded with the \texttt{in} keyword are passed by reference and read-only inside the function~\cite{microsoft-in-modifier}. This means that input parameters marked with \texttt{in} cannot be re-assigned inside the function, which may suggest functional purity. Consider the example in \autoref{fig:in-example1}, where the parameter \texttt{number} is preceded by the \texttt{in} keyword. Because of this, modifying it inside the function will raise an error.
+Function parameters preceded with the \texttt{in} keyword are passed by reference and read-only inside the function~\cite{microsoft-in-modifier}. This means that input parameters marked with \texttt{in} cannot be re-assigned inside the function, which may suggest functional purity. Consider the example in \autoref{fig:in-example1}, where the parameter \texttt{number} is preceded by the \texttt{in} keyword. Because of this, modifying it inside the function will cause a compilation error.
 
 \begin{figure}[H]
   \centering
   \begin{lstlisting}
     int globalValue = 42;
     addOne(globalValue);
-    Console.WriteLine(globalValue); // value is still 42
+    Console.WriteLine(globalValue);
 
     void addOne(in int number) // note the `in` keyword
     {
       number += 1; // illegal assignment will raise error CS8332
     }
   \end{lstlisting}
-  \caption{Assignment to the parameter \texttt{number} which is preceded with \texttt{in} raises an error~\cite{microsoft-in-modifier}.}
+  \caption{Assignment to the parameter \texttt{number} which is preceded with \texttt{in} raises a compilation error~\cite{microsoft-in-modifier}.}
   \label{fig:in-example1}
 \end{figure}
 
-However, \texttt{in} is not a purity guarantee. Consider the example in \autoref{fig:in-example2}. The \texttt{in} keyword before the argument \texttt{list} ensures that \texttt{list} is read-only. This prevents \texttt{list} from being re-assigned after instantiation, but it doesn't prevent the data structure which \texttt{list} refers to from being modified~\cite{buchanan-static-lists}. In C\# there are two kinds of types: \textit{value types} and \textit{reference types}~\cite{microsoft-types}. Value types directly contain their data, while reference types -- also known as objects -- are simply pointers that refer to the location of their data.  Even though strings are of the reference type they are immutable, meaning that they cannot be modified after being created~\cite{microsoft-strings}. Therefore, value types and strings are passed to methods by value, which means that a method that modifies a value type parameter only modifies it locally, which doesn't affect its purity.
+However, \texttt{in} is not a purity guarantee. Consider the example in \autoref{fig:in-example2}. The \texttt{in} keyword before the argument \texttt{list} ensures that \texttt{list} is read-only. This prevents \texttt{list} from being re-assigned after instantiation, but it doesn't prevent the data structure which \texttt{list} refers to from being modified~\cite{buchanan-static-lists}. In C\# there are two kinds of types: \textit{value types} and \textit{reference types}~\cite{microsoft-types}. Value types directly contain their data, while reference types -- also known as objects -- are simply pointers that refer to the location of their data.  Even though strings are of the reference type they are immutable, meaning that they cannot be modified after being created~\cite{microsoft-strings}. Therefore, value types and strings are passed to methods by value, which means that a method that modifies a value type parameter only modifies it locally, which doesn't affect its purity. However, since \texttt{list} in \autoref{fig:in-example2} is of reference type, \texttt{in} does not prevent \texttt{list}'s referenced data to be modified.
 
 \begin{figure}[H]
   \centering
@@ -313,7 +313,9 @@ However, \texttt{in} is not a purity guarantee. Consider the example in \autoref
   \label{fig:in-example2}
 \end{figure}
 
-Since the \texttt{in} keyword does not entirely prevent methods modifying their input parameters of reference type, and mutations to parameters of value type are not visible outside of methods regardless of the \texttt{in} keyword, it does not help us to determine the purity of a method.
+Since the \texttt{in} keyword does guarantee that methods won't modify their input parameters of reference type, \texttt{in} is not sufficient to determine a method's purity or impurity.
+
+, also \texttt{in} parameters have to be checked for modifications to ensure a method's purtiy.
 
 \subsection{The .NET Abstract Syntax Tree and the CodeAnalysis library} \label{The .NET Abstract Syntax Tree and the CodeAnalysis library}
 
