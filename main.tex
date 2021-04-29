@@ -44,7 +44,7 @@
   breaklines=true,
   breakatwhitespace=false,
   tabsize=2,
-  morekeywords={}
+  morekeywords={using}
 }
 
 % Use one of these:
@@ -556,11 +556,11 @@ The following is how to determine the purity level \textit{p} for the currently 
     %   \item If $m_p$ is overridden by any locally impure method, \textit{m} is marked parametrically impure.
     % \end{itemize}
   \item If the analyzed method \textit{m} modifies an input parameter of reference type, mark \textit{m} as \textit{parametrically impure}. This could be done in a couple of ways: \label{itm:parametrically-impure}
-    \begin{itemize}
-      \item By calling an object type parameter's method that has been marked as \textit{locally impure}.
-      \item By passing an object type parameter as an argument to a method that has been marked as \textit{parametrically impure}.
-      \item By directly mutating a parameter object's field or property, or the cell of a parameter array.
-    \end{itemize}
+    \begin{enumerate}
+      \item By calling an object type parameter's method that has been marked as \textit{locally impure}. \label{itm:parametrically-impure-sub1}
+      \item By passing an object type parameter as an argument to a method that has been marked as \textit{parametrically impure}. \label{itm:parametrically-impure-sub2}
+      \item By directly mutating a parameter object's field or property, or the cell of a parameter array. \label{itm:parametrically-impure-sub3}
+    \end{enumerate}
     If \textit{m} does at least one of the above, mark it as \textit{parametrically impure}.
   \item If a method returns \texttt{this} or passes it as an argument to a function it marked \textit{locally impure} since it is dependent on the state of its object, making it non-deterministic.
   \item Any method that raises an event is marked \textit{impure}. \label{itm:raises-event}
@@ -591,6 +591,8 @@ The first overloading of the method \texttt{Concatenate()} modifies the static c
   \centering
   \begin{minipage}[t]{0.52\linewidth}
     \begin{lstlisting}[basicstyle={\fontsize{8}{9}\ttfamily}]
+  using System;
+
   public class LinkedList
   {
     private Node head;
@@ -681,7 +683,7 @@ The first overloading of the method \texttt{Concatenate()} modifies the static c
   // parameters
   public static void Concatenate(LinkedList l1, LinkedList l2)
   {
-    l1.Concatenate(LinkedList l2);
+    l1.Concatenate(l2);
   }
 
   private class Node
@@ -772,9 +774,11 @@ At this point the working set $W$ is empty, and so there can be no more changes 
 
 \section{Implementation of the code analysis tool CsPurity} \label{sec:implementation-of-cspurity}
 
+% TODO: Add link to GitHub repo
+
 The implementation of the code analysis tool is called \textit{CsPurity} and is built using .NET Core and C\#. It can be compiled, run and tested from the command line using the command \href{https://docs.microsoft.com/en-us/dotnet/core/tools/}{\texttt{dotnet}}, followed by \texttt{run}, \texttt{build} or \texttt{test}, respectively. Upon calling the program it can be provided either with a single file to be analyzed, or a directory. In the second case, all C\#-files in the directory and all sub-directories are analyzed as one program.
 
-CsPurity works backwards through the analyzed program's function dependencies and for each function visited that function's functional purity level is calculated. The purity levels \textit{impure} and \textit{unknown} also get propagated from callee to caller. Out of all ten items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, the following three were implemented:
+CsPurity works backwards through the analyzed program's function dependencies and for each function visited that function's functional purity level is calculated. The purity levels \textit{impure} and \textit{unknown} also get propagated from callee to caller. Out of all ten items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, the following were implemented:
 
 \begin{itemize}
   \item \Autoref{itm:static-impure}: "If the method \textit{m} reads or modifies a static field of an object, \textit{m} is marked \textit{impure}".
@@ -782,7 +786,11 @@ CsPurity works backwards through the analyzed program's function dependencies an
   \item \Autoref{itm:impure-built-in}: "Any method mentioned in the two lists of impure built-in C\# methods in \autoref{sub:Impure-built-in-methods} is marked \textit{impure}".
 \end{itemize}
 
-The reason why three out of the total ten checks were implemented was due to the sheer amount of time that the implementation took. After implementing the whole lookup table and all of its functionality, calculation of each method's dependency set, propagation of impurities from callee to caller, etc. there was no time left to implement every item in the checklist in a reasonable amount of time, and so the three items above were chosen. Because of this, CsPurity is unable to detect local and parametrical impurity, and can only detect full impurity caused by side effects.
+  % \Autoref{itm:parametrically-impure}: If the analyzed method \textit{m} modifies an input parameter of reference type, mark \textit{m} as \textit{parametrically impure}
+
+Additionally, the items \ref{itm:locally-impure} and \ref{itm:parametrically-impure-sub3} were partially implemented in CsPurity by looking at all assignments in a method and determining if the assigned identifier is declared inside or outisde the method. If any identifier is declared outside the method it gets marked \textit{impure}. Therefore, the purity levels \textit{paramatrically impure} and \textit{locally impure} were not implemented in CsPurity.
+
+The reason why not all items were fully implemented in CsPurity was due to the sheer amount of time that the implementation took. After implementing the whole lookup table and all of its functionality, calculation of each method's dependency set, propagation of impurities from callee to caller, etc. there was no time left to implement every item in the checklist in a reasonable amount of time, and so the three items above were chosen. Because of this, CsPurity cannot classify methods into \textit{locally} or \textit{parametrically impure}, and can only detect full impurity caused by side effects or reading static fields.
 
 \Autoref{itm:static-impure}, \ref{itm:raises-exception} and \ref{itm:impure-built-in} were prioritied because they detect the impurest purity level \textit{impure}, and since it is the most severe impurity level it is therefore arguably the most important one to be able to detecet. Moreover, checks for full impurity were estimated to be the least time-consuming ones to implement.
 
@@ -802,37 +810,35 @@ CsPurity also assumes that mehods without \texttt{[Pure]} are impure. There coul
 
 \subsection{Results from scanning simple implementation of linked list} \label{sub:results-from-scanning-the-example-list}
 
-Following is the result of running CsPurity on the linked list program in \autoref{fig:example-code}. By looking at the result from running CsPurity on it and comparing it to the expected result in \autoref{ssub:example} we can evaluate its performance.
+Following is the result of running CsPurity on the linked list program in \autoref{fig:example-code}. By looking at the result from running CsPurity on it and comparing it to the expected result in \autoref{tab:lookup-table3} we can evaluate its performance.
 
 \begin{figure}[htpb]
   \centering
   \begin{minipage}{\linewidth} % Forces code to be on same page
     \begin{lstlisting}
-    METHOD                   PURITY LEVEL
-    -------------------------------------
-    LinkedList.Length        Pure
-    LinkedList.Add           Pure
-    LinkedList.Remove        Pure
-    LinkedList.Concatenate   Impure
-    LinkedList.Concatenate   Impure
+    METHOD                        PURITY LEVEL
+    ------------------------------------------
+    int LinkedList.Length         Pure
+    void LinkedList.Remove        Impure
+    void LinkedList.Add           Impure
+    void LinkedList.Concatenate   Impure
+    void LinkedList.Concatenate   Impure
     \end{lstlisting}
   \end{minipage}
   \caption{Result from running CsPurity on the linked list implementation in \autoref{fig:example-code}.}
   \label{fig:example-result}
 \end{figure}
 
-As seen in \autoref{fig:example-result} CsPurity correctly identifies the impurity of both overloads of \texttt{Concatenate()}, whose implementations can be seen in \autoref{fig:example-code}. CsPurity has thereby successfully spotted the first overload's side effect and propagated its impurity to the second overload, which depends on the first.
+As seen in \autoref{fig:example-result} CsPurity correctly identifies the purity level of the \texttt{Length()} as \textit{pure}, meaning that the method passed all impurity checks and got to keep its initial purity level \textit{pure}. It also successfully identifies the full impurity of both overloads of \texttt{Concatenate()} whose implementations can be seen in \autoref{fig:example-code}. CsPurity has thereby successfully spotted the first overload's side effect and propagated its impurity to the second overload, which depends on the first.
 
-However, the three other analyzed methods \texttt{Length()}, \texttt{Add()} and \texttt{Remove()}'s purity levels -- which are always initialized to \textit{pure} in the lookup table -- were unchanged by the analysis. As seen in \autoref{tab:lookup-table3}, \texttt{Length()}'s purity level should be unaffected and remain \textit{pure}. However, \texttt{Add()}'s and \texttt{Remove()}'s purity levels are not identified, since CsPurity only can detect methods with maximum impurity level \textit{impure} -- i.e. \autoref{itm:static-impure} in the checklist -- and not local or parametrical impurity.
-
-Therefore, what we can say for sure about the linked list implementation based on the result in \autoref{fig:example-result} is that its purity level is \textit{at most} three pure methods out of a total of five methods, i.e. it is $\leq$ 3/5 = 60\% functionally pure. Since the true purity level of 20\% that we expect from \autoref{ssub:example} is less than or equal to 60\%, the upper bound on the program's level of functional purity calculated by CsPurity is shown to be correct.
-
-% TODO
+As for the methods \texttt{Remove()} and \texttt{Add()}, their purity levels resulted in \textit{impure} in \autoref{fig:example-result}, while the analysis result in \autoref{tab:lookup-table3} is \textit{parametrically impure} and \textit{locally impure}, respectively. Here we see that although CsPurity does not excplicitly categorize into parametrical or local impurity, it still somewhat covers those cases by classifying basic parametrically and locally impure methods as \textit{impure}.
 
 \subsection{Results from running CsPurity on a large codebase} \label{sub:results-larger-codebase}
 
 The results from running CsPurity on each of the 11 repositories are divided into two different tables; \autoref{tab:results-pure-methods} which contains CsPurity's classification for methods with the \texttt{[Pure]} attribute, and \autoref{tab:results-non-pure-methods} with the result for methods without the attribute. Methods with the \texttt{[Pure]} attribute make up 47\% percent of the total number of methods analyzed, and so 53\% of methods do not have the attribute. \autoref{tab:results-summary} contains the distribution of purity levels for all analyzed methods, and \autoref{tab:results-precision-recall} contains CsPurity's precision and recall based on the numbers in \autoref{tab:results-pure-methods} and \autoref{tab:results-non-pure-methods}. Precision is the number of true positives in relation to the number of selected items. Recall (or sensitivity) is the number of true positives in relation to all relevant items (the items that should be selected).
 % CsPurity's precision in terms of classifying pure methods is equal to the number of \textit{pure} methods with a \texttt{[Pure]} attribute divided by the total number of methods that are classified as \textit{pure}. CsPuritiy's recall in terms of pure methods is the number of \textit{pure} methods with a \texttt{[Pure]} attribute divided by
+
+% Data generated by CsPurity commit 1c2d28
 
 \begin{table}[H]
   \small
@@ -843,20 +849,20 @@ The results from running CsPurity on each of the 11 repositories are divided int
     \hline
     \textbf{Repository name} & \textbf{Pure} & \textbf{Impure:\newline throws exception} & \textbf{Impure: other} & \textbf{Unknown} & \textbf{Total} \\
     \hline
-    nodatime                & 10  & 23   & 72    & 56    & 161   \\
-    WindowsCommunityToolkit & 42  & 38   & 64    & 124   & 268   \\
-    CsConsoleFormat         & 3   & 17   & 15    & 63    & 98    \\
-    opentk                  & 452 & 17   & 53    & 156   & 678   \\
-    opencvsharp             & 0   & 2    & 0     & 2621  & 2623  \\
-    nuke                    & 4   & 114  & 10    & 17290 & 17418 \\
-    linq2db                 & 3   & 114  & 11    & 31    & 159   \\
-    language-ext            & 365 & 954  & 16599 & 5935  & 23853 \\
-    MetadataExtractor .NET  & 2   & 9    & 9     & 43    & 63    \\
-    Spreads                 & 0   & 31   & 3     & 1     & 35    \\
-    fluentassertions        & 53  & 0    & 4     & 20    & 77    \\
+    nodatime                & 42   & 23   & 82    & 14   & 161   \\
+    WindowsCommunityToolkit & 42   & 22   & 139   & 65   & 268   \\
+    CsConsoleFormat         & 31   & 16   & 23    & 28   & 98    \\
+    opentk                  & 119  & 15   & 444   & 100  & 678   \\
+    opencvsharp             & 0    & 0    & 32    & 2591 & 2623  \\
+    nuke                    & 4    & 114  & 17243 & 57   & 17418 \\
+    linq2db                 & 5    & 105  & 20    & 29   & 159   \\
+    language-ext            & 1337 & 947  & 16960 & 4609 & 23853 \\
+    MetadataExtractor .NET  & 8    & 0    & 39    & 16   & 63    \\
+    Spreads                 & 0    & 31   & 3     & 1    & 35    \\
+    fluentassertions        & 57   & 0    & 4     & 16   & 77    \\
     \hline
-    \rowcolor{lightgray} \textbf{Total number of methods} & 934 & 1319 & 16840 & 26340 & \cellcolor{white} 45433 \\
-    \rowcolor{lightgray} \textbf{Total percentage}        & 2\% & 3\%  & 37\%  & 58\%  & \cellcolor{white} 100\% \\
+    \rowcolor{lightgray} \textbf{Total number of methods} & 1645 & 1273 & 34989 & 7526 & \cellcolor{white} 45433 \\
+    \rowcolor{lightgray} \textbf{Total percentage}        & 4\%  & 3\%  & 77\%  & 17\% & \cellcolor{white} 100\% \\
     \hline
   \end{tabular}
 \end{table}
@@ -870,20 +876,20 @@ The results from running CsPurity on each of the 11 repositories are divided int
     \hline
     \textbf{Repository name} & \textbf{Pure} & \textbf{Impure} & \textbf{Unknown} & \textbf{Total} \\
     \hline
-    nodatime                        & 88   & 2631   & 1038    & 3757  \\
-    WindowsCommunityToolkit         & 477  & 3480   & 3342    & 7299  \\
-    CsConsoleFormat                 & 35   & 272    & 576     & 883   \\
-    opentk                          & 532  & 462    & 1394    & 2388  \\
-    opencvsharp                     & 198  & 2517   & 965     & 3680  \\
-    nuke                            & 554  & 2056   & 965     & 3575  \\
-    linq2db                         & 998  & 7613   & 4316    & 12927 \\
-    language-ext                    & 85   & 5362   & 2678    & 8125  \\
-    MetadataExtractor .NET          & 36   & 1267   & 341     & 1644  \\
-    Spreads                         & 261  & 1094   & 546     & 1901  \\
-    fluentassertions                & 703  & 3771   & 1114    & 5588  \\
+    nodatime                & 276  & 2804  & 677   & 3757  \\
+    WindowsCommunityToolkit & 326  & 5110  & 1863  & 7299  \\
+    CsConsoleFormat         & 128  & 430   & 325   & 883   \\
+    opentk                  & 120  & 1420  & 848   & 2388  \\
+    opencvsharp             & 164  & 2624  & 892   & 3680  \\
+    nuke                    & 545  & 2156  & 399   & 3100  \\
+    linq2db                 & 1045 & 8874  & 3008  & 12927 \\
+    language-ext            & 670  & 5558  & 1897  & 8125  \\
+    MetadataExtractor .NET  & 100  & 1317  & 227   & 1644  \\
+    Spreads                 & 205  & 1379  & 317   & 1901  \\
+    fluentassertions        & 710  & 4075  & 803   & 5588  \\
     \hline
-    \rowcolor{lightgray} \textbf{Total number of methods} & 3967 & 30525  & 17275 & \cellcolor{white} 51767 \\
-    \rowcolor{lightgray} \textbf{Total percentage}        & 8\%  & 59\%   & 33\%  & \cellcolor{white} 100\% \\
+    \rowcolor{lightgray} \textbf{Total number of methods} & 4289 & 35747 & 11256 & \cellcolor{white} 51292 \\
+    \rowcolor{lightgray} \textbf{Total percentage}        & 8\%  & 70\%  & 22\%  & \cellcolor{white} 100\% \\
     \hline
   \end{tabular}
 \end{table}
@@ -897,8 +903,8 @@ The results from running CsPurity on each of the 11 repositories are divided int
     \hline
                         & \textbf{Total \# of Pures} & \textbf{Total \# of Impures} & \textbf{Total \# of Unknowns} & \textbf{Total} \\
     \hline
-    \textbf{Amount}     & 4901 & 48684  & 43615   & 97200 \\
-    \textbf{Percentage} & 5\%  & 50\%   & 45\%    & 100\% \\
+    \textbf{Amount}     & 5934 & 72009 & 18782 & 96725 \\
+    \textbf{Percentage} & 6\%  & 74\%  & 19\%  & 100\% \\
     \hline
   \end{tabular}
 \end{table}
@@ -909,15 +915,15 @@ The results from running CsPurity on each of the 11 repositories are divided int
   \label{tab:results-precision-recall}
   \begin{tabular}{|l|ll|}
     \hline
-                                              & \textbf{Precision} & \textbf{Recall} \\
+                                          & \textbf{Precision} & \textbf{Recall} \\
     \hline
-    \textbf{Pure method classification}   & 19\%               & 2\%             \\
-    \textbf{Impure method classification} & 63\%               & 59\%            \\
+    \textbf{Pure method classification}   & 28\%               & 4\%             \\
+    \textbf{Impure method classification} & 50\%               & 70\%            \\
     \hline
   \end{tabular}
 \end{table}
 
-As seen in \autoref{tab:results-summary}, 45\% of all methods were classified with the purity level \textit{unknown}, meaning that their purity levels could not be determined by CsPurity. This will typically occur when a method depends on a method from an imported library that lacks C\# source code like an assembly. The high number of \textit{unknowns} contributes greatly to the low recall for CsPurity that is seen in \autoref{tab:results-precision-recall}, in particular when it comes to classifying pure methods.
+As seen in \autoref{tab:results-summary}, 19\% of all methods were classified with the purity level \textit{unknown}, meaning that their purity levels could not be determined by CsPurity. This will typically occur when a method depends on a method from an imported library that lacks C\# source code like an assembly. This portion of \textit{unknowns} somewhat contributes to the low recall for CsPurity that is seen in \autoref{tab:results-precision-recall}, in particular when it comes to classifying pure methods.
 
 The data set is somewhat nonuniform, primarily in \autoref{tab:results-pure-methods}. The two by far most impactful repositories are \textit{language-ext} and \textit{nuke} which together make up over half of the code base (54\%) in terms of number of methods. The majority of \texttt{[Pure]} methods in \textit{language-ext} were classified as \textit{impure} by CsPurity, and those methods contribute to 97\% of all \texttt{[Pure]} methods classified as \textit{impure} by CsPurity. However, in \textit{nuke} the majority of \texttt{[Pure]} methods were classified as \textit{unknown}, and these methods make up 66\% of all \textit{unknown} \texttt{[Pure]}'s. In order to compensate for this we can normalize the purity levels of CsPurity's classification for each repository and calculate the purity and precision based on those normalized values. That yields the precision and recall shown in \autoref{tab:results-precision-recall-normalized}, with significantly higher values.
 
@@ -929,8 +935,8 @@ The data set is somewhat nonuniform, primarily in \autoref{tab:results-pure-meth
     \hline
                                           & \textbf{Precision (normalized)} & \textbf{Recall (normalized)} \\
     \hline
-    \textbf{Pure method classification}   & 64\%                            & 15\%                         \\
-    \textbf{Impure method classification} & 59\%                            & 56\%                         \\
+    \textbf{Pure method classification}   & 65\%                            & 17\%                         \\
+    \textbf{Impure method classification} & 54\%                            & 69\%                         \\
     \hline
   \end{tabular}
 \end{table}
