@@ -123,7 +123,7 @@
 \frontmatter
 
 \begin{abstract}
-  Functional purity is a fundamental part of the functional programming paradigm. A function is functionally pure if it is side-effect free and deterministic. Pure functions provide many benefits compared to impure ones, including guaranteed thread-safety as well as easier testing, debugging and maintenance. But how can functional purity be measured? This thesis develops a method for statically approximating the level of functional purity in any given C\# program. It also investigates problems with determining purity in object-oriented languages, with a focus on C\#. Moreover, a prototype of the method is implemented in order to evaluate the method using a benchmark consisting of 11 open source repositories that use C\#'s \texttt{[Pure]} attribute. The \texttt{[Pure]} attribute can be placed in front of a method declaration to indicate that it is side-effect free. Due to a number of limitations to the implementation as well as to \texttt{[Pure]}'s definition of functional purity, which excludes determinism, the results of the evaluation appear relatively poor. After normalizing the implementation's classification distribution for each repository its classification of pure functions has a precision of 65\% and recall 17\%, and its classification of impure functions has 54\% precision and 69\% recall. Nevertheless, the prototype still shows the potential of the full analysis method. A complete implementation of the analysis method could potentially yield a fully working system for approximating any C\# program's level of functional purity.
+  Functional purity is a fundamental part of the functional programming paradigm. A function is functionally pure if it is side-effect free and deterministic. Pure functions provide many benefits compared to impure ones, including guaranteed thread-safety as well as easier testing, debugging and maintenance. But how can functional purity be measured? This thesis develops a method for statically measuring the level of functional purity in any given C\# program. It also investigates problems with determining purity in object-oriented languages, with a focus on C\#. Moreover, a prototype of the method is implemented in order to evaluate the method using a benchmark consisting of 11 open source repositories that use C\#'s \texttt{[Pure]} attribute. The \texttt{[Pure]} attribute can be placed in front of a method declaration to indicate that it is side-effect free. Due to a number of limitations to the implementation as well as to \texttt{[Pure]}'s definition of functional purity, which excludes determinism, the results of the evaluation appear relatively poor. After normalizing the implementation's classification distribution for each repository its classification of pure functions has a precision of 65\% and recall 17\%, and its classification of impure functions has 54\% precision and 69\% recall. Nevertheless, the prototype still shows the potential of the full analysis method. A complete implementation of the analysis method could potentially yield a fully working system for measuring any C\# program's level of functional purity.
 \end{abstract}
 
 % Innehållsförteckningen här.
@@ -148,11 +148,109 @@ In order to answer this and questions like it we need a method for measuring a C
 % In order to accomplish this a data set is needed for which each function's purity level is known.
 The purpose of this thesis is thus to develop an analysis method for measuring the functional purity level of a given C\# program.
 
-% \subsection{Contributions} \label{sub:Contributions}
+The following are the contributions of this thesis:
+
+\begin{itemize}
+  \item A static analysis method for measuring the level of functional purity in a C\# program.
+  % \item Prototype CsPurity?
+  \item Methods for how to deal with a number of problems that arise when measuring purity in an object-oriented programming language.
+\end{itemize}
+
+The next section contains definitions for functional purity, functional programming and object oriented programming. \Autoref{sec:the-csharp-language} describes C\# and .NET, as well was a description of what makes C\# method pure. \Autoref{sec:problems-with-purity-in-oo} presents a number of dilemmas when it comes to measuring purity in object-oriented languages, and how they were addressed. \Autoref{sec:the-analysis-method} describes the analysis method used, and applies it to a simple C\# program. \Autoref{sec:implementation-of-cspurity} describes the implemented prototype of the analysis method -- CsPurity. \Autoref{sec:results-and-discussion} presents the results after running CsPurity on the example code in \autoref{sec:the-analysis-method} as well as on 11 open source repositories that use the \texttt{[Pure]} attribute, which was used to evaluate CsPuritiy's precision and recall. The results are then discussed at the end of \autoref{sec:results-and-discussion}, and the thesis is concluded in \autoref{sec:conclusion}.
+
+\Autoref{sec:related-work} presents similar work done in other programming languages.
+
+TODO: fix this paragraph
+
+\section{Related work} \label{sec:related-work} % (If not part of introduction)
+
+The problem of detecting functional purity has been studied in other programming languages. Even though each language has its unique features there is a lot to be learned from how others have approached the subject. This section describes related work done for purity analysis in Erlang as well as Java. Since Java is object-oriented, it is relatively similar to C\#, and so four out of the five related works cover purity analysis in Java.
+
+Not all literature defines functional purity the same, as will become clear in this section. Each subsection includes that work's definition. The definition for functional purity used in this thesis, as well its motivation, is in \autoref{sub:definitions}.
+
+\subsection{Purity in Erlang} \label{sub:Purity-in-Erlang}
+
+In their paper \textit{Purity in Erlang} Mihalis Pitidis and Konstantinos Sagonas develop a tool that automatically and statically analyzes the purity of Erlang functions~\cite{pitidis2010purity}. While Erlang as a language is quite different compared to C\#, the method described by Pitidis and Sagonas is relatively simple, which makes it relatively easy to adapt to work on C\# code. % TODO
+
+The method described by Pitidis and Sagonas classifies functions into being functionally pure, or one of three levels of functional impurity~\cite{pitidis2010purity}. The three levels of functional impurity they defined are: containing side effects; containing no side effects but being dependent on the environment; and containing no side effects, having no dependencies on the environment but raising exceptions~\cite{pitidis2010purity}.
+
+Their definition of purity uses \textit{referential transparency}, as it implies purity~\cite{pitidis2010purity}. Referential transparency means that an expression always produces the same value when evaluated~\cite{pitidis2010purity}. This means that a referentially transparent function could always be replaced with its output without altering the program's behaviour in any way~\cite{pitidis2010purity}.
+
+They store all analysis information in a \textit{lookup table} where the keys are the function identifiers \textit{f} and the values are the purity level \textit{$p_f$} of each \textit{f} as well as \textit{f}'s \textit{dependency set} $D_f$~\cite{pitidis2010purity}. The dependency set is the set of functions being called by \textit{f} and is constructed by parsing the program's Abstract Syntax Tree~\cite{pitidis2010purity}.
+
+Their analysis starts with Erlang's so called built-in-functions (BIFs), which are functions native to the Erlang's virtual machine and are written in C~\cite{pitidis2010purity}. Impure actions in Erlang can only be done through BIFs, including performing I/O actions or writing to global variables~\cite{kostis-email}. Because BIFs are written in C they cannot be analyzed by their analysis tool, and their purity is assumed to be already known beforehand by the analysis tool~\cite{pitidis2010purity}. The analysis propagates the impurity of BIFs to each function which directly or indirectly depends on them.
+
+In short terms, their analysis algorithm works like this: Initialize the purity of all functions in the lookup table to be analyzed to "pure"~\cite{pitidis2010purity}. Define the \textit{working set} to always equal the set of functions whose purity level is fully determined, i.e. the functions with empty dependency sets~\cite{pitidis2010purity}. For each function \textit{f} in the working set, propagate its purity level to functions depending on it and "contaminate" them with \textit{f}'s purity level~\cite{pitidis2010purity}. Then remove \textit{f} from the  dependency set of each function depending on it~\cite{pitidis2010purity}. If \textit{f} has the highest impurity level, remove the entire dependency set of each function depending on \textit{f}~\cite{pitidis2010purity}. If the working set gets empty, find a set of functions that are dependent on each other and no other functions, and set their purity level to the purity of the impurest function~\cite{pitidis2010purity}. Simplify their dependency sets by removing their dependency on each other from their dependency set~\cite{pitidis2010purity}. Repeat this process until there are no more changes to the lookup table~\cite{pitidis2010purity}.
+
+The foundation for the analysis method used in this paper is based off the method developed by Pitidis and Sagonas: The approach with using a lookup table to store the intermediate states of the analysis, dependency sets and propagation of impurity from callee to caller using dependency sets. However, the analysis by Pitidis and Sagonas is intended for programs written in Erlang, which is a functional programming language. Also, their analysis gets facilitated by Erlang's BIFs since impure actions can only be performed through them, and so they only need to propagate the impurity of the called BIFs to the callers, and therefore do not need to perform any intermediate analysis on other functions. Since no equivalence to BIFs exists in C\#, our analysis cannot consist only of propagating impurities from callee to caller but also needs to check each function analyzed to see if that function performs any impure action.
+
+\subsection{JPure: A Modular Purity System for Java} \label{sub:JPure: A Modular Purity System for Java}
+
+David J. Pearce built a purity system and analyzer for Java in his paper JPure: a modular purity system for Java~\cite{pearce2011jpure}. The system uses the properties \textit{freshness} and \textit{locality} to increase the system's ability to classify methods as pure~\cite{pearce2011jpure}. An object is fresh if it is newly allocated inside a method~\cite{pearce2011jpure}. An object's locality is its local state~\cite{pearce2011jpure}. Pearce's definition of a pure method is one that does not assign (directly or indirectly) to any field that existed before the method was called~\cite{pearce2011jpure}.
+
+The system uses the purity annotations \texttt{@Pure}, \texttt{@Local} and \texttt{@Fresh}~\cite{pearce2011jpure}. The annotation \texttt{@Pure} indicates that a method is pure~\cite{pearce2011jpure}. \texttt{@Local} indicates that a method only modifies an object's locality~\cite{pearce2011jpure}. \texttt{@Fresh} indicates that a method only returns fresh objects~\cite{pearce2011jpure}. These three annotations are modularly checkable, i.e. one method's purity annotations to be checked in isolation from all other methods~\cite{pearce2011jpure}.
+
+The system consists of two parts, \textit{purity inference} and \textit{purity checker}~\cite{pearce2011jpure}. Purity inference adds \texttt{@Pure} annotations (and any auxiliary annotations required) to the code and is intended to be run once because it is more costly~\cite{pearce2011jpure}. The purity checker checks the correctness of all annotations at compile-time, and is intended to be used continuously to maintain the code's purity~\cite{pearce2011jpure}.
+
+Pearce's definition of functional purity does not include determinism, unlike the one used in this thesis. The purity level \textit{locally impure} used in this thesis is based on Pearce's \texttt{@Local} attribute. Moreover, the solution to method overriding used in this thesis in \autoref{sub:inheritance} is also based on the ideas developed by Pearce. However, Pearce's approach requires that the program is modularly checkable, i.e. that each method's purity can be evaluated independently of all other methods, and uses annotations to achieve this~\cite{pearce2011jpure}.  Pearce does not introduce an \textit{unknown} purity level for called methods (referred to as methods from external packages) that are not analyzed, but assumes conservatively that such methods are always impure~\cite{pearce2011jpure}.
+
+% Their analysis seems way more complicated than mine, which could be an advantage
+
+\subsection{Purity and Side Effect Analysis for Java Programs} \label{sub:Purity and Side Effect Analysis for Java Programs}
+
+Similarly to Pearce, Alexandru S\u{a}lcianu and Martin Rinard presented a method for analysing purity in Java programs, but their definition of purity also only includes side effects and does not look at the input or output, i.e. does not include determinism~\cite{salcianu}. Their pointer analysis is based on tracking object creation and updates, as well as updates to local variables, and defines methods that mutate memory locations that existed before a method call as impure~\cite{salcianu}. Moreover, their analysis can recognize purity-related properties for impure methods, including \textit{read-only} and \textit{safe} parameters~\cite{salcianu}.
+
+The analysis method presented looks at each program point in each method \textit{m}, and computes a points-to graph modelling the parts of the heap that method \textit{m} points to, represented by nodes in the graph~\cite{salcianu}. There are three kinds of nodes: \textit{Inside nodes} which model objects created by \textit{m}, \textit{parameter nodes} which model objects passed to \textit{m} as arguments, and \textit{load nodes} modelling objects read from outside \textit{m}~\cite{salcianu}. Edges in the points-to graph model heap references~\cite{salcianu}. There are two types of edges: \textit{inside edges} which model heap references created by \textit{m}, and \textit{outside edges} modelling heap references read by \textit{m} from outside it (this includes \textit{m}'s parameters)~\cite{salcianu}.
+
+% For each method \textit{m} the analysis computes a set $W_m$ containing the mutated fields that are externally visible.
+
+The analysis also keeps track of \textit{globally escaped nodes}, which are nodes that may be accessed by unknown code, i.e. passed as argument to native methods or pointed to static fields~\cite{salcianu}. Since globally escaped nodes may be mutated by unknown code, the analysis has to handle them conservatively~\cite{salcianu}.
+
+To check if a method \textit{m} is pure, the analysis computes the set \textit{A} consisting of nodes reachable from parameter nodes along outside edges~\cite{salcianu}. In other words, \textit{A} represents all objects existing before executing \textit{m}~\cite{salcianu}. \textit{m} is pure if and only if no node in \textit{A} escapes globally (i.e. is accessed by unknown code) and no fields in any node in \textit{A} is modified~\cite{salcianu}. There is one exception to the purity constraint: constructors are allowed to mutate fields of the \texttt{this} object~\cite{salcianu}. Therefore, all mutated abstract fields of \texttt{this} are ignored by the analysis~\cite{salcianu}.
+
+Similarly to this thesis, S\u{a}lcianu and Rinard explicitly mark parts of a method that are potentially accessed by unknown code, and deal with them conservatively. Their analysis uses a points-to graph to compute the purity of each method, unlike the method in this thesis that uses a lookup-table and checklist.
+
+% Since they do not include determinism in their definition of functional purity, static
+
+% \subsection{Detecting function purity in JavaScript}
+% This was a little too difficult to understand, maybe remove from related work?
+% Nicolay et al. developed a method of detecting function purity in JavaScript using something called \textit{pushdown analysis}~\cite{purity-in-javascript}. Their definition of functional purity, however, includes only side effects and does not require functions' output to depend purely on their input~\cite{purity-in-javascript}.
+
+% Because everything except for
+
+% \subsection{Writing Pure Code in C\#} \label{sub:Writing Pure Code in Cs}
+% In his article \textit{Writing Pure Code in C\#} Massad defines three levels of pure methods~\cite{yacoub-massad-pure-code}:
+% \begin{enumerate}
+%   \item Pure methods, i.e. methods that do not read or write to instance state variables, or call impure methods.
+%   \item Methods that are pure, and that \textit{read} the state of their containing object, or the state of objects that are passed as parameters or created in the current method.
+%   \item Methods that are pure, and that \textit{read} or \textit{write} to the state of their containing objects, or to the state of objects created in the current method.
+% \end{enumerate}
+
+% \subsection{Evolution of Degree of Purity in Programming Languages} \label{sub:Evolution of Degree of Purity in Programming Languages}
+% Rajasekhara Babu et al.~\cite{rajasekharababu2012evolution}.
+
+\subsection{Verifiable Functional Purity in Java} \label{sub:Verifiable-Functional-Purity-in-Java}
+
+In their definition of functional purity Finifter et al. require pure functions to be both side-effect free and \textit{deterministic}~\cite{purity-in-java}. A function is deterministic if any two evaluations of it have the same result~\cite{purity-in-java}. This means that a deterministic function is one that relies purely on its arguments~\cite{purity-in-java}. A function is side-effect free if it only modifies objects that were created during its execution~\cite{purity-in-java}.
+
+The language that their analyzer handles is a subset of Java, in which they can prove functional purity~\cite{purity-in-java}. If a method is written in this subset of Java and its parameters are immutable, including the implicit \texttt{this}, then the method is pure~\cite{purity-in-java}. % page 166
+If its class is immutable it means that a method's global scope has a constant state, and so the only varying state is the one observable through its arguments~\cite{purity-in-java}.
+
+Their verifier has a whitelist of fields and methods from Java libraries that do not expose the ability to observe a global mutable state, or provide access to nondeterminism, and it will reject any reference to a field or method that is not on the list~\cite{purity-in-java}. This is similar to the approach with a list of impure built-in C\# methods used in this thesis and mentioned in \autoref{sub:Impure-built-in-methods}.
+
+Finifter et al. use the same definition of functional purity that is used in this thesis. The main disadvantage with Finifter et al.'s approach is that it requires the code to be written in a subset of Java code in order to be able to analyze the code.
+
+\subsection{Dynamic Purity Analysis For Java Programs} \label{sub:Dynamic Purity Analysis For Java Programs}
+
+In their paper Xu et al. define four different definitions for functional purity, and they are as follows from the strongest to the weakest definition: \textit{strong}, \textit{moderate}, \textit{weak} and \textit{once-impure} purity~\cite{xu2007dynamic}, similarly to the purity levels presented in this thesis in \autoref{def:functional-purity}, \autoref{def:locally-impure} and \autoref{def:parametrically-impure}. Their strongest definition, \textit{strong purity}, includes both determinism and side-effect freeness~\cite{xu2007dynamic}. Moreover, any read from or write to the heap is not allowed in strong impurity~\cite{xu2007dynamic}. Therefore, Xu et al. do not consider reading from object type parameters to be truly pure. \textit{Moderate purity} is like \textit{strong}, except that it also allows modification of newly allocated (i.e. fresh) objects~\cite{xu2007dynamic}. \textit{Weak purity} is like \textit{moderate}, but it also allows non-determinism i.e. reading from objects that exist outside the method~\cite{xu2007dynamic}. \textit{Once-impure purity} is equivalent to \textit{weak purity} except that the first invocation of the method may be impure~\cite{xu2007dynamic}.
+
+It is interesting that Xu et al. do not consider modification of fresh objects or reading the state of object type input parameters as truly pure, which this and most other work does. None of Xu et al.'s purity levels allow modification of input parameters. Xu et al. consider methods that modify their own object \texttt{this} to be impure, but do allow other methods that call such methods and remain \textit{moderately pure}. This is similar to the approach used in this thesis, which classifies the former type of method as \textit{locally impure} and the calling method as \textit{pure} if the called method belongs to a fresh object, as described in \autoref{sub:modifying-fresh-objects}.
+
+Xu et al.'s analysis is performed dynamically which requires looking at Java Virtual Machine code~\cite{xu2007dynamic}. The nature of the dynamic analysis may be the reason why some of their purity definitions differ from most other work, for instance that any modification of any object that was created after the start of executing a method, including fresh ones, is not considered pure by their method of analysis.
 
 \section{Definitions} \label{sub:definitions}
 
-Functional programming and object-oriented programming are two different programming paradigms. There is no universal definition for either of them, but in order to reason about them, we need to choose one.
+Object-oriented programming and functional programming are two different programming paradigms. There is no universal definition for either of them, but in order to reason about them, we need to choose one. Moreover, since one of the key features of functional programming is functional purity, we have to define that as well.
 
 \subsection{Object-oriented programming} \label{ssub:object-oriented-programming} % Perhaps also mention imperative programming?
 
@@ -163,18 +261,10 @@ Functional programming and object-oriented programming are two different program
 \item Classes can \emph{inherit} from other superclasses, such that an object of a class is also an object of its superclass~\cite{john-m-chambers}.
 \end{enumerate}
 
-\subsection{Functional programming} \label{sub:functional-programming}
-
-\begin{enumerate}
-  \item All functions are \emph{functionally pure}~\cite{alvin-alexander}. Functional purity is defined below in \autoref{def:functional-purity}.
-  \item Variables are immutable, meaning that their value does not change after being initiated~\cite{alvin-alexander}. % page 3
-  \item Functions are first-class and can be higher-order, meaning that functions can be passed to functions as parameters, and can be returned by functions~\cite{jonas-walter}. % page 3
-\end{enumerate}
-
 \subsection{Functional purity} \label{ssub:functional-purity-definition}
 % Maybe move this before subsection to lead up to this?
 
-Following is the definition of functional purity that will be used in this thesis:
+Functional purity is a key part of functional programming. Following is the definition of functional purity that will be used in this thesis:
 
 \begin{definition}[Functional purity] \label{def:functional-purity}
   A function is functionally pure if it is \textit{side effect} free and \textit{deterministic}.
@@ -190,7 +280,15 @@ Following is the definition of functional purity that will be used in this thesi
   A function is deterministic if its output depends only on its input parameters, i.e. the method must return the same value for the same input regardless of the state of the program~\cite{purity-in-java}.
 \end{definition}
 
-As seen in \autoref{sec:Related work} some related work defines functional purity only as being synonymous with "side-effect free". This definition omits determinism and thereby allows pure functions to read from variables defined outside their scope, which is less functional. Since determinism guarantees that concurrently running functions or programs cannot affect the execution of a deterministic function, excluding it means excluding guaranteed thread-safety~\cite{purity-in-java}. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis and Sagonas~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
+\subsection{Functional programming} \label{sub:functional-programming}
+
+\begin{enumerate}
+  \item All functions are functionally pure~\cite{alvin-alexander}.
+  \item Variables are immutable, meaning that their value does not change after being initialized~\cite{alvin-alexander}. % page 3
+  \item Functions are first-class and can be higher-order, meaning that functions can be passed to functions as parameters, and can be returned by functions~\cite{jonas-walter}. % page 3
+\end{enumerate}
+
+As mentioned in \autoref{sec:related-work}, some related work defines functional purity only as being synonymous with "side-effect free". This definition omits determinism and thereby allows pure functions to read from variables defined outside their scope, which is less functional. Since determinism guarantees that concurrently running functions or programs cannot affect the execution of a deterministic function, excluding it means excluding guaranteed thread-safety~\cite{purity-in-java}. The definition of purity used in this thesis will therefore require pure functions to not only be side-effect free but also to be deterministic. This is the definition of purity that is used by Finifter et al.~\cite{purity-in-java}, Pitidis and Sagonas~\cite{pitidis2010purity} and Alexander~\cite{alvin-alexander}. % page 19
 % the first two whose work is mentioned in \autoref{sub:Purity-in-Erlang} and \autoref{sub:Verifiable-Functional-Purity-in-Java}, respectively.
 Moreover, requiring pure functions to be both side-effect free \textit{and} deterministic also simplifies the analysis because it means that any symbol used in a function \textit{f} but defined outside \textit{f} makes \textit{f} impure. If we allowed pure functions to be non-deterministic, that would mean that we would have to check each symbol used in \textit{f} to see if it is being written to or if it is only being read before concluding if \textit{f} is pure.
 
@@ -222,7 +320,7 @@ Moreover, requiring pure functions to be both side-effect free \textit{and} dete
 %   \item Closures and how objects can be considered closures (if fields are \texttt{readonly}?), and whether they should be considered pure.
 % \end{itemize}
 
-\section{The C\# language and .NET} \label{sub:the-csharp-language}
+\section{The C\# language and .NET} \label{sec:the-csharp-language}
 
 C\# is a type-safe object-oriented programming language developed by Microsoft~\cite{albahari2003nutshell}. C\# is syntactically quite similar to C, C++ and Java, and includes features like nullable types, enumerations, higher-order functions, and direct memory access~\cite{intro-to-Csharp}. While C\# historically has been used primarily for writing code for Windows platforms, C\# has recently spread to most other platforms, including mobile, due to its increased cross-platform support~\cite{albahari2003nutshell}.
 
@@ -315,7 +413,7 @@ However, \texttt{in} is not a purity guarantee. Consider the example in \autoref
 
 Since the \texttt{in} keyword does guarantee that methods won't modify their input parameters of reference type, \texttt{in} does not ensure side-effect freeness. Therefore, parameters preceeded with \texttt{in} will have to be checked for modifications, just like all other parameters.
 
-\subsection{The .NET Abstract Syntax Tree and the CodeAnalysis library} \label{The .NET Abstract Syntax Tree and the CodeAnalysis library}
+\subsection{The .NET abstract syntax tree and the CodeAnalysis library} \label{The .NET Abstract Syntax Tree and the CodeAnalysis library}
 
 % Abstract syntax trees in general
 Abstract syntax trees (AST) are the primary data structure used when analysing source, as they encapsulate every piece of information held in the code~\cite{microsoft-work-with-syntax}. The AST generated by Microsoft's code analysis library \texttt{Microsoft.CodeAnalysis} from a given piece of C\# code represents the lexical and syntactic structure of the C\# program~\cite{microsoft-work-with-syntax}. The tree consists primarily of \textit{syntax nodes} which represent syntactic constructs including declarations, statements, clauses and expressions~\cite{microsoft-work-with-syntax}. Each node is derived from the \texttt{Syntax}-\texttt{Node} class~\cite{microsoft-work-with-syntax}. Every node is non-terminal, meaning that it always has children -- either other nodes or \textit{tokens}~\cite{microsoft-work-with-syntax}. Tokens are the smallest syntactic pieces of the program, consisting of keywords, identifiers, literals and punctuation~\cite{microsoft-work-with-syntax}.
@@ -920,7 +1018,13 @@ The results from running CsPurity on each of the 11 repositories are divided int
 
 As seen in \autoref{tab:results-summary}, 19\% of all methods were classified with the purity level \textit{unknown}, meaning that their purity levels could not be determined by CsPurity. This will typically occur when a method depends on a method from an imported library that lacks C\# source code like an assembly. This portion of \textit{unknowns} somewhat contributes to the low recall for CsPurity that is seen in \autoref{tab:results-precision-recall}, in particular when it comes to classifying pure methods.
 
-The data set is somewhat nonuniform, primarily in \autoref{tab:results-pure-methods}. The two by far most impactful repositories are \textit{language-ext} and \textit{nuke} which together make up over half of the code base (54\%) in terms of number of methods. The majority of \texttt{[Pure]} methods in \textit{language-ext} and \textit{nuke} were classified as \textit{impure} by CsPurity, and those methods contribute to 97\% of all \texttt{[Pure]} methods classified as \textit{impure} by CsPurity. In order to compensate for this we can normalize the purity levels of CsPurity's classification for each repository and calculate the purity and precision based on those normalized values. That yields the precision and recall shown in \autoref{tab:results-precision-recall-normalized}, which demonstrates significantly better performance.
+The data set is somewhat nonuniform, primarily in \autoref{tab:results-pure-methods}. The two by far most impactful repositories are \textit{language-ext} and \textit{nuke} which together make up over half of the code base (54\%) in terms of number of methods. The majority of \texttt{[Pure]} methods in \textit{language-ext} and \textit{nuke} were classified as \textit{impure} by CsPurity, and those methods contribute to 97\% of all \texttt{[Pure]} methods classified as \textit{impure} by CsPurity. In order to compensate for this we normalize the purity levels of CsPurity's classification for each repository and calculate the recall and precision based on those normalized values.
+
+For example, to normalize the amount of \texttt{[Pure]}s classified as \textit{pure}, for each repository \textit{R}, the number of methods in \textit{R} classified as \textit{pure} is divided by the total amount of \texttt{[Pure]} methods in \textit{R}. This is done for all the combinations of in the \texttt{[Pure]} or non-\texttt{[Pure]} with all
+
+This is done for each of CsPurity's classified purity level in both \autoref{tab:results-pure-methods} and \autoref{tab:results-non-pure-methods}.
+
+This yields the precision and recall shown in \autoref{tab:results-precision-recall-normalized}, which demonstrates significantly better performance.
 
 % TODO: explain how normalization is done
 
@@ -969,89 +1073,6 @@ CsPurity does not give a definite lower bound to a program's purity though. This
 Because a large portion of methods use built-in .NET methods for which the source code is not available to CsPurity, nearly a fifth of the analyzed methods get the purity level \textit{unknown}, as seen in \autoref{tab:results-summary}. One way that this was tackled during implementation was to search online for the source code of classes like \texttt{List}, run the analyzer on them and permanently store the calculated purity level for each method in a dictionary in CsPurity, so that whenever a call to a built-in \texttt{List} method is encountered by CsPurity that method's purity level (if it is not \textit{unknown}) can be retrieved from the dictionary. However, this relies on the fact that the source code for a particular built-in method is available, and the process of searching for its code, running the analyzer on it and adding any known result to the program's dictionary is cumbersome. Therefore, a lot of methods are marked as \textit{unknown} by CsPurity because they depend on a method whose source code is not available to, or has been priorly analyzed by CsPurity.
 
 An alternative approach to handling called methods with unknown purity -- as opposed to marking their purity level \textit{unknown} -- would be to simply assume that any unknown method's purity level always is \textit{impure}. The more conservative approach of assuming that any unknown method is impure would mean that the lower bound for the program's total possible impurity level would be moved up, which could potentially give a lower bound that is too high, since some of the unknown methods that were marked \textit{impure} could have been pure. Therefore, since it clearly indicates to the user where the purity level could not be determined, the purity level \textit{unknown} seems to be the best choice here.
-
-\section{Related work} \label{sec:Related work} % (If not part of introduction)
-
-% Maybe put this after Future Work?
-
-\subsection{Purity in Erlang} \label{sub:Purity-in-Erlang}
-
-In their paper \textit{Purity in Erlang} Mihalis Pitidis and Konstantinos Sagonas develop a tool that automatically and statically analyzes the purity of Erlang functions~\cite{pitidis2010purity}. It classifies functions into being functionally pure, or one of three levels of functional impurity~\cite{pitidis2010purity}.
-The three levels of functional impurity they defined are: containing side effects; containing no side effects but being dependent on the environment; and containing no side effects, having no dependencies on the environment but raising exceptions~\cite{pitidis2010purity}.
-
-Their definition of purity uses \textit{referential transparency}, as it implies purity~\cite{pitidis2010purity}. Referential transparency means that an expression always produces the same value when evaluated~\cite{pitidis2010purity}. This means that a referentially transparent function could always be replaced with its output without altering the program's behaviour in any way~\cite{pitidis2010purity}.
-
-They store all analysis information in a \textit{lookup table} where the keys are the function identifiers \textit{f} and the values are the purity level \textit{$p_f$} of each \textit{f} as well as \textit{f}'s \textit{dependency set} $D_f$~\cite{pitidis2010purity}. The dependency set is the set of functions being called by \textit{f} and is constructed by parsing the program's Abstract Syntax Tree~\cite{pitidis2010purity}.
-
-Their analysis starts with Erlang's so called built-in-functions (BIFs), which are functions native to the Erlang's virtual machine and are written in C~\cite{pitidis2010purity}. Impure actions in Erlang can only be done through BIFs, including performing I/O actions or writing to global variables~\cite{kostis-email}. Because BIFs are written in C they cannot be analyzed by their analysis tool, and their purity is assumed to be already known beforehand by the analysis tool~\cite{pitidis2010purity}. The analysis propagates the impurity of BIFs to each function which directly or indirectly depends on them.
-
-In short terms, their analysis algorithm works like this: Initialize the purity of all functions in the lookup table to be analyzed to "pure"~\cite{pitidis2010purity}. Define the \textit{working set} to always equal the set of functions whose purity level is fully determined, i.e. the functions with empty dependency sets~\cite{pitidis2010purity}. For each function \textit{f} in the working set, propagate its purity level to functions depending on it and "contaminate" them with \textit{f}'s purity level~\cite{pitidis2010purity}. Then remove \textit{f} from the  dependency set of each function depending on it~\cite{pitidis2010purity}. If \textit{f} has the highest impurity level, remove the entire dependency set of each function depending on \textit{f}~\cite{pitidis2010purity}. If the working set gets empty, find a set of functions that are dependent on each other and no other functions, and set their purity level to the purity of the impurest function~\cite{pitidis2010purity}. Simplify their dependency sets by removing their dependency on each other from their dependency set~\cite{pitidis2010purity}. Repeat this process until there are no more changes to the lookup table~\cite{pitidis2010purity}.
-
-The foundation for the analysis method used in this paper is based off the method developed by Pitidis and Sagonas: The approach with using a lookup table to store the intermediate states of the analysis, dependency sets and propagation of impurity from callee to caller using dependency sets. However, the analysis by Pitidis and Sagonas is intended for programs written in Erlang, which is a functional programming language. Also, their analysis gets facilitated by Erlang's BIFs since impure actions can only be performed through them, and so they only need to propagate the impurity of the called BIFs to the callers, and therefore do not need to perform any intermediate analysis on other functions. Since no equivalence to BIFs exists in C\#, our analysis cannot consist only of propagating impurities from callee to caller but also needs to check each function analyzed to see if that function performs any impure action.
-
-\subsection{JPure: A Modular Purity System for Java} \label{sub:JPure: A Modular Purity System for Java}
-
-David J. Pearce built a purity system and analyzer for Java in his paper JPure: a modular purity system for Java~\cite{pearce2011jpure}. The system uses the properties \textit{freshness} and \textit{locality} to increase the system's ability to classify methods as pure~\cite{pearce2011jpure}. An object is fresh if it is newly allocated inside a method~\cite{pearce2011jpure}. An object's locality is its local state~\cite{pearce2011jpure}. Pearce's definition of a pure method is one that does not assign (directly or indirectly) to any field that existed before the method was called~\cite{pearce2011jpure}.
-
-The system uses the purity annotations \texttt{@Pure}, \texttt{@Local} and \texttt{@Fresh}~\cite{pearce2011jpure}. The annotation \texttt{@Pure} indicates that a method is pure~\cite{pearce2011jpure}. \texttt{@Local} indicates that a method only modifies an object's locality~\cite{pearce2011jpure}. \texttt{@Fresh} indicates that a method only returns fresh objects~\cite{pearce2011jpure}. These three annotations are modularly checkable, i.e. one method's purity annotations to be checked in isolation from all other methods~\cite{pearce2011jpure}.
-
-The system consists of two parts, \textit{purity inference} and \textit{purity checker}~\cite{pearce2011jpure}. Purity inference adds \texttt{@Pure} annotations (and any auxiliary annotations required) to the code and is intended to be run once because it is more costly~\cite{pearce2011jpure}. The purity checker checks the correctness of all annotations at compile-time, and is intended to be used continuously to maintain the code's purity~\cite{pearce2011jpure}.
-
-Pearce's definition of functional purity does not include determinism, unlike the one used in this thesis. The purity level \textit{locally impure} used in this thesis is based on Pearce's \texttt{@Local} attribute. Moreover, the solution to method overriding used in this thesis in \autoref{sub:inheritance} is also based on the ideas developed by Pearce. However, Pearce's approach requires that the program is modularly checkable, i.e. that each method's purity can be evaluated independently of all other methods, and uses annotations to achieve this~\cite{pearce2011jpure}.  Pearce does not introduce an \textit{unknown} purity level for called methods (referred to as methods from external packages) that are not analyzed, but assumes conservatively that such methods are always impure~\cite{pearce2011jpure}.
-
-% Their analysis seems way more complicated than mine, which could be an advantage
-
-\subsection{Purity and Side Effect Analysis for Java Programs} \label{sub:Purity and Side Effect Analysis for Java Programs}
-
-Similarly to Pearce, Alexandru S\u{a}lcianu and Martin Rinard presented a method for analysing purity in Java programs, but their definition of purity also only includes side effects and does not look at the input or output, i.e. does not include determinism~\cite{salcianu}. Their pointer analysis is based on tracking object creation and updates, as well as updates to local variables, and defines methods that mutate memory locations that existed before a method call as impure~\cite{salcianu}. Moreover, their analysis can recognize purity-related properties for impure methods, including \textit{read-only} and \textit{safe} parameters~\cite{salcianu}.
-
-The analysis method presented looks at each program point in each method \textit{m}, and computes a points-to graph modelling the parts of the heap that method \textit{m} points to, represented by nodes in the graph~\cite{salcianu}. There are three kinds of nodes: \textit{Inside nodes} which model objects created by \textit{m}, \textit{parameter nodes} which model objects passed to \textit{m} as arguments, and \textit{load nodes} modelling objects read from outside \textit{m}~\cite{salcianu}. Edges in the points-to graph model heap references~\cite{salcianu}. There are two types of edges: \textit{inside edges} which model heap references created by \textit{m}, and \textit{outside edges} modelling heap references read by \textit{m} from outside it (this includes \textit{m}'s parameters)~\cite{salcianu}.
-
-% For each method \textit{m} the analysis computes a set $W_m$ containing the mutated fields that are externally visible.
-
-The analysis also keeps track of \textit{globally escaped nodes}, which are nodes that may be accessed by unknown code, i.e. passed as argument to native methods or pointed to static fields~\cite{salcianu}. Since globally escaped nodes may be mutated by unknown code, the analysis has to handle them conservatively~\cite{salcianu}.
-
-To check if a method \textit{m} is pure, the analysis computes the set \textit{A} consisting of nodes reachable from parameter nodes along outside edges~\cite{salcianu}. In other words, \textit{A} represents all objects existing before executing \textit{m}~\cite{salcianu}. \textit{m} is pure if and only if no node in \textit{A} escapes globally (i.e. is accessed by unknown code) and no fields in any node in \textit{A} is modified~\cite{salcianu}. There is one exception to the purity constraint: constructors are allowed to mutate fields of the \texttt{this} object~\cite{salcianu}. Therefore, all mutated abstract fields of \texttt{this} are ignored by the analysis~\cite{salcianu}.
-
-Similarly to this thesis, S\u{a}lcianu and Rinard explicitly mark parts of a method that are potentially accessed by unknown code, and deal with them conservatively. Their analysis uses a points-to graph to compute the purity of each method, unlike the method in this thesis that uses a lookup-table and checklist.
-
-% Since they do not include determinism in their definition of functional purity, static
-
-% \subsection{Detecting function purity in JavaScript}
-% This was a little too difficult to understand, maybe remove from related work?
-% Nicolay et al. developed a method of detecting function purity in JavaScript using something called \textit{pushdown analysis}~\cite{purity-in-javascript}. Their definition of functional purity, however, includes only side effects and does not require functions' output to depend purely on their input~\cite{purity-in-javascript}.
-
-% Because everything except for
-
-% \subsection{Writing Pure Code in C\#} \label{sub:Writing Pure Code in Cs}
-% In his article \textit{Writing Pure Code in C\#} Massad defines three levels of pure methods~\cite{yacoub-massad-pure-code}:
-% \begin{enumerate}
-%   \item Pure methods, i.e. methods that do not read or write to instance state variables, or call impure methods.
-%   \item Methods that are pure, and that \textit{read} the state of their containing object, or the state of objects that are passed as parameters or created in the current method.
-%   \item Methods that are pure, and that \textit{read} or \textit{write} to the state of their containing objects, or to the state of objects created in the current method.
-% \end{enumerate}
-
-% \subsection{Evolution of Degree of Purity in Programming Languages} \label{sub:Evolution of Degree of Purity in Programming Languages}
-% Rajasekhara Babu et al.~\cite{rajasekharababu2012evolution}.
-
-\subsection{Verifiable Functional Purity in Java} \label{sub:Verifiable-Functional-Purity-in-Java}
-
-In their definition of functional purity Finifter et al. require pure functions to be both side-effect free and \textit{deterministic}~\cite{purity-in-java}. A function is deterministic if any two evaluations of it have the same result~\cite{purity-in-java}. This means that a deterministic function is one that relies purely on its arguments~\cite{purity-in-java}. A function is side-effect free if it only modifies objects that were created during its execution~\cite{purity-in-java}.
-
-The language that their analyzer handles is a subset of Java, in which they can prove functional purity~\cite{purity-in-java}. If a method is written in this subset of Java and its parameters are immutable, including the implicit \texttt{this}, then the method is pure~\cite{purity-in-java}. % page 166
-If its class is immutable it means that a method's global scope has a constant state, and so the only varying state is the one observable through its arguments~\cite{purity-in-java}.
-
-Their verifier has a whitelist of fields and methods from Java libraries that do not expose the ability to observe a global mutable state, or provide access to nondeterminism, and it will reject any reference to a field or method that is not on the list~\cite{purity-in-java}. This is similar to the approach with a list of impure built-in C\# methods used in this thesis and mentioned in \autoref{sub:Impure-built-in-methods}.
-
-Finifter et al. use the same definition of functional purity that is used in this thesis. The main disadvantage with Finifter et al.'s approach is that it requires the code to be written in a subset of Java code in order to be able to analyze the code.
-
-\subsection{Dynamic Purity Analysis For Java Programs} \label{sub:Dynamic Purity Analysis For Java Programs}
-
-In their paper Xu et al. define four different definitions for functional purity, and they are as follows from the strongest to the weakest definition: \textit{strong}, \textit{moderate}, \textit{weak} and \textit{once-impure} purity~\cite{xu2007dynamic}, similarly to the purity levels presented in this thesis in \autoref{def:functional-purity}, \autoref{def:locally-impure} and \autoref{def:parametrically-impure}. Their strongest definition, \textit{strong purity}, includes both determinism and side-effect freeness~\cite{xu2007dynamic}. Moreover, any read from or write to the heap is not allowed in strong impurity~\cite{xu2007dynamic}. Therefore, Xu et al. do not consider reading from object type parameters to be truly pure. \textit{Moderate purity} is like \textit{strong}, except that it also allows modification of newly allocated (i.e. fresh) objects~\cite{xu2007dynamic}. \textit{Weak purity} is like \textit{moderate}, but it also allows non-determinism i.e. reading from objects that exist outside the method~\cite{xu2007dynamic}. \textit{Once-impure purity} is equivalent to \textit{weak purity} except that the first invocation of the method may be impure~\cite{xu2007dynamic}.
-
-It is interesting that Xu et al. do not consider modification of fresh objects or reading the state of object type input parameters as truly pure, which this and most other work does. None of Xu et al.'s purity levels allow modification of input parameters. Xu et al. consider methods that modify their own object \texttt{this} to be impure, but do allow other methods that call such methods and remain \textit{moderately pure}. This is similar to the approach used in this thesis, which classifies the former type of method as \textit{locally impure} and the calling method as \textit{pure} if the called method belongs to a fresh object, as described in \autoref{sub:modifying-fresh-objects}.
-
-Xu et al.'s analysis is performed dynamically which requires looking at Java Virtual Machine code~\cite{xu2007dynamic}. The nature of the dynamic analysis may be the reason why some of their purity definitions differ from most other work, for instance that any modification of any object that was created after the start of executing a method, including fresh ones, is not considered pure by their method of analysis.
 
 \section{Conclusion} \label{sec:conclusion}
 
