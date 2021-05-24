@@ -140,7 +140,7 @@
 
 The object-oriented programming paradigm has been the industry norm for quite some time~\cite{tiobe}. However, functional programming is on the rise and becoming more popular~\cite{intertech}. Many mainstream languages like Java, C\# and C++ have adopted first-class functions from the functional paradigm~\cite{intertech}. While perhaps some associate functional programming with the more theoretical and mathematical fields, functional programming can be used for more practical applications like building modern web applications and mobile apps~\cite{jonas-walter}.
 
-Functional programs have many benefits. Perhaps one of the most useful features of functional programming that the object-oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about than impure ones because they have no \textit{side effects}~\cite{alvin-alexander}. A side effect is anything that a function does besides producing a return value and that is visible from the function's caller's point of view~\cite{purity-in-javascript}. Pure functions are always thread-safe, meaning that they are very suitable for parallel programming~\cite{purity-in-java}. Pure functions are also easier to test compared to impure ones since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
+Functional programs have many benefits. Perhaps one of the most useful features of functional programming that the object-oriented world of programming could adopt is \textit{functional purity}. Programs with pure functions are generally easier to reason about than impure ones because they have no \textit{side effects}~\cite{alvin-alexander}. A side effect is anything that a function does besides producing a return value and that is visible outside the function~\cite{purity-in-java}. Pure functions are always thread-safe, meaning that they are very suitable for parallel programming~\cite{purity-in-java}. Pure functions are also easier to test compared to impure ones since all we need to look at are functions' inputs and outputs, which also, for instance, facilitates property-based testing~\cite{alvin-alexander}. Moreover, research has shown that pure programs are easier to debug and maintain~\cite{purity-in-javascript}. % page 1
 For this reason it is useful in software engineering to be able to measure the level of functional purity in programs~\cite{purity-in-javascript}.
 
 C\# is among the top five most popular programming languages~\cite{tiobe}. To its core, it is an object-oriented programming language. However, it has features that allow for functional programming~\cite{hamid-mosalla}. But to what extent is C\# being used as a functional programming language?
@@ -153,20 +153,16 @@ The following are the contributions of this thesis:
 \begin{itemize}
   \item A static analysis method for measuring the level of functional purity in a C\# program.
   % \item Prototype CsPurity?
-  \item Methods for how to deal with a number of problems that arise when measuring purity in an object-oriented programming language.
+  \item Techniques for how to deal with a number of problems that arise when measuring purity in an object-oriented programming language.
 \end{itemize}
 
-The next section contains definitions for functional purity, functional programming and object oriented programming. \Autoref{sec:the-csharp-language} describes C\# and .NET, as well was a description of what makes C\# method pure. \Autoref{sec:problems-with-purity-in-oo} presents a number of dilemmas when it comes to measuring purity in object-oriented languages, and how they were addressed. \Autoref{sec:the-analysis-method} describes the analysis method used, and applies it to a simple C\# program. \Autoref{sec:implementation-of-cspurity} describes the implemented prototype of the analysis method -- CsPurity. \Autoref{sec:results-and-discussion} presents the results after running CsPurity on the example code in \autoref{sec:the-analysis-method} as well as on 11 open source repositories that use the \texttt{[Pure]} attribute, which was used to evaluate CsPuritiy's precision and recall. The results are then discussed at the end of \autoref{sec:results-and-discussion}, and the thesis is concluded in \autoref{sec:conclusion}.
-
-\Autoref{sec:related-work} presents similar work done in other programming languages.
-
-TODO: fix this paragraph
+ The next section presents similar work done in other programming languages. \Autoref{sec:definitions} contains definitions for functional purity, functional programming, and object oriented programming. \Autoref{sec:the-csharp-language} describes C\# and .NET, as well as a description of what makes C\# method pure. \Autoref{sec:problems-with-purity-in-oo} presents a number of dilemmas when it comes to measuring purity in object-oriented languages, and how they were addressed. \Autoref{sec:the-analysis-method} describes the analysis method used, and applies it to a simple C\# program. \Autoref{sec:implementation-of-cspurity} describes the implemented prototype of the analysis method -- CsPurity. \Autoref{sec:results-and-discussion} presents the results after running CsPurity on the example code in \autoref{sec:the-analysis-method}, as well as on 11 open source repositories that use the \texttt{[Pure]} attribute, which was used to evaluate CsPuritiy's precision and recall. The results are then discussed at the end of \autoref{sec:results-and-discussion}, and the thesis is concluded in \autoref{sec:conclusion}.
 
 \section{Related work} \label{sec:related-work} % (If not part of introduction)
 
-The problem of detecting functional purity has been studied in other programming languages. Even though each language has its unique features there is a lot to be learned from how others have approached the subject. This section describes related work done for purity analysis in Erlang as well as Java. Since Java is object-oriented, it is relatively similar to C\#, and so four out of the five related works cover purity analysis in Java.
+The problem of detecting functional purity has been studied in other programming languages. Even though each language has its unique features there is a lot to be learned from how other people have approached the subject. This section describes related work done for purity analysis in Erlang as well as Java. Since Java is object-oriented, it is relatively similar to C\#, and so four out of the five related works cover purity analysis in Java.
 
-Not all literature defines functional purity the same, as will become clear in this section. Each subsection includes that work's definition. The definition for functional purity used in this thesis, as well its motivation, is in \autoref{sub:definitions}.
+Not all literature defines functional purity the same, as will become clear in this section. Each subsection includes that work's definition. The definition for functional purity used in this thesis, as well its motivation, is in \autoref{sec:definitions}.
 
 \subsection{Purity in Erlang} \label{sub:Purity-in-Erlang}
 
@@ -248,17 +244,17 @@ It is interesting that Xu et al. do not consider modification of fresh objects o
 
 Xu et al.'s analysis is performed dynamically which requires looking at Java Virtual Machine code~\cite{xu2007dynamic}. The nature of the dynamic analysis may be the reason why some of their purity definitions differ from most other work, for instance that any modification of any object that was created after the start of executing a method, including fresh ones, is not considered pure by their method of analysis.
 
-\section{Definitions} \label{sub:definitions}
+\section{Definitions} \label{sec:definitions}
 
 Object-oriented programming and functional programming are two different programming paradigms. There is no universal definition for either of them, but in order to reason about them, we need to choose one. Moreover, since one of the key features of functional programming is functional purity, we have to define that as well.
 
-\subsection{Object-oriented programming} \label{ssub:object-oriented-programming} % Perhaps also mention imperative programming?
+\subsection{Object-oriented programming} \label{ssub:object-oriented-programming}
 
 \begin{enumerate}
 \item Computations are done via \textit{methods} belonging to \textit{objects}, whose structure suits the goal of whatever computation we're doing~\cite{john-m-chambers}.
 \item Each object has a unique \textit{object identity} which distinguishes it from all other objects~\cite{khoshafian1986object}.
 \item Objects are based on \emph{classes}, and objects belonging to a class have a shared set of properties~\cite{john-m-chambers}.
-\item Classes can \emph{inherit} from other superclasses, such that an object of a class is also an object of its superclass~\cite{john-m-chambers}.
+\item Classes can \emph{inherit} from other classes, such that an object of a class is also an object of the inherited class~\cite{john-m-chambers}.
 \end{enumerate}
 
 \subsection{Functional purity} \label{ssub:functional-purity-definition}
@@ -273,7 +269,7 @@ Functional purity is a key part of functional programming. Following is the defi
 \textit{Side effect} and \textit{determinism} are defined as follows:
 
 \begin{definition}[Side effect] \label{def:side-effect}
-  A side effect is any action performed by a function that is visible from the function's caller's point of view~\cite{purity-in-javascript}.
+  A side effect is any action performed by a function that is visible outside that function~\cite{purity-in-java}.
 \end{definition}
 
 \begin{definition}[Determinism] \label{def:determinism}
@@ -324,9 +320,11 @@ Moreover, requiring pure functions to be both side-effect free \textit{and} dete
 
 C\# is a type-safe object-oriented programming language developed by Microsoft~\cite{albahari2003nutshell}. C\# is syntactically quite similar to C, C++ and Java, and includes features like nullable types, enumerations, higher-order functions, and direct memory access~\cite{intro-to-Csharp}. While C\# historically has been used primarily for writing code for Windows platforms, C\# has recently spread to most other platforms, including mobile, due to its increased cross-platform support~\cite{albahari2003nutshell}.
 
-C\# applications run in the .NET ecosystem~\cite{intro-to-Csharp}. There are multiple implementations of .NET, including .NET Core and the .NET Framework~\cite{intro-to-Csharp}. .NET includes a virtual execution environment called the common language runtime (CLR) on which C\# programs run, as well as a common set of class libraries~\cite{albahari2003nutshell}. Before execution C\# source code is compiled to the so-called intermediate language (IL) and stored on disk~\cite{intro-to-Csharp}. Upon execution the IL code is just-in-time-compiled to native machine instructions that can be executed by the operating system~\cite{intro-to-Csharp}.
+C\# applications run in the .NET ecosystem~\cite{intro-to-Csharp}. There are multiple implementations of .NET, including .NET Core and the .NET Framework~\cite{intro-to-Csharp}. .NET includes a virtual execution environment called the common language runtime (CLR) on which C\# programs run, as well as a common set of class libraries~\cite{albahari2003nutshell}. Before execution C\# source code is compiled to the so-called intermediate language (IL) and stored on disk~\cite{intro-to-Csharp}. Upon execution, the IL code is just-in-time-compiled to native machine instructions that can be executed by the operating system~\cite{intro-to-Csharp}.
 
 One fundamental part of the .NET ecosystem are so called assemblies~\cite{assemblies}. An assembly is a unit of types and resources that form a logical building block of functionality~\cite{assemblies}. Assemblies do not contain C\# source code, but IL code~\cite{assemblies-overview}.
+
+Since C\# is object-oriented it has objects, which are instantiated from classes. In object-oriented programming, methods commonly reference the object in which they exist in order to read or modify their object's state. In C\#, and many other object-oriented languages, methods refer to their object using the keyword \texttt{this}~\cite{microsoft-this}.
 
 Similarly to many other programming languages, functions in C\# are generally referred to as \textit{methods}~\cite{albahari2003nutshell}. These two terms will be used interchangeably in this thesis. Each method belongs to a \textit{class}, which is an encapsulation of data and behaviours~\cite{albahari2003nutshell}. C\# also supports anonymous functions~\cite{albahari2003nutshell}.
 
@@ -459,22 +457,22 @@ Analyzing functional purity in object-oriented programming languages yields a nu
 
 \subsection{Inheritance and method overriding} \label{sub:inheritance}
 
-When calling an object parameter's method, because of inheritance and method overriding we can never be sure of which method implementation will be called. Consider the following example~\cite{pearce2011jpure}:
+When calling an object parameter's method, because of inheritance and method overriding we can never be sure of which method implementation will be called.
 
-\begin{figure}[H]
+\begin{figure}
   \centering
   \begin{lstlisting}
     void f(List<string> x) {
       x.Add("Hello");
     }
   \end{lstlisting}
-  \caption{Since \texttt{x} can be of any subclass of \texttt{List} we can never be sure of \texttt{x.Add()}'s implementation.}
+  \caption{Since \texttt{x} can be of any subclass of \texttt{List} we can never be sure of \texttt{x.Add()}'s implementation~\cite{pearce2011jpure}.}
   \label{fig:inheritance-example}
 \end{figure}
 
-Because the parameter \texttt{x} can be of any subclass of \texttt{List} we can not for sure know the implementation of \texttt{x.Add()}, nor therefore can we be certain of \texttt{x.Add()}'s purity. Thus, a static analysis method can not for sure determine \texttt{f()}'s purity by only looking at its definition.
+For instance, because the parameter \texttt{x} in \autoref{fig:inheritance-example} can be of any subclass of \texttt{List} we can not for sure know the implementation of \texttt{x.Add()}, nor therefore can we be certain of \texttt{x.Add()}'s purity. Thus, a static analysis method can not for sure determine \texttt{f()}'s purity by only looking at its definition.
 
-One solution to this that David J. Pearce suggests is to demand that pure methods only are overridden by methods that are also pure~\cite{pearce2011jpure}. Therefore, if a method \textit{m} is overridden by at least one impure method, \textit{m} is assumed to be impure.
+One solution to this that David J. Pearce suggests is to demand that pure methods only are overridden by methods that are also pure~\cite{pearce2011jpure}. Therefore, if a method \textit{m} is overridden by at least one impure method, \textit{m} is classified as impure. Also, if \textit{m} is overridden by at least one method with unknown purity level, \textit{m}'s purity is classified as unknown.
 
 This means that in the example in \autoref{fig:inheritance-example}, the function \texttt{f()} is pure iff all methods that override \texttt{List.Add()} are pure.
 
@@ -482,9 +480,7 @@ This means that in the example in \autoref{fig:inheritance-example}, the functio
 
 If an object \textit{o} is allocated inside the analyzed method \textit{m}, the object \textit{o} is said to be \textit{fresh}~\cite{pearce2011jpure}. To modify \textit{o}'s state we might call a method belonging to \textit{o} that has the side effect of modifying \textit{o}. However, this method should not make \textit{m} impure since \textit{o} is fresh, which means that the modification of \textit{o} is not a side effect of \textit{m}.
 
-Consider the following example:
-
-\begin{figure}[H]
+\begin{figure}[h]
   \centering
   \begin{lstlisting}
     public List<String> Foo() {
@@ -493,12 +489,11 @@ Consider the following example:
       return list;
     }
   \end{lstlisting}
-  % \caption{\texttt{List.Add()} has a side effect because it modifies the \texttt{list}, which was declared before calling the method. However, since \texttt{list} is fresh, \texttt{Foo()}'s purity is not affected.}
   \caption{\texttt{List.Add()} modifies \texttt{list}, which was declared before calling \texttt{List.Add()}. However, since \texttt{list} is fresh, \texttt{Foo()}'s purity is not affected.}
   \label{fig:fresh-object-example}
 \end{figure}
 
-Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side effect of \texttt{Add()}, \texttt{Add()} cannot be a pure method. Does that mean that the function \texttt{Foo()} calling \texttt{list.Add()} is also impure, because it calls a non-pure method? In general functions that invoke impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{def:functional-purity}:
+For example, because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the state of \texttt{list}, which is a side effect of \texttt{Add()}, \texttt{Add()} cannot be a pure method. Does that mean that the function \texttt{Foo()} calling \texttt{list.Add()} is also impure, because it calls a non-pure method? In general functions that invoke impure functions are themselves impure. However, this is not the case for \texttt{Foo()}. Recall the definition of purity in \autoref{def:functional-purity}:
 
 \begin{quote}
   \textit{A function is functionally pure if it is side-effect free and deterministic}.
@@ -507,10 +502,8 @@ Because \texttt{list.Add()} in \autoref{fig:fresh-object-example} modifies the s
 Because the function \texttt{Foo()} only modifies an object that is fresh, \texttt{Foo()} does not have any side effect. The function is also deterministic since it does not read any value outside the function besides its own parameters, which it in this case doesn't have. This means that \texttt{Foo()} is pure. To solve this we introduce the purity level \textit{locally impure}:
 
 \begin{definition}[Local Impurity] \label{def:locally-impure}
-  Any method that is functionally pure except for modifying any of its own object's fields is locally impure.
+  Any method that is functionally pure except for modifying any of its object's fields is locally impure.
 \end{definition}
-
-Consider the following example:
 
 \begin{figure}[H]
   \centering
@@ -533,11 +526,9 @@ Consider the following example:
   \label{fig:locally-impure-example}
 \end{figure}
 
-The method \texttt{Increment()} in \autoref{fig:locally-impure-example} is locally impure because it modifies its object's field \texttt{value} but doesn't have any other side effects. A function that calls a fresh object's locally impure method \textit{m} is not contaminated by \textit{m}'s local impurity.
+For example, the method \texttt{Increment()} in \autoref{fig:locally-impure-example} is locally impure because it modifies its object's field \texttt{value} but doesn't have any other side effects. A function that calls a fresh object's locally impure method \textit{m} is not contaminated by \textit{m}'s local impurity.
 
-There is however one more way to modify a fresh object: to pass it as an argument to a method that alters its state. Consider the following example:
-
-\begin{figure}[H]
+\begin{figure}
   \centering
   \begin{lstlisting}
     public A Foo() { // pure
@@ -558,13 +549,13 @@ There is however one more way to modify a fresh object: to pass it as an argumen
   \label{fig:parametrically-impure-example}
 \end{figure}
 
-Because the method \texttt{Increment()} in \autoref{fig:parametrically-impure-example} modifies its input parameter object it cannot be considered truly pure. However, since \texttt{Foo()} uses \texttt{Increment()} to modify a fresh object \texttt{Foo()} is still pure. I have chosen to categorize methods like this \textit{parametrically impure}:
+There is however one more way to modify a fresh object: to pass it as an argument to a method that alters its state. For example, because the method \texttt{Increment()} in \autoref{fig:parametrically-impure-example} modifies its input parameter object it cannot be considered truly pure. However, since \texttt{Foo()} uses \texttt{Increment()} to modify a fresh object \texttt{Foo()} is still pure. I have chosen to categorize methods like this \textit{parametrically impure}:
 
 \begin{definition}[Parametrical impurity] \label{def:parametrically-impure}
-  Any method that is pure except for modifying the state of its input is parametrically impure.
+  Any method that is pure except for modifying the state of a reference type parameter is parametrically impure.
 \end{definition}
 
-There are two ways for a method to modify its input parameters: either by mutating a value belonging to a reference type input parameter, i.e. an object's field or property, or the cell of an array; or by calling a locally impure method belonging to a parameter object.
+There are two ways for a method to modify the state of its reference type input parameters: either by mutating a value belonging to a reference type input parameter, i.e. an object's field or property, or the cell of an array; or by calling a locally impure method belonging to a parameter object.
 
 The key thing in both the example where a method \textit{m} calls locally or parametrically impure methods is that they modify a fresh object, which therefore doesn't affect \textit{m}'s purity level. So as long as the analyzed method \textit{m} or any of its called methods don't perform any truly impure action like I/O operations (e.g. writing to a file on the file system) or throw exceptions, \textit{m} is pure.
 
@@ -578,9 +569,7 @@ Although local impurity implies parametrical impurity, the opposite does always 
 
 \textit{Properties} in C\# are special \texttt{get} and \texttt{set} methods for reading, computing or writing to values of object fields~\cite{microsoft-properties}. Properties can, just like other fields or methods be set to \texttt{static}, which means that they are assigned to the class rather than any instantiated object. If a method reads from or modifies a static property, that method would be considered to be non-deterministic or to have a side effect, i.e. it would be impure, because static fields are accessible anywhere in a program.
 
-However, properties can also be non-static but still read or modify static fields. Consider the following:
-
-\begin{figure}[H]
+\begin{figure}
   \centering
   \begin{lstlisting}
   public class Foo {
@@ -607,7 +596,7 @@ However, properties can also be non-static but still read or modify static field
   \label{fig:non-static-property-example}
 \end{figure}
 
-In the example in \autoref{fig:non-static-property-example}, the method \texttt{Bar()} assigns to the field \texttt{Nationality} of the fresh object \texttt{stina}. Because the property \texttt{Nationality} is non-static it, it might look like a pure action at a first glance. But since the property writes method \texttt{get} itself modifies a static field, the \texttt{Bar()}'s assignment to \texttt{Nationality} is in fact a side effect, which alters all \texttt{Swede} objects' \texttt{Nationality}. Therefore, it is not enough to check if a property is static in order to determine whether a read or write is pure, but the property's \texttt{get} and \texttt{set} have to be checked as well.
+However, properties can also be non-static but still read or modify static fields. In the example in \autoref{fig:non-static-property-example}, the method \texttt{Bar()} assigns to the field \texttt{Nationality} of the fresh object \texttt{stina}. Because the property \texttt{Nationality} is non-static it, it might look like a pure action at a first glance. But since the property writes method \texttt{get} itself modifies a static field, the \texttt{Bar()}'s assignment to \texttt{Nationality} is in fact a side effect, which alters all \texttt{Swede} objects' \texttt{Nationality}. Therefore, it is not enough to check if a property is static in order to determine whether a read or write is pure, but the property's \texttt{get} and \texttt{set} have to be checked as well.
 
 % Perhaps ignore cases like this for simplicity?
 
@@ -1020,13 +1009,11 @@ As seen in \autoref{tab:results-summary}, 19\% of all methods were classified wi
 
 The data set is somewhat nonuniform, primarily in \autoref{tab:results-pure-methods}. The two by far most impactful repositories are \textit{language-ext} and \textit{nuke} which together make up over half of the code base (54\%) in terms of number of methods. The majority of \texttt{[Pure]} methods in \textit{language-ext} and \textit{nuke} were classified as \textit{impure} by CsPurity, and those methods contribute to 97\% of all \texttt{[Pure]} methods classified as \textit{impure} by CsPurity. In order to compensate for this we normalize the purity levels of CsPurity's classification for each repository and calculate the recall and precision based on those normalized values.
 
-For example, to normalize the amount of \texttt{[Pure]}s classified as \textit{pure}, for each repository \textit{R}, the number of methods in \textit{R} classified as \textit{pure} is divided by the total amount of \texttt{[Pure]} methods in \textit{R}. This is done for all the combinations of in the \texttt{[Pure]} or non-\texttt{[Pure]} with all
-
-This is done for each of CsPurity's classified purity level in both \autoref{tab:results-pure-methods} and \autoref{tab:results-non-pure-methods}.
-
-This yields the precision and recall shown in \autoref{tab:results-precision-recall-normalized}, which demonstrates significantly better performance.
-
 % TODO: explain how normalization is done
+
+For example, to normalize the amount of \texttt{[Pure]}s classified as \textit{pure}, for each repository \textit{R}, the number of methods in \textit{R} classified as \textit{pure} is divided by the total amount of \texttt{[Pure]} methods in \textit{R}. % This is done for all the combinations of in the \texttt{[Pure]} or non-\texttt{[Pure]} with all
+This is done for each of CsPurity's classified purity level in both \autoref{tab:results-pure-methods} and \autoref{tab:results-non-pure-methods}
+, which yields the precision and recall shown in \autoref{tab:results-precision-recall-normalized} which demonstrates significantly better performance.
 
 \begin{table}[H]
   \centering
@@ -1042,7 +1029,7 @@ This yields the precision and recall shown in \autoref{tab:results-precision-rec
   \end{tabular}
 \end{table}
 
-One could argue that normalized precision and recall is more fair because each repository's purity level distribution contributes equally to the value. % The non-normalized data assumes that each repository
+With a precision and recall based on normalized data each repository's purity level distribution contributes equally. % The non-normalized data assumes that each repository
 Since the repositories have different code and different authors that may be varyingly strict with what methods should have the \texttt{[Pure]} attribute it is reasonable to assume that each repository should be viewed as a separate entity, and that each repository therefore should be accounted for evenly.
 
 \subsection{Discussion} \label{sub:discussion}
