@@ -1056,7 +1056,7 @@ CsPurity does not give a definite lower bound to a program's purity though. This
 
 Because a large portion of methods use built-in .NET methods for which the source code is not available to CsPurity, nearly a fifth of the analyzed methods get the purity level \textit{unknown}, as seen in \autoref{tab:results-summary}. One way that this was tackled during implementation was to search online for the source code of classes like \texttt{List}, run the analyzer on them and permanently store the calculated purity level for each method in a dictionary in CsPurity, so that whenever a call to a built-in \texttt{List} method is encountered by CsPurity that method's purity level (if it is not \textit{unknown}) can be retrieved from the dictionary. However, this relies on the fact that the source code for a particular built-in method is available, and the process of searching for its code, running the analyzer on it and adding any known result to the program's dictionary is cumbersome. Therefore, a lot of methods are marked as \textit{unknown} by CsPurity because they depend on a method whose source code is not available to, or has been priorly analyzed by CsPurity.
 
-An alternative approach to handling called methods with unknown purity -- as opposed to marking their purity level \textit{unknown} -- would be to simply assume that any unknown method's purity level always is \textit{impure}. The more conservative approach of assuming that any unknown method is impure would mean that the lower bound for the program's total possible impurity level would be moved up, which could potentially give a lower bound that is too high, since some of the unknown methods that were marked \textit{impure} could have been pure. Therefore, since it clearly indicates to the user where the purity level could not be determined, the purity level \textit{unknown} seems to be the best choice here.
+An alternative approach to handling called methods with unknown purity -- as opposed to marking their purity level \textit{unknown} -- would be to simply assume that any unknown method's purity level always is \textit{impure}. The more conservative approach of assuming that any unknown method is impure would mean that the lower bound for the program's total possible impurity level would be increased, which could potentially give a lower bound that is too high, since some of the unknown methods that were marked \textit{impure} could have been pure. Therefore, since it clearly indicates to the user when the purity level could not be determined, the purity level \textit{unknown} seems to be the best choice.
 
 \section{Conclusion} \label{sec:conclusion}
 
@@ -1083,6 +1083,8 @@ Moreover, the analysis method developed in this thesis could potentially be used
 While likely very difficult to implement, another very useful feature would be if CsPurity after finding an impurity could suggest changes to the code that would make the function in question pure.
 
 As mentioned in \autoref{sec:implementation-of-cspurity}, CsPurity cannot determine the purity level of higher-order function, which in C\# come in the form of so-called delegates. This is another improvement one could add to the analysis method and CsPurity.
+
+\newpage
 
 \bibliography{references}
 
