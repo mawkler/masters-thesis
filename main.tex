@@ -858,7 +858,7 @@ At this point the working set $W$ is empty, and so there can be no more changes 
 
 % TODO: Add link to GitHub repo
 
-The implementation of the code analysis tool is called \textit{CsPurity} and is built using .NET Core and C\#. It can be compiled, run and tested from the command line using the command \href{https://docs.microsoft.com/en-us/dotnet/core/tools/}{\texttt{dotnet}}, followed by \texttt{run}, \texttt{build} or \texttt{test}, respectively. Upon calling the program it can be provided either with a single file to be analyzed, or a directory. In the second case, all C\#-files in the directory and all sub-directories are analyzed as one program.
+The implementation of the code analysis tool is called \textit{CsPurity} and is built using .NET Core and C\#. Upon calling the program it can be provided either with a single file to be analyzed, or a directory. In the second case, all C\#-files in the directory and all sub-directories are analyzed as one program.
 
 CsPurity works backwards through the analyzed program's function dependencies and for each function visited that function's functional purity level is calculated. The purity levels \textit{impure} and \textit{unknown} also get propagated from callee to caller. Out of all ten items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, the following were implemented:
 
