@@ -91,22 +91,22 @@ public class LinkedList
         l1.Concatenate(l2);
     }
 
-    public override string ToString()
-    {
-        if (head == null) return "";
-        else
-        {
-            string result = "";
-            Node current = head;
-            do
-            {
-                result += current.ToString() + ", ";
-                current = current.next;
-            }
-            while (current != null);
-            return result;
-        }
-    }
+    // public override string ToString()
+    // {
+    //     if (head == null) return "";
+    //     else
+    //     {
+    //         string result = "";
+    //         Node current = head;
+    //         do
+    //         {
+    //             result += current.ToString() + ", ";
+    //             current = current.next;
+    //         }
+    //         while (current != null);
+    //         return result;
+    //     }
+    // }
 
     private class Node
     {
@@ -120,28 +120,28 @@ public class LinkedList
             this.data = data;
         }
 
-        public override string ToString() => data.ToString();
+        /* public override string ToString() => data.ToString(); */
     }
 
-    public static void Main(string[] args)
-    {
-        LinkedList l = new LinkedList();
-        l.Add("foo");
-        l.Add("bar");
-        l.Add("baz");
-        l.Add("faz");
-        Console.WriteLine(l.ToString());
-        LinkedList.Remove(3, l);
-        Console.WriteLine(l.ToString());
-        LinkedList.Remove(1, l);
-        Console.WriteLine(l.ToString());
-        LinkedList.Remove(0, l);
-        Console.WriteLine(l.ToString());
-        Console.WriteLine(l.head);
-        Console.WriteLine(l.tail);
-        LinkedList l2 = new LinkedList();
-        l2.Add("far");
-        l.Concatenate(l2);
-        Console.WriteLine(l);
-    }
+    // public static void Main(string[] args)
+    // {
+    //     LinkedList l = new LinkedList();
+    //     l.Add("foo");
+    //     l.Add("bar");
+    //     l.Add("baz");
+    //     l.Add("faz");
+    //     Console.WriteLine(l.ToString());
+    //     LinkedList.Remove(3, l);
+    //     Console.WriteLine(l.ToString());
+    //     LinkedList.Remove(1, l);
+    //     Console.WriteLine(l.ToString());
+    //     LinkedList.Remove(0, l);
+    //     Console.WriteLine(l.ToString());
+    //     Console.WriteLine(l.head);
+    //     Console.WriteLine(l.tail);
+    //     LinkedList l2 = new LinkedList();
+    //     l2.Add("far");
+    //     l.Concatenate(l2);
+    //     Console.WriteLine(l);
+    // }
 }

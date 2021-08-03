@@ -21,6 +21,7 @@
   linkcolor=blue,
   filecolor=magenta,
   urlcolor=cyan,
+  citecolor=blue
 }
 \urlstyle{same}
 
@@ -796,21 +797,21 @@ The analysis starts off by building the dependency set for each function and set
     \texttt{Length()}           &                           & \textit{pure} \\
     \texttt{Remove()}           & \texttt{Length()}         & \textit{pure} \\
     \texttt{Add()}              & \texttt{Length()}         & \textit{pure} \\
-    \texttt{Concatenate$_1()$}   &                           & \textit{pure} \\
-    \texttt{Concatenate$_2()$}   & \texttt{Concatenate$_1()$} & \textit{pure} \\ \hline
+    \texttt{Concatenate$_1$()}   &                           & \textit{pure} \\
+    \texttt{Concatenate$_2$()}   & \texttt{Concatenate$_1$()} & \textit{pure} \\ \hline
   \end{tabular}
   \\
-  $W$ = \{\texttt{Length()}, \texttt{Concatenate$_1()$}\}
+  $W$ = \{\texttt{Length()}, \texttt{Concatenate$_1$()}\}
 \end{table}
 
-The working set $W$ is the set of all functions in the lookup table with empty dependency sets, which in this case is \texttt{Length()} and \texttt{Concatenate$_1()$} (the first overloading of \texttt{Concatenate()} in \autoref{fig:example-code}). We now go through each item in the checklist in \autoref{sub:checklist-to-determine-the-purity-level} for each method in $W$, and check which items apply to the methods:
+The working set $W$ is the set of all functions in the lookup table with empty dependency sets, which in this case is \texttt{Length()} and \texttt{Concatenate$_1$()} (the first overloading of \texttt{Concatenate()} in \autoref{fig:example-code}). We now go through each item in the checklist in \autoref{sub:checklist-to-determine-the-purity-level} for each method in $W$, and check which items apply to the methods:
 
-Since none of the items in the checklist apply to \texttt{Length()}, its purity level remains \textit{pure}. As for the method \texttt{Concatenate$_1()$} the items \ref{itm:locally-impure}, \ref{itm:static-impure} and \ref{itm:parametrically-impure} apply to it. Item \ref{itm:parametrically-impure} since \texttt{Concatenate$_1()$} modifies the fields \texttt{list} and \texttt{tail} of its input parameter, item \autoref{itm:locally-impure} since it modifies its own \texttt{head} and \texttt{tail}, and \autoref{itm:static-impure} since \texttt{Concatenate()} modifies the static class field \texttt{numberOfConcatenates}. Thus, \texttt{Concatenate$_1()$} should be marked with the purity levels \textit{locally impure}, \textit{parametrically impure} and \textit{impure}, and since \textit{impure} is the impurest of the three the method gets marked \textit{impure}.
+Since none of the items in the checklist apply to \texttt{Length()}, its purity level remains \textit{pure}. As for \texttt{Concatenate$_1$()} the items \ref{itm:locally-impure}, \ref{itm:static-impure} and \ref{itm:parametrically-impure} apply to it. Item \ref{itm:parametrically-impure} applies since \texttt{Concatenate$_1$()} modifies the fields \texttt{list} and \texttt{tail} of its input parameter, item \autoref{itm:locally-impure} since it modifies its own \texttt{head} and \texttt{tail}, and \autoref{itm:static-impure} since \texttt{Concatenate()} modifies the static class field \texttt{numberOfConcatenates}. Thus, \texttt{Concatenate$_1$()} should be marked with the purity levels \textit{locally impure}, \textit{parametrically impure} and \textit{impure}, and since \textit{impure} is the impurest of the three the method gets marked \textit{impure}.
 
-Since \texttt{Concatenate$_1()$}'s purity level was marked \textit{impure} its purity level is propagated to its callers, which in this case is \texttt{Concatenate$_2()$}. \texttt{Concatenate$_1()$} is then removed from the dependency set of \texttt{Concatenate$_2()$}, and \texttt{Length()} is removed from \texttt{Add()} and \texttt{Remove()}'s dependency sets. The methods \texttt{Length()} and \texttt{Concatenate$_1()$} are now removed from the working set $W$, and \texttt{Remove()}, \texttt{Add()} and \texttt{Concatenate$_2()$} are added to $W$, as their dependency sets now are empty. At this point the state of the lookup table is as shown in \autoref{tab:lookup-table2}.
+Since \texttt{Concatenate$_1$()}'s purity level was marked \textit{impure} its purity level is propagated to its callers, which in this case is \texttt{Concatenate$_2$()}. \texttt{Concatenate$_1$()} is then removed from the dependency set of \texttt{Concatenate$_2$()}, and \texttt{Length()} is removed from \texttt{Add()} and \texttt{Remove()}'s dependency sets. The methods \texttt{Length()} and \texttt{Concatenate$_1$()} are now removed from the working set $W$, and \texttt{Remove()}, \texttt{Add()} and \texttt{Concatenate$_2$()} are added to $W$, as their dependency sets now are empty. At this point the state of the lookup table is as shown in \autoref{tab:lookup-table2}.
 
 \begin{table}[H]
-  \caption{\texttt{Remove()} and \texttt{Concatenate$_1()$}'s purity levels have been updated, and after analysing them they are removed from the dependency set of their callers. Also, \texttt{Concatenate$_1()$}'s purity level has been propagated to \texttt{Concatenate$_2()$}.}
+  \caption{\texttt{Remove()} and \texttt{Concatenate$_1$()}'s purity levels have been updated, and after analysing them they are removed from the dependency set of their callers. Also, \texttt{Concatenate$_1$()}'s purity level has been propagated to \texttt{Concatenate$_2$()}.}
   \label{tab:lookup-table2}
   \centering
   \begin{tabular}{|l|c|c|}
@@ -819,20 +820,20 @@ Since \texttt{Concatenate$_1()$}'s purity level was marked \textit{impure} its p
     \texttt{Length()}          &                        & \textit{pure}                         \\
     \texttt{Remove()}          &                        & \textit{parametrically impure}        \\
     \texttt{Add()}             &                        & \textit{pure}                         \\
-    \texttt{Concatenate$_1()$}  &                        & \textit{impure}                       \\
-    \texttt{Concatenate$_2()$}  &                        & \textit{impure}                       \\ \hline
+    \texttt{Concatenate$_1$()}  &                        & \textit{impure}                       \\
+    \texttt{Concatenate$_2$()}  &                        & \textit{impure}                       \\ \hline
   \end{tabular}
   \\
-  $W$ = \{\texttt{\texttt{Remove()}, Add()}, \texttt{Concatenate$_2()$}\}
+  $W$ = \{\texttt{\texttt{Remove()}, Add()}, \texttt{Concatenate$_2$()}\}
 \end{table}
 
-Now we perform the same actions again with the new working set $W$ = \{\texttt{Remove()}, \texttt{Add()}, \texttt{Concatenate$_2()$}\}, starting with \texttt{Remove()}. Out of the items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, \autoref{itm:parametrically-impure} applies since \texttt{Remove()} directly mutates its input parameter \texttt{list} in multiple locations. Therefore, \texttt{Remove()} is marked \textit{parametrically impure}.
+Now we perform the same actions again with the new working set $W$ = \{\texttt{Remove()}, \texttt{Add()}, \texttt{Concatenate$_2$()}\}, starting with \texttt{Remove()}. Out of the items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, \autoref{itm:parametrically-impure} applies since \texttt{Remove()} directly mutates its input parameter \texttt{list} in multiple locations. Therefore, \texttt{Remove()} is marked \textit{parametrically impure}.
 
 As for \texttt{Add()} \autoref{itm:locally-impure} applies to it since \texttt{Add()} modifies its object in multiple locations, for instance by assigning to the field \texttt{tail}, and so \texttt{Add()}'s purity level is set to \textit{locally impure}.
 
-Looking at \texttt{Concatenate$_2()$}, none of the items in the checklist apply, and so it remains its purity level \textit{impure} that was propagated to it from \texttt{Concatenate$_1()$}.
+Looking at \texttt{Concatenate$_2$()}, none of the items in the checklist apply, and so it remains its purity level \textit{impure} that was propagated to it from \texttt{Concatenate$_1$()}.
 
-\texttt{Remove()}, \texttt{Add()} and \texttt{Concatenate$_2()$} are then removed from $W$.
+\texttt{Remove()}, \texttt{Add()} and \texttt{Concatenate$_2$()} are then removed from $W$.
 
 \begin{table}[H]
   \caption{\texttt{Add()}'s purity level has been updated to \textit{locally impure}. Since $W$ is now empty, this is the final result of the analysis.}
@@ -844,8 +845,8 @@ Looking at \texttt{Concatenate$_2()$}, none of the items in the checklist apply,
     \texttt{Length()}          &                        & \textit{pure}                         \\
     \texttt{Remove()}          &                        & \textit{parametrically impure}        \\
     \texttt{Add()}             &                        & \textit{locally impure}               \\
-    \texttt{Concatenate$_1()$}  &                        & \textit{impure}                       \\
-    \texttt{Concatenate$_2()$}  &                        & \textit{impure}                       \\ \hline
+    \texttt{Concatenate$_1$()}  &                        & \textit{impure}                       \\
+    \texttt{Concatenate$_2$()}  &                        & \textit{impure}                       \\ \hline
   \end{tabular}
   \\
   $W$ = \{\}
