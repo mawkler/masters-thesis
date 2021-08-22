@@ -186,7 +186,7 @@ David J. Pearce built a purity system and analyzer for Java in his paper \textit
 
 The system uses the purity annotations \texttt{@Pure}, \texttt{@Local} and \texttt{@Fresh}~\cite{pearce2011jpure}. The annotation \texttt{@Pure} indicates that a method is pure~\cite{pearce2011jpure}. \texttt{@Local} indicates that a method only modifies an object's locality~\cite{pearce2011jpure}. \texttt{@Fresh} indicates that a method only returns fresh objects~\cite{pearce2011jpure}. These three annotations are modularly checkable, i.e. one method's purity annotations can be checked in isolation from all other methods~\cite{pearce2011jpure}.
 
-The system consists of two parts, \textit{purity inference} and \textit{purity checker}~\cite{pearce2011jpure}. Purity inference adds \texttt{@Pure} annotations (and any auxiliary annotations required) to the code and is intended to be run once because it is more costly~\cite{pearce2011jpure}. The purity checker checks the correctness of all annotations at compile-time, and is intended to be used continuously to maintain the code's purity~\cite{pearce2011jpure}.
+The system consists of two parts, \textit{purity inference} and \textit{purity checker}~\cite{pearce2011jpure}. Purity inference adds \texttt{@Pure} annotations (and any auxiliary annotations required) to the code and is intended to be run once because it is more costly~\cite{pearce2011jpure}. The purity checker examines the correctness of all annotations at compile-time, and is intended to be used continuously to maintain the code's purity~\cite{pearce2011jpure}.
 
 Pearce's definition of functional purity does not include determinism, unlike the one used in this thesis. The purity level \textit{locally impure} used in this thesis is based on Pearce's \texttt{@Local} attribute. Moreover, the solution to method overriding used in this thesis in \autoref{sub:inheritance} is also based on the ideas developed by Pearce. However, Pearce's approach requires that the program is modularly checkable, i.e. that each method's purity can be evaluated independently of all other methods, and uses annotations to achieve this~\cite{pearce2011jpure}.  Pearce does not introduce an \textit{unknown} purity level for called methods (referred to as methods from external packages) that are not analyzed, but assumes conservatively that such methods are always impure~\cite{pearce2011jpure}.
 
@@ -276,7 +276,7 @@ Functional purity is a key part of functional programming. Following is the defi
   A function is deterministic if its output depends only on its input parameters, i.e. the method must return the same value for the same input regardless of the state of the program~\cite{purity-in-java}.
 \end{definition}
 
-In addition to functional purity and functional impurity, three additional purity levels are presented in \autoref{def:locally-impure}, \autoref{def:parametrically-impure} and in \autoref{sec:the-analysis-method}.
+In addition to functional purity and functional impurity, three additional purity levels will be presented in \autoref{def:locally-impure}, \autoref{def:parametrically-impure} and in \autoref{sec:the-analysis-method}.
 
 \subsection{Functional programming} \label{sub:functional-programming}
 
@@ -856,9 +856,7 @@ At this point the working set $W$ is empty, and so there can be no more changes 
 
 \section{Implementation of code analysis prototype CsPurity} \label{sec:implementation-of-cspurity}
 
-% TODO: Add link to GitHub repo
-
-The implementation of the code analysis method is called \textit{CsPurity} and is built using .NET Core and C\#. Upon calling the program it can be provided either with a single file to be analyzed, or a directory. In the second case, all C\#-files in the directory and all sub-directories are analyzed as one program.
+The implementation of the code analysis method is called \textit{CsPurity} and is built using .NET Core and C\#. CsPurity is open source and available online\footnote{\url{https://github.com/Melkster/CsPurity}}. Upon calling the program it can be provided either with a single file to be analyzed, or a directory. In the second case, all C\#-files in the directory and all sub-directories are analyzed as one program.
 
 CsPurity works backwards through the analyzed program's function dependencies and for each function visited that function's functional purity level is calculated. The purity levels \textit{impure} and \textit{unknown} also get propagated from callee to caller. Out of all ten items in the checklist in \autoref{sub:checklist-to-determine-the-purity-level}, the following were implemented:
 
