@@ -125,6 +125,11 @@
 % Change to frontmatter style (e.g. roman page numbers)
 \frontmatter
 
+\newpage
+\thispagestyle{empty}
+\mbox{}
+\newpage
+
 \begin{abstract}
   Functional purity is a fundamental part of the functional programming paradigm. A function is functionally pure if it is side-effect free and deterministic. Pure functions provide many benefits compared to impure ones, including guaranteed thread-safety as well as easier testing, debugging and maintenance. But how can functional purity be measured? This thesis develops a method for statically measuring the level of functional purity in any given C\# program. It also investigates problems with determining purity in object-oriented languages, with a focus on C\#. Moreover, a prototype of the method is implemented in order to evaluate the method using a benchmark consisting of 11 open source repositories that use C\#'s \texttt{[Pure]} attribute. The \texttt{[Pure]} attribute can be placed in front of a method declaration to indicate that it is side-effect free. Due to a number of limitations to the implementation as well as to \texttt{[Pure]}'s definition of functional purity, which excludes determinism, the results of the evaluation appear relatively poor. After normalizing the implementation's classification distribution for each repository, its classification of pure functions has a precision of 65\% and recall 17\%, and its classification of impure functions has 54\% precision and 69\% recall. Nevertheless, the prototype still shows the potential of the full analysis method. A complete implementation of the analysis method could potentially yield a fully working system for measuring any C\# program's level of functional purity.
 \end{abstract}
