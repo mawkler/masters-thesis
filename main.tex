@@ -15,6 +15,7 @@
 \usepackage{float}
 \usepackage{hyperref}
 \usepackage{colortbl}
+\usepackage{datetime}
 
 \hypersetup{
   colorlinks=true,
@@ -84,8 +85,8 @@
 
 % Set the date and year - use the right language!
 \date{
-  \begin{otherlanguage}{English}  %\foreignlanguage doesn't seem to affect \today?
-    \today
+  \begin{otherlanguage}{English}
+    \monthname~\the\year
   \end{otherlanguage}
 }
 
@@ -93,6 +94,7 @@
 %\year=2018
 \handledare{Mikael Axelsson, Erik Löthman}
 \reviewer{Konstantinos Sagonas}
+\examinator{Lars-Åke Nordén}
 
 % Programnamn på svenska och engelska
 \progname{Institutionen för informationsteknologi}{Department of Information Technology}
@@ -102,9 +104,9 @@
 %\enhetsnamn{Department of Information Technology}
 \besoksadress{Ångströmlaboratoriet \\ Lägerhyddsvägen 1 \\ Hus 4, Plan 0}
 \postadress{Box 536 \\ 751 21 Uppsala}
-\telefon{018 - 471 30 03}
-\telefax{018 – 471 30 00}
-\hemsida{http:/www.it.uu.se}
+\telefon{018 -- 471 30 03}
+\telefax{018 -- 471 30 00}
+\hemsida{http://www.teknat.uu.se/student}
 
 % Set the name of the series, and the number in the series
 \seriesname{Examensarbete 30 hp}
@@ -131,7 +133,7 @@
 \newpage
 
 \begin{abstract}
-  Functional purity is a fundamental part of the functional programming paradigm. A function is functionally pure if it is side-effect free and deterministic. Pure functions provide many benefits compared to impure ones, including guaranteed thread-safety as well as easier testing, debugging and maintenance. But how can functional purity be measured? This thesis develops a method for statically measuring the level of functional purity in any given C\# program. It also investigates problems with determining purity in object-oriented languages, with a focus on C\#. Moreover, a prototype of the method is implemented in order to evaluate the method using a benchmark consisting of 11 open source repositories that use C\#'s \texttt{[Pure]} attribute. The \texttt{[Pure]} attribute can be placed in front of a method declaration to indicate that it is side-effect free. Due to a number of limitations to the implementation as well as to \texttt{[Pure]}'s definition of functional purity, which excludes determinism, the results of the evaluation appear relatively poor. After normalizing the implementation's classification distribution for each repository, its classification of pure functions has a precision of 65\% and recall 17\%, and its classification of impure functions has 54\% precision and 69\% recall. Nevertheless, the prototype still shows the potential of the full analysis method. A complete implementation of the analysis method could potentially yield a fully working system for measuring any C\# program's level of functional purity.
+  \textsf{Functional purity is a fundamental part of the functional programming paradigm. A function is functionally pure if it is side-effect free and deterministic. Pure functions provide many benefits compared to impure ones, including guaranteed thread-safety as well as easier testing, debugging and maintenance. But how can functional purity be measured? This thesis develops a method for statically measuring the level of functional purity in any given C\# program. It also investigates problems with determining purity in object-oriented languages, with a focus on C\#. Moreover, a prototype of the method is implemented in order to evaluate the method using a benchmark consisting of 11 open source repositories that use C\#'s \texttt{[Pure]} attribute. The \texttt{[Pure]} attribute can be placed in front of a method declaration to indicate that it is side-effect free. Due to a number of limitations to the implementation as well as to \texttt{[Pure]}'s definition of functional purity, which excludes determinism, the results of the evaluation appear relatively poor. After normalizing the implementation's classification distribution for each repository, its classification of pure functions has a precision of 65\% and recall 17\%, and its classification of impure functions has 54\% precision and 69\% recall. Nevertheless, the prototype still shows the potential of the full analysis method. A complete implementation of the analysis method could potentially yield a fully working system for measuring any C\# program's level of functional purity.}
 \end{abstract}
 
 % Innehållsförteckningen här.
